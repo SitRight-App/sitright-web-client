@@ -10,6 +10,7 @@ export interface LatestReading {
   posture_class: PostureClass
   confidence: number
   timestamp: string
+  battery_percent: number
 }
 
 export const POSTURE_LABELS: Record<PostureClass, string> = {
