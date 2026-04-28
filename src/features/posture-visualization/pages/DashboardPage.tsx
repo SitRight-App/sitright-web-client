@@ -29,7 +29,7 @@ export function DashboardPage() {
 
       {isError && (
         <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-          No se pudo conectar con el backend. Verifica que esté corriendo en el puerto 8000.
+          No se pudo conectar con el backend. Verifica que el servicio esté disponible.
         </div>
       )}
 
