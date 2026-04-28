@@ -41,7 +41,7 @@ describe('useProlongedBadPosture — HU-08', () => {
   it('activa alerta después de 60 lecturas malas consecutivas', () => {
     const { result, rerender } = renderHook(
       ({ reading }) => useProlongedBadPosture(reading),
-      { initialProps: { reading: undefined } },
+      { initialProps: { reading: undefined as LatestReading | undefined } },
     )
 
     for (let i = 1; i <= 60; i++) {
@@ -55,7 +55,7 @@ describe('useProlongedBadPosture — HU-08', () => {
   it('dismiss desactiva la alerta', () => {
     const { result, rerender } = renderHook(
       ({ reading }) => useProlongedBadPosture(reading),
-      { initialProps: { reading: undefined } },
+      { initialProps: { reading: undefined as LatestReading | undefined } },
     )
     for (let i = 1; i <= 60; i++) {
       act(() => rerender({ reading: makeReading(String(i), 'excessive_recline') }))

@@ -7,6 +7,7 @@ import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { useBreakReminder } from './useBreakReminder'
 import type { LatestReading } from '../types/posture'
+import type { VestStatus } from './useVestStatus'
 
 function makeReading(id: string): LatestReading {
   return {
@@ -24,7 +25,7 @@ describe('useBreakReminder — HU-11', () => {
   it('muestra recordatorio después de 720 lecturas conectado (60 min)', () => {
     const { result, rerender } = renderHook(
       ({ vestStatus, reading }) => useBreakReminder(vestStatus, reading),
-      { initialProps: { vestStatus: 'connected' as const, reading: undefined as LatestReading | undefined } },
+      { initialProps: { vestStatus: 'connected' as VestStatus, reading: undefined as LatestReading | undefined } },
     )
 
     for (let i = 1; i <= 720; i++) {
@@ -38,7 +39,7 @@ describe('useBreakReminder — HU-11', () => {
   it('reinicia el contador cuando el chaleco se desconecta', () => {
     const { result, rerender } = renderHook(
       ({ vestStatus, reading }) => useBreakReminder(vestStatus, reading),
-      { initialProps: { vestStatus: 'connected' as const, reading: undefined as LatestReading | undefined } },
+      { initialProps: { vestStatus: 'connected' as VestStatus, reading: undefined as LatestReading | undefined } },
     )
 
     // 500 lecturas conectado (no llega a 720)
@@ -59,7 +60,7 @@ describe('useBreakReminder — HU-11', () => {
   it('dismiss desactiva el recordatorio', () => {
     const { result, rerender } = renderHook(
       ({ vestStatus, reading }) => useBreakReminder(vestStatus, reading),
-      { initialProps: { vestStatus: 'connected' as const, reading: undefined as LatestReading | undefined } },
+      { initialProps: { vestStatus: 'connected' as VestStatus, reading: undefined as LatestReading | undefined } },
     )
     for (let i = 1; i <= 720; i++) {
       act(() => rerender({ vestStatus: 'connected', reading: makeReading(String(i)) }))
