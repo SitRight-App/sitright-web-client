@@ -1,3 +1,38 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply min-h-screen;
+  }
+  body {
+    @apply bg-cream font-sans text-ink antialiased;
+    font-size: 14px;
+    line-height: 1.55;
+    font-variation-settings: 'opsz' 24;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif;
+    font-weight: 400;
+    font-variation-settings: 'opsz' 144;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .label-mono {
+    @apply font-mono uppercase text-[10px] tracking-[0.18em] text-ink-soft;
+  }
+  .num-tag {
+    @apply font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint;
+  }
+  .editorial-card {
+    @apply rounded-[4px] border border-sand bg-cream-bone;
+  }
+}
