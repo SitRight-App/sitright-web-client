@@ -6,39 +6,36 @@ interface Props {
 }
 
 export function RecommendationsCard({ recommendations, postureClass }: Props) {
-  if (postureClass === 'adequate') {
-    return (
-      <div className="rounded-xl border border-green-100 bg-green-50 p-5">
-        <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-green-600">
-          Recomendaciones
-        </p>
-        {recommendations.map((rec, i) => (
-          <div key={i} className="flex gap-3">
-            <span className="mt-0.5 text-green-500">✓</span>
-            <div>
-              <p className="font-medium text-green-800">{rec.title}</p>
-              <p className="mt-0.5 text-sm text-green-700">{rec.description}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
+  const isGood = postureClass === 'adequate'
 
   return (
-    <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm">
-      <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-400">
-        Recomendaciones ergonómicas
+    <div className="relative editorial-card p-7">
+      <span className="num-tag absolute right-5 top-5">№ 07</span>
+      <p className="label-mono">
+        {isGood ? 'Mantén el ritmo' : 'Recomendaciones ergonómicas'}
       </p>
-      <div className="space-y-3">
+      <h3 className="mt-2 font-serif text-2xl tracking-tight text-ink">
+        {isGood ? 'Estás bien sentado.' : 'Pequeños ajustes ahora.'}
+      </h3>
+
+      <div className="mt-5 space-y-4">
         {recommendations.map((rec, i) => (
-          <div key={i} className="flex gap-3 rounded-lg bg-slate-50 p-3">
-            <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600">
-              {i + 1}
+          <div
+            key={i}
+            className="grid grid-cols-[28px_1fr] gap-4 border-b border-dashed border-sand pb-4 last:border-0 last:pb-0"
+          >
+            <span
+              className={`font-mono text-[11px] tracking-[0.10em] ${
+                isGood ? 'text-moss' : 'text-terracotta'
+              }`}
+            >
+              {String(i + 1).padStart(2, '0')}
             </span>
             <div>
-              <p className="font-medium text-slate-800">{rec.title}</p>
-              <p className="mt-0.5 text-sm text-slate-500">{rec.description}</p>
+              <p className="font-serif text-base text-ink">{rec.title}</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-ink-soft">
+                {rec.description}
+              </p>
             </div>
           </div>
         ))}

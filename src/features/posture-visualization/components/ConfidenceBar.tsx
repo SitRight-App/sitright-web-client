@@ -1,24 +1,19 @@
-import type { PostureClass } from '../types/posture'
-import { POSTURE_COLORS } from '../types/posture'
-
 interface Props {
   value: number
-  postureClass: PostureClass
+  accent?: string
 }
 
-export function ConfidenceBar({ value, postureClass }: Props) {
+export function ConfidenceBar({ value, accent }: Props) {
   const percent = Math.round(value * 100)
-  const barColor = POSTURE_COLORS[postureClass]
-
   return (
     <div>
-      <div className="mb-1 flex justify-between text-xs text-slate-500">
-        <span>Confianza del modelo</span>
-        <span className="font-semibold">{percent}%</span>
+      <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-cream/65">
+        <span>Confianza ML</span>
+        <span className="text-cream">{percent}%</span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+      <div className="h-[3px] w-full overflow-hidden bg-cream/10">
         <div
-          className={`h-full rounded-full ${barColor} transition-all duration-500`}
+          className={`h-full transition-all duration-500 ${accent ?? 'bg-cream'}`}
           style={{ width: `${percent}%` }}
         />
       </div>

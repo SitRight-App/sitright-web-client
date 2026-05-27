@@ -6,24 +6,35 @@ interface Props {
 }
 
 const CONFIG: Record<VestStatus, { label: string; dot: string; text: string }> = {
-  connected:    { label: 'Conectado',   dot: 'bg-green-400',  text: 'text-green-700' },
-  battery_low:  { label: 'Batería baja — conectar cargador', dot: 'bg-amber-400', text: 'text-amber-700' },
-  disconnected: { label: 'Chaleco sin conexión', dot: 'bg-slate-300', text: 'text-slate-500' },
-  loading:      { label: 'Buscando chaleco...', dot: 'bg-slate-200', text: 'text-slate-400' },
+  connected: { label: 'Conectado', dot: 'bg-moss', text: 'text-moss' },
+  battery_low: {
+    label: 'Batería baja',
+    dot: 'bg-terracotta',
+    text: 'text-terracotta-deep',
+  },
+  disconnected: {
+    label: 'Sin conexión',
+    dot: 'bg-ink-faint',
+    text: 'text-ink-soft',
+  },
+  loading: {
+    label: 'Buscando chaleco',
+    dot: 'bg-sand',
+    text: 'text-ink-faint',
+  },
 }
 
 export function VestStatusBadge({ status, batteryPercent }: Props) {
   const { label, dot, text } = CONFIG[status]
-
   return (
-    <div className="flex items-center gap-2">
-      <span className={`inline-block h-2.5 w-2.5 rounded-full ${dot}`} />
-      <span className={`text-sm font-medium ${text}`}>
-        {label}
-        {status === 'connected' && batteryPercent !== undefined && (
-          <span className="ml-1 text-slate-400">· {batteryPercent}%</span>
-        )}
-      </span>
-    </div>
+    <span
+      className={`inline-flex items-center gap-2 rounded-full border border-sand bg-cream-bone px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] ${text}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+      <span>{label}</span>
+      {status === 'connected' && batteryPercent !== undefined && (
+        <span className="text-ink-faint">· {batteryPercent}%</span>
+      )}
+    </span>
   )
 }

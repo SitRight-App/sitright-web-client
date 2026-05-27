@@ -1,9 +1,9 @@
 import type { LatestReading, PostureClass } from '../types/posture'
 import {
-  POSTURE_BORDER_COLORS,
-  POSTURE_COLORS,
+  POSTURE_BG,
+  POSTURE_HEADLINES,
   POSTURE_LABELS,
-  POSTURE_TEXT_COLORS,
+  isDeviation,
 } from '../types/posture'
 import { ConfidenceBar } from './ConfidenceBar'
 
@@ -21,45 +21,42 @@ function timeSince(isoString: string): string {
 
 export function PostureIndicator({ reading, isLoading }: Props) {
   const cls: PostureClass = reading?.posture_class ?? 'indeterminate'
-  const dotColor = POSTURE_COLORS[cls]
-  const textColor = POSTURE_TEXT_COLORS[cls]
-  const borderColor = POSTURE_BORDER_COLORS[cls]
-  const label = POSTURE_LABELS[cls]
+  const headline = POSTURE_HEADLINES[cls]
+  const sub = POSTURE_LABELS[cls]
+  const isWarn = isDeviation(cls)
+
+  const tone = isWarn
+    ? 'bg-terracotta text-cream border-terracotta-deep'
+    : 'bg-moss-deep text-cream border-moss-deep'
 
   return (
-    <div className={`rounded-2xl border-2 ${borderColor} bg-white p-8 shadow-sm`}>
-      <p className="mb-6 text-sm font-semibold uppercase tracking-widest text-slate-400">
-        Estado actual
+    <div className={`relative flex h-full flex-col rounded-[4px] border p-7 ${tone}`}>
+      <span className="absolute right-4 top-4 font-mono text-[10px] uppercase tracking-[0.16em] text-cream/55">
+        № 01
+      </span>
+      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sand/80">
+        Postura actual
       </p>
-
-      <div className="flex items-center gap-6">
-        <div className="relative flex-shrink-0">
-          <div className={`h-20 w-20 rounded-full ${dotColor} opacity-20`} />
-          <div
-            className={`absolute inset-0 m-auto h-12 w-12 rounded-full ${dotColor} ${
-              cls !== 'indeterminate' ? 'animate-pulse' : ''
-            }`}
-          />
-        </div>
-
-        <div className="flex-1">
-          <p className={`text-2xl font-bold ${textColor}`}>{label}</p>
-
-          {reading && (
-            <p className="mt-1 text-sm text-slate-400">
-              {timeSince(reading.timestamp)}
-            </p>
-          )}
-
-          {isLoading && !reading && (
-            <p className="mt-1 text-sm text-slate-400">Conectando...</p>
-          )}
-        </div>
+      <div className="mt-4 flex-1">
+        <h2 className="font-serif text-[32px] leading-tight tracking-tight">
+          {headline.split(' ').slice(0, 1).join(' ')}{' '}
+          <em className="italic">
+            {headline.split(' ').slice(1).join(' ')}
+          </em>
+        </h2>
+        <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-cream/75">
+          {sub}.{' '}
+          {reading
+            ? `Última lectura ${timeSince(reading.timestamp)}.`
+            : isLoading
+              ? 'Conectando con el chaleco.'
+              : 'Sin lecturas todavía.'}
+        </p>
       </div>
 
       {reading && (
-        <div className="mt-6">
-          <ConfidenceBar value={reading.confidence} postureClass={cls} />
+        <div className="mt-6 border-t border-cream/15 pt-4">
+          <ConfidenceBar value={reading.confidence} accent={POSTURE_BG[cls]} />
         </div>
       )}
     </div>
