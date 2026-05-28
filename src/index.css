@@ -2,6 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Paleta SitRight — variables CSS centralizadas.
+ *
+ * Para cambiar la paleta del proyecto entero, modificar SOLO los valores en
+ * :root. Cada token está expresado como tripleta R G B (sin coma, separada
+ * por espacios) para que las opacidades de Tailwind funcionen correctamente
+ * — por ejemplo `bg-cream/50` resuelve a `rgb(244 239 230 / 0.5)`.
+ *
+ * Si querés probar otra paleta sin tocar nada más, podés sobrescribir los
+ * valores de :root en un media-query o atributo data-theme y todo el sistema
+ * se actualiza automáticamente.
+ */
+:root {
+  /* Crema y bone — fondos cálidos y tarjetas */
+  --color-cream: 244 239 230;       /* #F4EFE6 */
+  --color-cream-deep: 232 223 201;  /* #E8DFC9 */
+  --color-cream-bone: 235 227 211;  /* #EBE3D3 */
+
+  /* Tinta — textos primarios y secundarios */
+  --color-ink: 26 31 27;            /* #1A1F1B */
+  --color-ink-soft: 74 82 73;       /* #4A5249 */
+  --color-ink-faint: 138 144 136;   /* #8A9088 */
+
+  /* Verde musgo — acento principal */
+  --color-moss: 45 74 54;           /* #2D4A36 */
+  --color-moss-deep: 31 51 36;      /* #1F3324 */
+  --color-moss-soft: 77 107 85;     /* #4D6B55 */
+
+  /* Terracota — acento de alerta y atención */
+  --color-terracotta: 200 98 60;    /* #C8623C */
+  --color-terracotta-deep: 162 74 40; /* #A24A28 */
+  --color-terracotta-soft: 232 166 133; /* #E8A685 */
+
+  /* Arena — separadores y elementos sutiles */
+  --color-sand: 201 184 150;        /* #C9B896 */
+  --color-sand-light: 221 208 176;  /* #DDD0B0 */
+}
+
 @layer base {
   html,
   body,

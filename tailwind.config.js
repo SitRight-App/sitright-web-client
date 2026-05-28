@@ -1,32 +1,39 @@
 /** @type {import('tailwindcss').Config} */
+//
+// Paleta SitRight referenciada vía variables CSS definidas en src/index.css.
+// Para cambiar la paleta, modificar :root en src/index.css — no es necesario
+// tocar este archivo.
+//
+const palette = (token) => `rgb(var(--color-${token}) / <alpha-value>)`
+
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
         cream: {
-          DEFAULT: '#F4EFE6',
-          deep: '#E8DFC9',
-          bone: '#EBE3D3',
+          DEFAULT: palette('cream'),
+          deep: palette('cream-deep'),
+          bone: palette('cream-bone'),
         },
         ink: {
-          DEFAULT: '#1A1F1B',
-          soft: '#4A5249',
-          faint: '#8A9088',
+          DEFAULT: palette('ink'),
+          soft: palette('ink-soft'),
+          faint: palette('ink-faint'),
         },
         moss: {
-          DEFAULT: '#2D4A36',
-          deep: '#1F3324',
-          soft: '#4D6B55',
+          DEFAULT: palette('moss'),
+          deep: palette('moss-deep'),
+          soft: palette('moss-soft'),
         },
         terracotta: {
-          DEFAULT: '#C8623C',
-          deep: '#A24A28',
-          soft: '#E8A685',
+          DEFAULT: palette('terracotta'),
+          deep: palette('terracotta-deep'),
+          soft: palette('terracotta-soft'),
         },
         sand: {
-          DEFAULT: '#C9B896',
-          light: '#DDD0B0',
+          DEFAULT: palette('sand'),
+          light: palette('sand-light'),
         },
       },
       fontFamily: {
