@@ -10,6 +10,7 @@ import { HistoryListPage } from '@/features/session-history/pages/HistoryListPag
 import { SessionDetailPage } from '@/features/session-history/pages/SessionDetailPage'
 import { VestManagementPage } from '@/features/vest-management/pages/VestManagementPage'
 import { SettingsPage } from '@/features/iam/pages/SettingsPage'
+import { RecommendationsPage } from '@/features/recommendations/pages/RecommendationsPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +32,7 @@ export default function App() {
                 <Route index element={<DashboardPage />} />
                 <Route path="history" element={<HistoryListPage />} />
                 <Route path="history/:sessionId" element={<SessionDetailPage />} />
+                <Route path="recommendations" element={<RecommendationsPage />} />
                 <Route path="vest" element={<VestManagementPage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />

@@ -5,6 +5,7 @@ import { Brandmark } from '@/shared/ui/Brandmark'
 const TOP_PAGES = [
   { to: '/', label: 'Postura en vivo', end: true },
   { to: '/history', label: 'Historial' },
+  { to: '/recommendations', label: 'Recomendaciones' },
   { to: '/vest', label: 'Chaleco' },
   { to: '/settings', label: 'Configuración' },
 ]
@@ -27,6 +28,15 @@ const SIDEBAR_ICONS = [
     svg: (
       <>
         <path d="M3 5h14M3 10h14M3 15h9" />
+      </>
+    ),
+  },
+  {
+    to: '/recommendations',
+    label: 'Recomendaciones',
+    svg: (
+      <>
+        <path d="M5 3l10 7-10 7V3z" />
       </>
     ),
   },
