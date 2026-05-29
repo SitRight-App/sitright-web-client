@@ -46,33 +46,20 @@ export function RegisterPage() {
             <Brandmark />
           </div>
           <div className="font-serif text-[22px] tracking-wide">SitRight</div>
-          <div className="ml-auto font-mono text-[10px] uppercase tracking-[0.18em] text-sand-light/70">
-            Edición tesis · 2026
-          </div>
         </header>
 
         <div className="relative mb-auto mt-32">
-          <div className="mb-7 inline-flex items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-sand">
-            <span className="inline-block h-px w-6 bg-sand" />
-            № 02 — Nueva cuenta
-          </div>
           <h1 className="font-serif text-[88px] font-light leading-[0.92] tracking-[-0.035em]">
             Comienza
             <br />
             <em className="font-light text-terracotta">a moverte bien.</em>
           </h1>
           <p className="mt-9 max-w-[460px] font-serif text-lg font-light leading-relaxed text-sand-light">
-            Registra tu cuenta SitRight con tu correo. Luego vincularás tu chaleco y calibrarás
-            tu postura de referencia en menos de tres minutos.
+            Tu columna ya está llevando la contabilidad. Sumá tu cuenta y empezá a verla en
+            tiempo real: tres datos para abrir el acceso, y en pocos minutos vincularás tu
+            chaleco y calibrarás tu postura de referencia.
           </p>
         </div>
-
-        <footer className="relative flex items-end justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-sand opacity-70">
-          <span>
-            <span className="text-terracotta">№ 02</span> · Identidad &amp; Acceso
-          </span>
-          <span>UPC · Ingeniería de Software</span>
-        </footer>
       </section>
 
       <section className="flex flex-col bg-cream p-14">
@@ -159,10 +146,6 @@ export function RegisterPage() {
           </form>
         </div>
 
-        <footer className="flex items-center justify-between border-t border-sand pt-6 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-          <span>v 0.1.0 · piloto</span>
-          <span>Render · Netlify · MongoDB</span>
-        </footer>
       </section>
     </div>
   )
