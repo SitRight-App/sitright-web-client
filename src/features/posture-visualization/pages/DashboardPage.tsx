@@ -1,6 +1,7 @@
 import { useAuth } from '@/features/iam/context/AuthContext'
 import { RecommendationsCard } from '@/features/recommendations/components/RecommendationsCard'
 import { useRecommendations } from '@/features/recommendations/hooks/useRecommendations'
+import { SessionControls } from '@/features/session-history/components/SessionControls'
 import { BreakReminder } from '../components/BreakReminder'
 import { PostureAlert } from '../components/PostureAlert'
 import { PostureIndicator } from '../components/PostureIndicator'
@@ -262,8 +263,9 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* Full-width timeline below the grid */}
-      <div className="mt-4">
+      {/* Bottom: session controls + timeline */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-[360px_1fr]">
+        <SessionControls />
         <PostureTimeline
           readings={recent.data ?? []}
           isLoading={recent.isLoading}

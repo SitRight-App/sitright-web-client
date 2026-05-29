@@ -1,0 +1,48 @@
+import { Link } from 'react-router-dom'
+import { formatDuration, useLiveDuration } from '../hooks/useLiveDuration'
+import { useActiveSession } from '../hooks/useSessions'
+
+/**
+ * Pill del topbar que refleja el estado de la sesión actual.
+ *
+ * - Con sesión activa: fondo verde musgo + dot terracotta pulsando + cronómetro
+ *   en vivo. Click navega al dashboard donde está el control de cerrar.
+ * - Sin sesión activa: fondo sand claro + indicador estático. Click navega al
+ *   dashboard donde se puede iniciar una.
+ */
+export function ActiveSessionPill() {
+  const { data: active, isLoading } = useActiveSession()
+  const liveMs = useLiveDuration(active?.started_at ?? null)
+
+  if (isLoading) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full bg-sand/30 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">
+        <span className="h-1.5 w-1.5 rounded-full bg-ink-faint" />
+        Sin estado
+      </span>
+    )
+  }
+
+  if (active) {
+    return (
+      <Link
+        to="/"
+        className="inline-flex items-center gap-2 rounded-full bg-moss-deep px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-opacity hover:opacity-90"
+        title={`Sesión activa desde ${new Date(active.started_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`}
+      >
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-terracotta" />
+        Sesión · {formatDuration(liveMs)}
+      </Link>
+    )
+  }
+
+  return (
+    <Link
+      to="/"
+      className="inline-flex items-center gap-2 rounded-full border border-sand bg-cream-bone px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-ink-faint" />
+      Sin sesión activa
+    </Link>
+  )
+}

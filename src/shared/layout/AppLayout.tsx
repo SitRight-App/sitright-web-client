@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/iam/context/AuthContext'
 import { NotificationsBell } from '@/features/iam/components/NotificationsBell'
+import { ActiveSessionPill } from '@/features/session-history/components/ActiveSessionPill'
 import { Brandmark } from '@/shared/ui/Brandmark'
 
 const TOP_PAGES = [
@@ -99,10 +100,7 @@ export function AppLayout() {
         </nav>
 
         <div className="ml-auto flex items-center gap-6">
-          <span className="inline-flex items-center gap-2 rounded-full bg-moss-deep px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-terracotta" />
-            Monitoreo activo
-          </span>
+          <ActiveSessionPill />
 
           <NotificationsBell />
 
