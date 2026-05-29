@@ -1,26 +1,32 @@
 import { useState, type FormEvent } from 'react'
+import { useToast } from '@/shared/ui/toast'
 import { useLinkVest } from '../hooks/useMyVest'
 import type { LinkVestResponse } from '../types/vest'
 
 export function LinkVestForm() {
   const linkMutation = useLinkVest()
+  const toast = useToast()
   const [macAddress, setMacAddress] = useState('')
   const [pairingCode, setPairingCode] = useState('')
   const [credentials, setCredentials] = useState<LinkVestResponse | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    setError(null)
     try {
       const response = await linkMutation.mutateAsync({
         mac_address: macAddress.toUpperCase(),
         pairing_code: pairingCode,
       })
       setCredentials(response)
+      toast.success(
+        'Chaleco vinculado.',
+        'Guarda las credenciales MQTT que aparecen abajo.',
+      )
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Error desconocido'
-      setError(message)
+      toast.error(
+        'No se pudo vincular el chaleco.',
+        err instanceof Error ? err.message : 'Error desconocido',
+      )
     }
   }
 
@@ -87,11 +93,6 @@ export function LinkVestForm() {
           className="w-full border-0 border-b-[1.2px] border-ink bg-transparent py-2.5 text-[17px] text-ink focus:border-terracotta focus:outline-none"
         />
       </div>
-      {error && (
-        <p className="border-l-2 border-terracotta bg-terracotta/10 px-3 py-2 text-xs text-terracotta-deep">
-          {error}
-        </p>
-      )}
       <button
         type="submit"
         disabled={linkMutation.isPending}

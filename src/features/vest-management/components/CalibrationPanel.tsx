@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useToast } from '@/shared/ui/toast'
 import { useCalibrateVest } from '../hooks/useMyVest'
 
 interface Props {
@@ -8,12 +8,9 @@ interface Props {
 
 export function CalibrationPanel({ vestId, isCalibrated }: Props) {
   const calibrate = useCalibrateVest(vestId)
-  const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState(false)
+  const toast = useToast()
 
   async function handleCalibrate() {
-    setError(null)
-    setDone(false)
     try {
       const reference = { ax: 0, ay: 0, az: -1 }
       await calibrate.mutateAsync({
@@ -21,9 +18,12 @@ export function CalibrationPanel({ vestId, isCalibrated }: Props) {
         dorsal: reference,
         lumbar: reference,
       })
-      setDone(true)
+      toast.success('Calibración registrada.', 'Los sensores tomaron tu postura de referencia.')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido')
+      toast.error(
+        'No se pudo calibrar el chaleco.',
+        err instanceof Error ? err.message : 'Error desconocido',
+      )
     }
   }
 
@@ -42,17 +42,6 @@ export function CalibrationPanel({ vestId, isCalibrated }: Props) {
         Coloca el chaleco sobre el trabajador en posición erguida ideal antes de calibrar. La
         lectura actual quedará registrada como referencia para detectar desviaciones.
       </p>
-
-      {error && (
-        <p className="mt-4 border-l-2 border-terracotta bg-terracotta/10 px-3 py-2 text-xs text-terracotta-deep">
-          {error}
-        </p>
-      )}
-      {done && (
-        <p className="mt-4 border-l-2 border-moss bg-moss/10 px-3 py-2 text-xs text-moss">
-          Calibración registrada correctamente.
-        </p>
-      )}
 
       <button
         type="button"

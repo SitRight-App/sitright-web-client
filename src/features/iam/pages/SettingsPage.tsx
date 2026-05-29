@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useToast } from '@/shared/ui/toast'
 import { useAuth } from '../context/AuthContext'
 import { listMyNotifications, updateMe } from '../services/authService'
 import type { AppNotification } from '../types/auth'
@@ -36,7 +37,7 @@ export function SettingsPage() {
   const [alertThreshold, setAlertThreshold] = useState<number>(30)
   const [language, setLanguage] = useState('es')
   const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
+  const toast = useToast()
 
   useEffect(() => {
     if (!user) return
@@ -52,7 +53,6 @@ export function SettingsPage() {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    setMessage(null)
     setSaving(true)
     try {
       const updated = await updateMe({
@@ -64,12 +64,12 @@ export function SettingsPage() {
         language,
       })
       setUser(updated)
-      setMessage({ kind: 'ok', text: 'Cambios guardados.' })
+      toast.success('Cambios guardados.', 'Tu perfil quedó actualizado.')
     } catch (err) {
-      setMessage({
-        kind: 'error',
-        text: err instanceof Error ? err.message : 'Error desconocido',
-      })
+      toast.error(
+        'No se pudieron guardar los cambios.',
+        err instanceof Error ? err.message : 'Error desconocido',
+      )
     } finally {
       setSaving(false)
     }
@@ -217,17 +217,6 @@ export function SettingsPage() {
         </section>
 
         <div className="lg:col-span-3">
-          {message && (
-            <p
-              className={`mb-4 border-l-2 px-3 py-2 text-xs ${
-                message.kind === 'ok'
-                  ? 'border-moss bg-moss/10 text-moss'
-                  : 'border-terracotta bg-terracotta/10 text-terracotta-deep'
-              }`}
-            >
-              {message.text}
-            </p>
-          )}
           <button
             type="submit"
             disabled={saving}

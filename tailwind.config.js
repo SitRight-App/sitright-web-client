@@ -45,6 +45,15 @@ export default {
         widestest: '0.18em',
         widerer: '0.16em',
       },
+      keyframes: {
+        'toast-in': {
+          '0%': { opacity: '0', transform: 'translateX(20px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+      },
+      animation: {
+        'toast-in': 'toast-in 0.25s cubic-bezier(0.2, 0.7, 0.2, 1) forwards',
+      },
     },
   },
   plugins: [],

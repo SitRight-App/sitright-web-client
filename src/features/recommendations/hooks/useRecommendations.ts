@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useToast } from '@/shared/ui/toast'
 import {
   getAllRecommendations,
   getAppliedRecommendations,
@@ -36,20 +37,36 @@ export function useAppliedRecommendations() {
 
 export function useMarkRecommendationApplied() {
   const qc = useQueryClient()
+  const toast = useToast()
   return useMutation({
     mutationFn: markRecommendationApplied,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: APPLIED_KEY })
+      toast.success('Marcada como aplicada hoy.')
+    },
+    onError: (err) => {
+      toast.error(
+        'No se pudo marcar la recomendación.',
+        err instanceof Error ? err.message : undefined,
+      )
     },
   })
 }
 
 export function useUnmarkRecommendationApplied() {
   const qc = useQueryClient()
+  const toast = useToast()
   return useMutation({
     mutationFn: unmarkRecommendationApplied,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: APPLIED_KEY })
+      toast.info('Recomendación desmarcada.')
+    },
+    onError: (err) => {
+      toast.error(
+        'No se pudo desmarcar la recomendación.',
+        err instanceof Error ? err.message : undefined,
+      )
     },
   })
 }

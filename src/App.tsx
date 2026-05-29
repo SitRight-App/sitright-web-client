@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { ToastProvider } from '@/shared/ui/toast'
 import { AppLayout } from '@/shared/layout/AppLayout'
 import { DashboardPage } from '@/features/posture-visualization/pages/DashboardPage'
 import { AuthProvider } from '@/features/iam/context/AuthContext'
@@ -21,26 +22,28 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+      <ToastProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-            <Route element={<ProtectedRoute />}>
-              <Route element={<AppLayout />}>
-                <Route index element={<DashboardPage />} />
-                <Route path="history" element={<HistoryListPage />} />
-                <Route path="history/:sessionId" element={<SessionDetailPage />} />
-                <Route path="recommendations" element={<RecommendationsPage />} />
-                <Route path="vest" element={<VestManagementPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AppLayout />}>
+                  <Route index element={<DashboardPage />} />
+                  <Route path="history" element={<HistoryListPage />} />
+                  <Route path="history/:sessionId" element={<SessionDetailPage />} />
+                  <Route path="recommendations" element={<RecommendationsPage />} />
+                  <Route path="vest" element={<VestManagementPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Route>
               </Route>
-            </Route>
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </ToastProvider>
     </QueryClientProvider>
   )
 }
