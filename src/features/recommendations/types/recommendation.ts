@@ -18,6 +18,11 @@ export interface RecommendationStep {
   meta: string
 }
 
+export interface AppliedRecommendation {
+  recommendation_id: string
+  applied_at: string
+}
+
 /**
  * Recomendación entregada por el backend.
  *

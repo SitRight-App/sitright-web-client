@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react'
-import { useAllRecommendations } from '../hooks/useRecommendations'
+import {
+  useAllRecommendations,
+  useAppliedRecommendations,
+  useMarkRecommendationApplied,
+  useUnmarkRecommendationApplied,
+} from '../hooks/useRecommendations'
 import { RecommendationIcon } from '../components/RecommendationIcon'
 import type {
   Recommendation,
@@ -7,6 +12,7 @@ import type {
 } from '../types/recommendation'
 
 type CategoryFilter = 'all' | RecommendationCategory
+type StatusFilter = 'all' | 'pending' | 'applied'
 
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   all: 'Todas',
@@ -21,7 +27,31 @@ const TAG_STYLES: Record<RecommendationCategory, string> = {
   general: 'bg-moss/10 text-moss border border-moss/25',
 }
 
-function countByCategory(entries: Recommendation[]): Record<CategoryFilter, number> {
+const timeFmt = new Intl.DateTimeFormat('es-PE', {
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+interface DecoratedRecommendation extends Recommendation {
+  applied: boolean
+  appliedAt: string | null
+}
+
+function decorate(
+  catalog: Recommendation[],
+  appliedIds: Set<string>,
+  appliedAtMap: Map<string, string>,
+): DecoratedRecommendation[] {
+  return catalog.map((r) => ({
+    ...r,
+    applied: appliedIds.has(r.id),
+    appliedAt: appliedAtMap.get(r.id) ?? null,
+  }))
+}
+
+function countByCategory(
+  entries: DecoratedRecommendation[],
+): Record<CategoryFilter, number> {
   const counts: Record<CategoryFilter, number> = {
     all: entries.length,
     lumbar: 0,
@@ -37,10 +67,22 @@ function countByCategory(entries: Recommendation[]): Record<CategoryFilter, numb
 }
 
 export function RecommendationsPage() {
-  const { data, isLoading, isError } = useAllRecommendations()
-  const [category, setCategory] = useState<CategoryFilter>('all')
+  const catalog = useAllRecommendations()
+  const applied = useAppliedRecommendations()
+  const mark = useMarkRecommendationApplied()
+  const unmark = useUnmarkRecommendationApplied()
 
-  const allEntries = data ?? []
+  const [category, setCategory] = useState<CategoryFilter>('all')
+  const [status, setStatus] = useState<StatusFilter>('all')
+
+  const allEntries = useMemo<DecoratedRecommendation[]>(() => {
+    const appliedIds = new Set((applied.data ?? []).map((a) => a.recommendation_id))
+    const appliedAtMap = new Map<string, string>()
+    for (const a of applied.data ?? []) {
+      appliedAtMap.set(a.recommendation_id, a.applied_at)
+    }
+    return decorate(catalog.data ?? [], appliedIds, appliedAtMap)
+  }, [catalog.data, applied.data])
 
   const featured = useMemo(
     () => allEntries.find((r) => r.is_featured) ?? null,
@@ -53,11 +95,30 @@ export function RecommendationsPage() {
   )
 
   const counts = useMemo(() => countByCategory(gridEntries), [gridEntries])
+  const appliedCount = useMemo(() => gridEntries.filter((r) => r.applied).length, [
+    gridEntries,
+  ])
 
   const filtered = useMemo(() => {
-    if (category === 'all') return gridEntries
-    return gridEntries.filter((entry) => entry.category === category)
-  }, [gridEntries, category])
+    return gridEntries.filter((entry) => {
+      if (category !== 'all' && entry.category !== category) return false
+      if (status === 'applied' && !entry.applied) return false
+      if (status === 'pending' && entry.applied) return false
+      return true
+    })
+  }, [gridEntries, category, status])
+
+  const handleToggle = (entry: DecoratedRecommendation) => {
+    if (mark.isPending || unmark.isPending) return
+    if (entry.applied) {
+      unmark.mutate(entry.id)
+    } else {
+      mark.mutate(entry.id)
+    }
+  }
+
+  const isLoading = catalog.isLoading || applied.isLoading
+  const isError = catalog.isError
 
   return (
     <div>
@@ -72,9 +133,10 @@ export function RecommendationsPage() {
           <em className="italic font-normal text-moss">columnas más sanas.</em>
         </h1>
         <div className="text-right font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-          Catálogo de recomendaciones
+          Aplicadas hoy
           <div className="mt-1.5 font-serif text-3xl normal-case tracking-tight text-ink">
-            {gridEntries.length} <span className="text-ink-faint">disponibles</span>
+            {appliedCount}{' '}
+            <span className="text-ink-faint">/ {gridEntries.length}</span>
           </div>
         </div>
       </div>
@@ -91,10 +153,15 @@ export function RecommendationsPage() {
         </p>
       )}
 
-      {/* Hero — featured recommendation */}
-      {featured && <FeaturedHero featured={featured} />}
+      {featured && (
+        <FeaturedHero
+          featured={featured}
+          onMark={() => mark.mutate(featured.id)}
+          onUnmark={() => unmark.mutate(featured.id)}
+          isMutating={mark.isPending || unmark.isPending}
+        />
+      )}
 
-      {/* Filter row */}
       {gridEntries.length > 0 && (
         <div className="mb-6 flex flex-wrap items-center gap-3">
           <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
@@ -114,13 +181,36 @@ export function RecommendationsPage() {
               {CATEGORY_LABELS[cat]} · {counts[cat]}
             </button>
           ))}
+          <span className="ml-4 mr-1 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+            Estado
+          </span>
+          {(['pending', 'applied'] as StatusFilter[]).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStatus(status === s ? 'all' : s)}
+              className={`rounded-full border px-4 py-2 text-xs transition-colors ${
+                status === s
+                  ? 'border-ink bg-ink text-cream'
+                  : 'border-sand bg-transparent text-ink hover:border-ink'
+              }`}
+            >
+              {s === 'pending'
+                ? `Pendientes · ${gridEntries.length - appliedCount}`
+                : `Aplicadas · ${appliedCount}`}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* Grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((entry) => (
-          <RecommendationCard key={entry.id} entry={entry} />
+          <RecommendationCard
+            key={entry.id}
+            entry={entry}
+            onToggle={() => handleToggle(entry)}
+            disabled={mark.isPending || unmark.isPending}
+          />
         ))}
         {!isLoading && filtered.length === 0 && !isError && (
           <div className="col-span-full border border-dashed border-sand p-10 text-center">
@@ -128,7 +218,7 @@ export function RecommendationsPage() {
               No hay recomendaciones en este filtro.
             </p>
             <p className="mt-1.5 text-sm text-ink-soft">
-              Ajustá los filtros de categoría.
+              Ajustá los filtros de categoría o estado.
             </p>
           </div>
         )}
@@ -138,10 +228,13 @@ export function RecommendationsPage() {
 }
 
 interface FeaturedHeroProps {
-  featured: Recommendation
+  featured: DecoratedRecommendation
+  onMark: () => void
+  onUnmark: () => void
+  isMutating: boolean
 }
 
-function FeaturedHero({ featured }: FeaturedHeroProps) {
+function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroProps) {
   const titleEmphasis = featured.featured_title_emphasis ?? ''
   const titleMain = featured.title.replace(titleEmphasis, '').trim()
 
@@ -175,20 +268,32 @@ function FeaturedHero({ featured }: FeaturedHeroProps) {
             {featured.featured_body}
           </p>
         )}
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            className="inline-flex items-center gap-2.5 border border-terracotta bg-terracotta px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:bg-terracotta-deep"
-          >
-            Marcar como aplicada
-            <span aria-hidden>→</span>
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2.5 border border-cream/30 bg-transparent px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:border-cream"
-          >
-            Posponer 30 min
-          </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {featured.applied ? (
+            <>
+              <span className="inline-flex items-center gap-2.5 border border-terracotta-soft bg-terracotta-soft/20 px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream">
+                ✓ Aplicada{featured.appliedAt && ` · ${timeFmt.format(new Date(featured.appliedAt))}`}
+              </span>
+              <button
+                type="button"
+                onClick={onUnmark}
+                disabled={isMutating}
+                className="inline-flex items-center gap-2.5 border border-cream/30 bg-transparent px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:border-cream disabled:opacity-50"
+              >
+                Desmarcar
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={onMark}
+              disabled={isMutating}
+              className="inline-flex items-center gap-2.5 border border-terracotta bg-terracotta px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:bg-terracotta-deep disabled:opacity-50"
+            >
+              {isMutating ? 'Marcando…' : 'Marcar como aplicada'}
+              <span aria-hidden>→</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -224,25 +329,45 @@ function FeaturedHero({ featured }: FeaturedHeroProps) {
 }
 
 interface CardProps {
-  entry: Recommendation
+  entry: DecoratedRecommendation
+  onToggle: () => void
+  disabled: boolean
 }
 
-function RecommendationCard({ entry }: CardProps) {
+function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
   const category = entry.category as RecommendationCategory
+  const isApplied = entry.applied
   return (
-    <article className="group relative flex min-h-[360px] cursor-pointer flex-col rounded-md border border-sand bg-cream-bone p-6 transition-all hover:-translate-y-0.5 hover:border-ink">
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={disabled}
+      className={`group relative flex min-h-[360px] flex-col rounded-md border p-6 text-left transition-all hover:-translate-y-0.5 hover:border-ink disabled:opacity-60 ${
+        isApplied
+          ? 'border-dashed border-moss/30 bg-moss/[0.05]'
+          : 'border-sand bg-cream-bone'
+      }`}
+    >
       <div className="mb-6 flex items-start justify-between">
         <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
           {entry.number}
         </span>
         <span
-          className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.16em] ${TAG_STYLES[category] ?? TAG_STYLES.general}`}
+          className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.16em] ${
+            isApplied
+              ? 'bg-moss/15 text-moss border border-moss/30'
+              : TAG_STYLES[category] ?? TAG_STYLES.general
+          }`}
         >
-          {CATEGORY_LABELS[category] ?? 'General'}
+          {isApplied ? 'Aplicada hoy' : CATEGORY_LABELS[category] ?? 'General'}
         </span>
       </div>
 
-      <div className="mb-5 grid h-20 w-20 place-items-center rounded-full border border-sand bg-cream text-moss">
+      <div
+        className={`mb-5 grid h-20 w-20 place-items-center rounded-full border border-sand ${
+          isApplied ? 'bg-moss/[0.08] text-moss' : 'bg-cream text-moss'
+        }`}
+      >
         <RecommendationIcon icon={entry.icon} />
       </div>
 
@@ -252,9 +377,19 @@ function RecommendationCard({ entry }: CardProps) {
       <p className="mb-auto text-[13px] leading-relaxed text-ink-soft">{entry.description}</p>
 
       <div className="mt-4 flex items-center justify-between border-t border-dashed border-sand pt-4 font-mono text-[11px] text-ink-soft">
-        <span>{entry.frequency_label}</span>
-        <span className="text-base text-ink transition-transform group-hover:translate-x-1">→</span>
+        <span>
+          {isApplied && entry.appliedAt
+            ? `Aplicada · ${timeFmt.format(new Date(entry.appliedAt))}`
+            : entry.frequency_label}
+        </span>
+        <span
+          className={`text-base transition-transform group-hover:translate-x-1 ${
+            isApplied ? 'text-moss' : 'text-ink'
+          }`}
+        >
+          {isApplied ? '✓' : '→'}
+        </span>
       </div>
-    </article>
+    </button>
   )
 }

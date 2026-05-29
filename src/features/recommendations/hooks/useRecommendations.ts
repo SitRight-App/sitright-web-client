@@ -1,8 +1,13 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   getAllRecommendations,
+  getAppliedRecommendations,
   getRecommendationsByClass,
+  markRecommendationApplied,
+  unmarkRecommendationApplied,
 } from '../services/recommendationsService'
+
+const APPLIED_KEY = ['recommendations', 'applied'] as const
 
 export function useRecommendations(postureClass: string | undefined) {
   return useQuery({
@@ -18,5 +23,33 @@ export function useAllRecommendations() {
     queryKey: ['recommendations', 'all'],
     queryFn: getAllRecommendations,
     staleTime: 5 * 60_000,
+  })
+}
+
+export function useAppliedRecommendations() {
+  return useQuery({
+    queryKey: APPLIED_KEY,
+    queryFn: getAppliedRecommendations,
+    staleTime: 30_000,
+  })
+}
+
+export function useMarkRecommendationApplied() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: markRecommendationApplied,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: APPLIED_KEY })
+    },
+  })
+}
+
+export function useUnmarkRecommendationApplied() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: unmarkRecommendationApplied,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: APPLIED_KEY })
+    },
   })
 }
