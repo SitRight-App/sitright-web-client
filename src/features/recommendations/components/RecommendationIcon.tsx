@@ -1,7 +1,7 @@
-import type { RecommendationCatalogEntry } from '../types/recommendation'
+import type { RecommendationIconSlug } from '../types/recommendation'
 
 interface Props {
-  icon: RecommendationCatalogEntry['icon']
+  icon: RecommendationIconSlug
   size?: number
 }
 
@@ -13,6 +13,24 @@ interface Props {
  */
 export function RecommendationIcon({ icon, size = 40 }: Props) {
   switch (icon) {
+    case 'lumbar-stretch':
+      return (
+        <svg viewBox="0 0 40 40" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.4}>
+          <circle cx="20" cy="10" r="3" />
+          <line x1="20" y1="13" x2="20" y2="22" />
+          <path d="M20 22l-7 10" />
+          <path d="M20 22l8 4" />
+          <line x1="13" y1="32" x2="28" y2="26" strokeDasharray="2 2" />
+        </svg>
+      )
+    case 'vest-check':
+      return (
+        <svg viewBox="0 0 40 40" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.4}>
+          <path d="M10 8v24h20V8l-6 5h-8l-6-5z" />
+          <circle cx="20" cy="20" r="2.5" />
+          <path d="M15 26h10" />
+        </svg>
+      )
     case 'lumbar-slouch':
       return (
         <svg viewBox="0 0 40 40" width={size} height={size} fill="none" stroke="currentColor" strokeWidth={1.4}>

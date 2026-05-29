@@ -9,13 +9,48 @@ import { describe, expect, it } from 'vitest'
 import { RecommendationsCard } from './RecommendationsCard'
 import type { Recommendation } from '../types/recommendation'
 
+function makeRec(overrides: Partial<Recommendation>): Recommendation {
+  return {
+    id: 'test-rec',
+    number: '№ 99',
+    title: 'placeholder',
+    description: 'placeholder',
+    category: 'general',
+    icon: 'pause',
+    frequency_label: 'placeholder',
+    posture_classes: ['forward_slouch'],
+    is_featured: false,
+    featured_tagline: null,
+    featured_title_emphasis: null,
+    featured_body: null,
+    steps: [],
+    ...overrides,
+  }
+}
+
 const FORWARD_SLOUCH_RECS: Recommendation[] = [
-  { title: 'Ajusta la altura del monitor', description: 'Sube el monitor a la altura de los ojos.' },
-  { title: 'Ejercicios de extensión cervical', description: 'Inclina la cabeza hacia atrás.' },
+  makeRec({
+    id: 'r1',
+    title: 'Ajusta la altura del monitor',
+    description: 'Sube el monitor a la altura de los ojos.',
+    icon: 'monitor',
+  }),
+  makeRec({
+    id: 'r2',
+    title: 'Ejercicios de extensión cervical',
+    description: 'Inclina la cabeza hacia atrás.',
+    icon: 'cervical-retract',
+    category: 'cervical',
+  }),
 ]
 
 const ADEQUATE_RECS: Recommendation[] = [
-  { title: '¡Excelente postura!', description: 'Mantén esta posición.' },
+  makeRec({
+    id: 'r3',
+    title: '¡Excelente postura!',
+    description: 'Mantén esta posición.',
+    posture_classes: ['adequate'],
+  }),
 ]
 
 describe('RecommendationsCard — HU-10', () => {
@@ -24,8 +59,8 @@ describe('RecommendationsCard — HU-10', () => {
     render(<RecommendationsCard recommendations={FORWARD_SLOUCH_RECS} postureClass="forward_slouch" />)
     expect(screen.getByText(/ajusta la altura del monitor/i)).toBeInTheDocument()
     expect(screen.getByText(/ejercicios de extensión cervical/i)).toBeInTheDocument()
-    expect(screen.getByText('1')).toBeInTheDocument()
-    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText('01')).toBeInTheDocument()
+    expect(screen.getByText('02')).toBeInTheDocument()
   })
 
   // Happy: adequate → mensaje positivo
