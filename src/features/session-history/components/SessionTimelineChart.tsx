@@ -3,6 +3,7 @@ import type {
   PostureClass,
   TimelineReading,
 } from '@/features/posture-visualization/types/posture'
+import { Skeleton } from '@/shared/ui/Skeleton'
 
 interface Props {
   readings: TimelineReading[]
@@ -79,9 +80,14 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
   }
   if (isLoading) {
     return (
-      <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint">
-        Cargando línea de tiempo…
-      </p>
+      <div>
+        <Skeleton width="100%" height={CHART_H} />
+        <div className="ml-14 mt-4 flex gap-5">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} width={90} height={10} />
+          ))}
+        </div>
+      </div>
     )
   }
   if (readings.length < 2) {

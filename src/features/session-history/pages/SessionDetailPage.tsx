@@ -5,6 +5,7 @@ import type {
   PostureClass,
   TimelineReading,
 } from '@/features/posture-visualization/types/posture'
+import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { SessionSpineSnapshot } from '../components/SessionSpineSnapshot'
 import { SessionTimelineChart } from '../components/SessionTimelineChart'
 import { useSession } from '../hooks/useSessions'
@@ -134,11 +135,7 @@ export function SessionDetailPage() {
   )
 
   if (isLoading) {
-    return (
-      <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint">
-        Cargando sesión…
-      </p>
-    )
+    return <SessionDetailSkeleton />
   }
 
   if (isError || !session) {
@@ -169,6 +166,55 @@ export function SessionDetailPage() {
         recommendations={recs.data ?? []}
         dominant={dominant}
       />
+    </div>
+  )
+}
+
+function SessionDetailSkeleton() {
+  return (
+    <div>
+      <SkeletonTextLine width={260} className="mb-4" />
+      <section className="mb-9 grid gap-12 border-b border-sand pb-8 lg:grid-cols-[1fr_360px]">
+        <div>
+          <div className="mb-5 flex flex-wrap gap-7">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonTextLine key={i} width={120} />
+            ))}
+          </div>
+          <Skeleton width="70%" height={56} className="mb-3" />
+          <Skeleton width="60%" height={56} className="mb-4" />
+          <Skeleton width="100%" height={56} />
+        </div>
+        <Skeleton width="100%" height={280} />
+      </section>
+      <div className="mb-7 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <SkeletonCard key={i}>
+            <SkeletonTextLine width="60%" className="mb-4" />
+            <Skeleton width="50%" height={40} />
+            <SkeletonTextLine width="70%" className="mt-3" />
+          </SkeletonCard>
+        ))}
+      </div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <SkeletonCard>
+          <SkeletonTextLine width="40%" />
+          <Skeleton width="70%" height={28} className="mt-2" />
+          <Skeleton width="100%" height={260} className="mt-6" />
+        </SkeletonCard>
+        <SkeletonCard className="bg-cream-deep">
+          <SkeletonTextLine width="30%" />
+          <Skeleton width="80%" height={24} className="mt-3" />
+          <div className="mt-6 space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i}>
+                <SkeletonTextLine width="70%" />
+                <Skeleton width="100%" height={6} className="mt-1.5" />
+              </div>
+            ))}
+          </div>
+        </SkeletonCard>
+      </div>
     </div>
   )
 }

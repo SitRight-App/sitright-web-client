@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { useToast } from '@/shared/ui/toast'
 import { useAuth } from '../context/AuthContext'
 import { listMyNotifications, updateMe } from '../services/authService'
@@ -271,9 +272,21 @@ function NotificationsPanel() {
       )}
 
       {isLoading && (
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint">
-          Cargando…
-        </p>
+        <ul>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <li
+              key={i}
+              className="grid grid-cols-[28px_1fr_auto] items-start gap-4 py-3.5"
+            >
+              <Skeleton width={8} height={8} circle className="mt-1.5" />
+              <div className="space-y-1.5">
+                <SkeletonTextLine width="80%" />
+                <SkeletonTextLine width="40%" />
+              </div>
+              <SkeletonTextLine width={60} />
+            </li>
+          ))}
+        </ul>
       )}
 
       {!isLoading && data && data.length === 0 && (

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import {
   useAllRecommendations,
   useAppliedRecommendations,
@@ -148,9 +149,38 @@ export function RecommendationsPage() {
       )}
 
       {isLoading && (
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint">
-          Cargando catálogo…
-        </p>
+        <>
+          <section className="mb-9 grid grid-cols-1 overflow-hidden rounded-md border border-sand bg-cream lg:grid-cols-[1.3fr_1fr]">
+            <div className="p-9" style={{ backgroundColor: 'rgb(var(--color-moss-deep))' }}>
+              <Skeleton width="60%" height={12} className="bg-sand/30" />
+              <Skeleton width="80%" height={48} className="mt-5 bg-sand/30" />
+              <Skeleton width="60%" height={48} className="mt-2 bg-sand/30" />
+              <Skeleton width="100%" height={56} className="mt-6 bg-sand/30" />
+            </div>
+            <div className="bg-cream-deep p-9">
+              <SkeletonTextLine width="40%" />
+              <div className="mt-4 space-y-3.5">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} width="100%" height={36} />
+                ))}
+              </div>
+            </div>
+          </section>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonCard key={i} className="min-h-[360px]">
+                <div className="mb-6 flex items-start justify-between">
+                  <SkeletonTextLine width={48} />
+                  <Skeleton width={64} height={16} pill />
+                </div>
+                <Skeleton width={80} height={80} circle className="mb-5" />
+                <Skeleton width="80%" height={24} />
+                <Skeleton width="60%" height={24} className="mt-2" />
+                <Skeleton width="100%" height={36} className="mt-3" />
+              </SkeletonCard>
+            ))}
+          </div>
+        </>
       )}
 
       {featured && (

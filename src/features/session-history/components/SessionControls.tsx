@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useMyVest } from '@/features/vest-management/hooks/useMyVest'
+import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { formatDuration, useLiveDuration } from '../hooks/useLiveDuration'
 import { useActiveSession, useCloseSession, useStartSession } from '../hooks/useSessions'
 
@@ -46,9 +47,11 @@ export function SessionControls() {
       </h2>
 
       {isLoading && (
-        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-          Cargando…
-        </p>
+        <div className="mt-4 space-y-3">
+          <SkeletonTextLine width="80%" />
+          <SkeletonTextLine width="60%" />
+          <Skeleton width={160} height={44} className="mt-5" />
+        </div>
       )}
 
       {!isLoading && !vest && <NoVestState />}

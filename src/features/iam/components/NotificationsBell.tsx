@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import {
   useMarkNotificationRead,
   useMyNotifications,
@@ -137,9 +138,21 @@ function NotificationsDropdown({
         )}
 
         {isLoading && (
-          <p className="px-5 py-4 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-            Cargando…
-          </p>
+          <ul>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <li
+                key={i}
+                className="grid grid-cols-[20px_1fr_auto] items-start gap-3 border-b border-dashed border-sand px-5 py-4 last:border-0"
+              >
+                <Skeleton width={8} height={8} circle className="mt-1.5" />
+                <div className="space-y-1.5">
+                  <SkeletonTextLine width="85%" />
+                  <SkeletonTextLine width="40%" />
+                </div>
+                <SkeletonTextLine width={56} />
+              </li>
+            ))}
+          </ul>
         )}
 
         {!isLoading && notifications.length === 0 && !isError && (

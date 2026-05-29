@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { useSessions } from '../hooks/useSessions'
 import type { PostureSession } from '../types/session'
 
@@ -96,9 +97,31 @@ export function HistoryListPage() {
         )}
 
         {isLoading && (
-          <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-faint">
-            Cargando…
-          </p>
+          <div>
+            <div className="grid grid-cols-[1fr_120px_120px_120px_120px_24px] gap-5 border-b border-sand px-6 pb-3.5 font-mono text-[9px] uppercase tracking-[0.20em] text-ink-faint">
+              <span>Inicio</span>
+              <span>Duración</span>
+              <span>Lecturas</span>
+              <span>Adecuada</span>
+              <span>Estado</span>
+              <span />
+            </div>
+            <div className="mt-1.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="grid grid-cols-[1fr_120px_120px_120px_120px_24px] items-center gap-5 border-b border-sand px-6 py-5"
+                >
+                  <SkeletonTextLine width="60%" />
+                  <SkeletonTextLine width="50%" />
+                  <SkeletonTextLine width="40%" />
+                  <SkeletonTextLine width="40%" />
+                  <Skeleton width={72} height={20} pill />
+                  <SkeletonTextLine width={12} />
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {!isLoading && sessions && sessions.length === 0 && (

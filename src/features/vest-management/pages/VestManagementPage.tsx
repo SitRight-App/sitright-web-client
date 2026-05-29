@@ -1,5 +1,6 @@
 import { useCurrentPosture } from '@/features/posture-visualization/hooks/useCurrentPosture'
 import type { PostureClass } from '@/features/posture-visualization/types/posture'
+import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { CalibrationPanel } from '../components/CalibrationPanel'
 import { LinkVestForm } from '../components/LinkVestForm'
 import { VestIllustration } from '../components/VestIllustration'
@@ -57,9 +58,30 @@ export function VestManagementPage() {
       )}
 
       {isLoading && (
-        <p className="mt-6 font-mono text-xs uppercase tracking-[0.18em] text-ink-faint">
-          Cargando…
-        </p>
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <SkeletonCard>
+            <SkeletonTextLine width="50%" />
+            <Skeleton width="80%" height={32} className="mt-4" />
+            <Skeleton width={220} height={220} className="mx-auto mt-8" circle />
+            <div className="mt-6 grid grid-cols-4 gap-4 border-t border-dashed border-sand pt-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i}>
+                  <SkeletonTextLine width="60%" />
+                  <Skeleton width="80%" height={18} className="mt-2" />
+                </div>
+              ))}
+            </div>
+          </SkeletonCard>
+          <div className="flex flex-col gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonCard key={i}>
+                <SkeletonTextLine width="40%" />
+                <Skeleton width="70%" height={24} className="mt-3" />
+                <Skeleton width="100%" height={60} className="mt-4" />
+              </SkeletonCard>
+            ))}
+          </div>
+        </div>
       )}
 
       {!isLoading && !vest && <UnlinkedState />}
