@@ -11,6 +11,7 @@ import { HistoryListPage } from '@/features/session-history/pages/HistoryListPag
 import { SessionDetailPage } from '@/features/session-history/pages/SessionDetailPage'
 import { VestManagementPage } from '@/features/vest-management/pages/VestManagementPage'
 import { SettingsPage } from '@/features/iam/pages/SettingsPage'
+import { AdminPage } from '@/features/iam/pages/AdminPage'
 import { RecommendationsPage } from '@/features/recommendations/pages/RecommendationsPage'
 
 const queryClient = new QueryClient({
@@ -37,6 +38,7 @@ export default function App() {
                   <Route path="recommendations" element={<RecommendationsPage />} />
                   <Route path="vest" element={<VestManagementPage />} />
                   <Route path="settings" element={<SettingsPage />} />
+                  <Route path="admin" element={<AdminPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
               </Route>

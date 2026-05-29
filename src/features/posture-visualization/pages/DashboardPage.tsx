@@ -1,7 +1,9 @@
+import { motion } from 'framer-motion'
 import { useAuth } from '@/features/iam/context/AuthContext'
 import { RecommendationsCard } from '@/features/recommendations/components/RecommendationsCard'
 import { useRecommendations } from '@/features/recommendations/hooks/useRecommendations'
 import { SessionControls } from '@/features/session-history/components/SessionControls'
+import { staggerContainer, staggerItem } from '@/shared/ui/motion'
 import { BreakReminder } from '../components/BreakReminder'
 import { PostureAlert } from '../components/PostureAlert'
 import { PostureIndicator } from '../components/PostureIndicator'
@@ -92,13 +94,21 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr_360px]">
-        <div className="lg:row-span-2">
+      <motion.div
+        className="grid gap-4 lg:grid-cols-[320px_1fr_360px]"
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
+      >
+        <motion.div variants={staggerItem} className="lg:row-span-2">
           <PostureIndicator reading={reading ?? null} isLoading={isLoading} />
-        </div>
+        </motion.div>
 
         {/* Center column: large spine viz placeholder */}
-        <div className="relative editorial-card overflow-hidden bg-cream-deep p-8 lg:row-span-2">
+        <motion.div
+          variants={staggerItem}
+          className="relative editorial-card overflow-hidden bg-cream-deep p-8 lg:row-span-2"
+        >
           <span className="num-tag absolute right-5 top-5">№ 02</span>
           <p className="label-mono">Visualización vertebral</p>
           <h2 className="mt-2 font-serif text-2xl tracking-tight text-ink">
@@ -215,10 +225,10 @@ export function DashboardPage() {
             </div>
             <span>tasa · 5 s</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Right column: metrics card */}
-        <div className="relative editorial-card p-7">
+        <motion.div variants={staggerItem} className="relative editorial-card p-7">
           <span className="num-tag absolute right-5 top-5">№ 03</span>
           <p className="label-mono">Lectura actual</p>
           <div className="mt-4 flex items-baseline gap-2">
@@ -250,18 +260,18 @@ export function DashboardPage() {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Right column bottom: recommendations */}
-        <div>
+        <motion.div variants={staggerItem}>
           {recommendations && recommendations.length > 0 && (
             <RecommendationsCard
               recommendations={recommendations}
               postureClass={reading?.posture_class ?? 'indeterminate'}
             />
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Bottom: session controls + timeline */}
       <div className="mt-4 grid gap-4 lg:grid-cols-[360px_1fr]">

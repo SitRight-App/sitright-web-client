@@ -1,15 +1,20 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/iam/context/AuthContext'
 import { NotificationsBell } from '@/features/iam/components/NotificationsBell'
 import { ActiveSessionPill } from '@/features/session-history/components/ActiveSessionPill'
 import { Brandmark } from '@/shared/ui/Brandmark'
+import { pageTransition } from '@/shared/ui/motion'
 
-const TOP_PAGES = [
+type NavPage = { to: string; label: string; end?: boolean; adminOnly?: boolean }
+
+const TOP_PAGES: NavPage[] = [
   { to: '/', label: 'Postura en vivo', end: true },
   { to: '/history', label: 'Historial' },
   { to: '/recommendations', label: 'Recomendaciones' },
   { to: '/vest', label: 'Chaleco' },
   { to: '/settings', label: 'Configuración' },
+  { to: '/admin', label: 'Admin', adminOnly: true },
 ]
 
 const SIDEBAR_ICONS = [
@@ -70,6 +75,7 @@ function userInitial(name: string): string {
 export function AppLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   function handleLogout() {
     logout()
@@ -85,18 +91,20 @@ export function AppLayout() {
         </div>
 
         <nav className="flex items-center gap-7 px-7 font-mono text-[11px] uppercase tracking-[0.16em] text-ink-soft">
-          {TOP_PAGES.map(({ to, label, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `py-1.5 ${isActive ? 'border-b-[1.4px] border-terracotta text-ink' : ''}`
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
+          {TOP_PAGES.filter((p) => !p.adminOnly || user?.role === 'admin').map(
+            ({ to, label, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  `py-1.5 ${isActive ? 'border-b-[1.4px] border-terracotta text-ink' : ''}`
+                }
+              >
+                {label}
+              </NavLink>
+            ),
+          )}
         </nav>
 
         <div className="ml-auto flex items-center gap-6">
@@ -170,9 +178,19 @@ export function AppLayout() {
         </div>
       </aside>
 
-      {/* main */}
+      {/* main — anima cada cambio de ruta con un fade-up suave */}
       <main className="overflow-y-auto px-12 py-8">
-        <Outlet />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            variants={pageTransition}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   )

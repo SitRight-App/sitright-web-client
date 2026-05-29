@@ -142,15 +142,49 @@ export function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-7 text-center text-[13px] text-ink-soft">
-            ¿Eres administrador?{' '}
-            <a href="#" className="border-b border-ink text-ink">
-              Acceso restringido
-            </a>
-          </p>
+          <DemoCredentialsHint
+            onUse={(creds) => {
+              setEmail(creds.email)
+              setPassword(creds.password)
+            }}
+          />
         </div>
 
       </section>
+    </div>
+  )
+}
+
+interface DemoCreds {
+  label: string
+  email: string
+  password: string
+}
+
+const DEMO_CREDS: DemoCreds[] = [
+  { label: 'Trabajador', email: 'demo@sitright.app', password: 'Demo1234!' },
+  { label: 'Administrador', email: 'admin@sitright.app', password: 'Admin1234!' },
+]
+
+function DemoCredentialsHint({ onUse }: { onUse: (creds: DemoCreds) => void }) {
+  return (
+    <div className="mt-9 border-t border-sand pt-5">
+      <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+        ¿Solo querés probar? Cuentas demo
+      </p>
+      <div className="flex flex-wrap gap-2.5">
+        {DEMO_CREDS.map((c) => (
+          <button
+            key={c.email}
+            type="button"
+            onClick={() => onUse(c)}
+            className="inline-flex items-center gap-2 border border-sand bg-cream-bone px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-terracotta" />
+            Entrar como {c.label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
