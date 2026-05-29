@@ -46,3 +46,13 @@ export async function updateMe(body: UpdateProfileRequest): Promise<AuthUser> {
 export async function listMyNotifications(): Promise<AppNotification[]> {
   return apiFetch<AppNotification[]>('/users/me/notifications')
 }
+
+export async function countUnreadNotifications(): Promise<{ count: number }> {
+  return apiFetch<{ count: number }>('/users/me/notifications/unread-count')
+}
+
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  return apiFetch<void>(`/users/me/notifications/${notificationId}/read`, {
+    method: 'PATCH',
+  })
+}

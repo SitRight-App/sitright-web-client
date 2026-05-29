@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/iam/context/AuthContext'
+import { NotificationsBell } from '@/features/iam/components/NotificationsBell'
 import { Brandmark } from '@/shared/ui/Brandmark'
 
 const TOP_PAGES = [
@@ -102,6 +103,8 @@ export function AppLayout() {
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-terracotta" />
             Monitoreo activo
           </span>
+
+          <NotificationsBell />
 
           {user && (
             <button
