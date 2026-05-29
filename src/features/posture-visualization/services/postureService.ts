@@ -13,6 +13,8 @@ export async function getLatestReading(): Promise<LatestReading | null> {
 interface RecentReadingsOptions {
   limit?: number
   minutes?: number
+  since?: string
+  until?: string
 }
 
 export async function getRecentReadings(
@@ -21,6 +23,8 @@ export async function getRecentReadings(
   const params = new URLSearchParams()
   if (opts.limit) params.set('limit', String(opts.limit))
   if (opts.minutes) params.set('minutes', String(opts.minutes))
+  if (opts.since) params.set('since', opts.since)
+  if (opts.until) params.set('until', opts.until)
   const qs = params.toString()
   return apiFetch<TimelineReading[]>(`/readings/recent${qs ? `?${qs}` : ''}`)
 }
