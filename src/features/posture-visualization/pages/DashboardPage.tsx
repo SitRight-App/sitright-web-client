@@ -4,10 +4,12 @@ import { useRecommendations } from '@/features/recommendations/hooks/useRecommen
 import { BreakReminder } from '../components/BreakReminder'
 import { PostureAlert } from '../components/PostureAlert'
 import { PostureIndicator } from '../components/PostureIndicator'
+import { PostureTimeline } from '../components/PostureTimeline'
 import { VestStatusBadge } from '../components/VestStatusBadge'
 import { useBreakReminder } from '../hooks/useBreakReminder'
 import { useCurrentPosture } from '../hooks/useCurrentPosture'
 import { useProlongedBadPosture } from '../hooks/useProlongedBadPosture'
+import { useRecentReadings } from '../hooks/useRecentReadings'
 import { useVestStatus } from '../hooks/useVestStatus'
 import { POSTURE_HEADLINES, isDeviation } from '../types/posture'
 
@@ -34,6 +36,7 @@ export function DashboardPage() {
   const { isAlertActive, dismiss: dismissAlert } = useProlongedBadPosture(reading)
   const { showReminder, dismiss: dismissReminder } = useBreakReminder(vestStatus, reading)
   const { data: recommendations } = useRecommendations(reading?.posture_class)
+  const recent = useRecentReadings({ limit: 60, refetchInterval: 5_000 })
 
   const headline = reading ? POSTURE_HEADLINES[reading.posture_class] : 'Aún sin lectura.'
   const isWarn = reading ? isDeviation(reading.posture_class) : false
@@ -257,6 +260,15 @@ export function DashboardPage() {
             />
           )}
         </div>
+      </div>
+
+      {/* Full-width timeline below the grid */}
+      <div className="mt-4">
+        <PostureTimeline
+          readings={recent.data ?? []}
+          isLoading={recent.isLoading}
+          isError={recent.isError}
+        />
       </div>
     </div>
   )

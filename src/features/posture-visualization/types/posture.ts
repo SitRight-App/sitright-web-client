@@ -13,6 +13,13 @@ export interface LatestReading {
   battery_percent: number
 }
 
+export interface TimelineReading {
+  id: string
+  posture_class: PostureClass
+  confidence: number
+  timestamp: string
+}
+
 export const POSTURE_LABELS: Record<PostureClass, string> = {
   adequate: 'Postura adecuada',
   forward_slouch: 'Inclinación frontal',
