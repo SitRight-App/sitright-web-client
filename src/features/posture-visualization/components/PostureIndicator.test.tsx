@@ -23,33 +23,47 @@ function makeReading(overrides: Partial<LatestReading> = {}): LatestReading {
 }
 
 describe('PostureIndicator — HU-06', () => {
-  // Happy: postura adecuada muestra texto correcto
-  it('muestra "Postura correcta" cuando la postura es adequate', () => {
+  // Happy: postura adecuada muestra texto editorial alineado al mockup.
+  // El headline está partido en dos nodos por el split de cursiva ("Columna"
+  // en regular y "en línea." en <em>); por eso asertamos contra el sub
+  // ("Postura adecuada") y el énfasis ("en línea") por separado.
+  it('muestra etiquetas editoriales para la postura adecuada', () => {
     render(<PostureIndicator reading={makeReading()} isLoading={false} />)
-    expect(screen.getByText(/postura correcta/i)).toBeInTheDocument()
+    expect(screen.getByText(/postura adecuada/i)).toBeInTheDocument()
+    expect(screen.getByText(/en línea/i)).toBeInTheDocument()
   })
 
   // Happy: forward_slouch muestra tipo de desviación
-  it('muestra "Encorvamiento frontal" cuando la postura es forward_slouch', () => {
-    render(<PostureIndicator reading={makeReading({ posture_class: 'forward_slouch' })} isLoading={false} />)
-    expect(screen.getByText(/encorvamiento frontal/i)).toBeInTheDocument()
+  it('muestra "Inclinación frontal" cuando la postura es forward_slouch', () => {
+    render(
+      <PostureIndicator
+        reading={makeReading({ posture_class: 'forward_slouch' })}
+        isLoading={false}
+      />,
+    )
+    expect(screen.getByText(/inclinación frontal/i)).toBeInTheDocument()
   })
 
   // Happy: excessive_recline muestra tipo de desviación
   it('muestra "Reclinación excesiva" cuando la postura es excessive_recline', () => {
-    render(<PostureIndicator reading={makeReading({ posture_class: 'excessive_recline' })} isLoading={false} />)
+    render(
+      <PostureIndicator
+        reading={makeReading({ posture_class: 'excessive_recline' })}
+        isLoading={false}
+      />,
+    )
     expect(screen.getByText(/reclinación excesiva/i)).toBeInTheDocument()
   })
 
   // Unhappy: sin datos + cargando → texto de carga
-  it('muestra "Conectando..." cuando no hay datos y está cargando', () => {
+  it('muestra "Conectando" cuando no hay datos y está cargando', () => {
     render(<PostureIndicator reading={null} isLoading={true} />)
     expect(screen.getByText(/conectando/i)).toBeInTheDocument()
   })
 
-  // Unhappy: null reading sin carga → estado sin datos
-  it('muestra "Sin datos" cuando no hay lectura y no está cargando', () => {
+  // Unhappy: null reading sin carga → estado sin lecturas
+  it('muestra "Sin lecturas" cuando no hay lectura y no está cargando', () => {
     render(<PostureIndicator reading={null} isLoading={false} />)
-    expect(screen.getByText(/sin datos/i)).toBeInTheDocument()
+    expect(screen.getByText(/sin lecturas/i)).toBeInTheDocument()
   })
 })

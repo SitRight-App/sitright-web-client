@@ -328,7 +328,7 @@ function UnlinkedDashboard({ firstName, now }: UnlinkedDashboardProps) {
           <h1 className="font-serif text-[44px] font-normal leading-[1] tracking-[-0.025em] text-ink">
             Buen día, {firstName}.
             <br />
-            Aún no tienes <em className="italic font-normal text-terracotta">un chaleco vinculado.</em>
+            Aún no vinculaste <em className="italic font-normal text-terracotta">tu chaleco.</em>
           </h1>
         </div>
 

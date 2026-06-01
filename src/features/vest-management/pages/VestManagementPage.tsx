@@ -98,7 +98,13 @@ interface PropsWithVest {
 
 function VestStatusHeadPill({ vest }: PropsWithVest) {
   const { data: latest } = useCurrentPosture()
-  const secondsAgo = latest?.timestamp ? secondsSince(latest.timestamp) : null
+  // Sólo consideramos la lectura si pertenece al chaleco vinculado; el
+  // endpoint /readings/latest aún no filtra por usuario, así que una lectura
+  // de otro vest podría colarse aquí (se ve sobre todo en demos con varios
+  // chalecos compartiendo backend).
+  const isOurReading = latest?.vest_id === vest.id
+  const secondsAgo =
+    isOurReading && latest?.timestamp ? secondsSince(latest.timestamp) : null
   const isConnected = secondsAgo !== null && secondsAgo <= 30
   return (
     <span
@@ -156,8 +162,10 @@ function UnlinkedState() {
 
 function LinkedState({ vest }: PropsWithVest) {
   const { data: latest } = useCurrentPosture()
-  const warningSensor = latest?.posture_class
-    ? sensorFromPosture(latest.posture_class)
+  // Ignoramos lecturas que no son de este chaleco (ver nota en VestStatusHeadPill).
+  const ours = latest?.vest_id === vest.id ? latest : null
+  const warningSensor = ours?.posture_class
+    ? sensorFromPosture(ours.posture_class)
     : null
 
   return (
@@ -165,7 +173,7 @@ function LinkedState({ vest }: PropsWithVest) {
       <ProductSheet vest={vest} warningSensor={warningSensor} />
       <div className="flex flex-col gap-4">
         <BatteryPanel vest={vest} />
-        <SensorsPanel warningSensor={warningSensor} latestTimestamp={latest?.timestamp ?? null} />
+        <SensorsPanel warningSensor={warningSensor} latestTimestamp={ours?.timestamp ?? null} />
         <CalibrationCard vest={vest} />
         <DeviceMetaPanel vest={vest} />
       </div>
@@ -532,7 +540,7 @@ function DeviceMetaPanel({ vest }: PropsWithVest) {
   return (
     <section className="relative rounded-md border border-sand bg-cream-bone p-6">
       <span className="num-tag absolute right-5 top-5">№ 05</span>
-      <p className="label-mono">Información del dispositivo</p>
+      <p className="label-mono">Información del chaleco</p>
       <h3 className="mt-1.5 mb-4 font-serif text-2xl tracking-tight text-ink">
         Especificaciones técnicas
       </h3>

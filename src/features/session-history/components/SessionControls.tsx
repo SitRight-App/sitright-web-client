@@ -41,7 +41,7 @@ export function SessionControls() {
           </>
         ) : (
           <>
-            ¿Empezás <em className="italic text-moss">a registrar</em>?
+            ¿Empiezas <em className="italic text-moss">a registrar</em>?
           </>
         )}
       </h2>

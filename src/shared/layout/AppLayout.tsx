@@ -16,15 +16,19 @@ import { ActiveSessionPill } from '@/features/session-history/components/ActiveS
 import { Brandmark } from '@/shared/ui/Brandmark'
 import { pageTransition } from '@/shared/ui/motion'
 
-type NavPage = { to: string; label: string; end?: boolean; adminOnly?: boolean }
+type NavPage = { to: string; label: string; end?: boolean }
 
+/**
+ * Topbar: navegación editorial de las 4 secciones principales de contenido.
+ * Refleja `prototypes/02-dashboard.html` (top-pages). Configuración y
+ * Administración quedan fuera adrede — son utilidades, viven sólo en el
+ * sidebar (icono).
+ */
 const TOP_PAGES: NavPage[] = [
   { to: '/', label: 'Postura en vivo', end: true },
   { to: '/history', label: 'Historial' },
   { to: '/recommendations', label: 'Recomendaciones' },
   { to: '/vest', label: 'Chaleco' },
-  { to: '/settings', label: 'Configuración' },
-  { to: '/admin', label: 'Admin', adminOnly: true },
 ]
 
 type SidebarItem = {
@@ -35,6 +39,10 @@ type SidebarItem = {
   adminOnly?: boolean
 }
 
+/**
+ * Sidebar: quick-switcher icónico. Replica las 4 secciones del topbar para
+ * navegación inmediata + agrega Configuración (y Admin si el rol lo permite).
+ */
 const SIDEBAR_ICONS: SidebarItem[] = [
   { to: '/', label: 'Tiempo real', end: true, Icon: Activity },
   { to: '/history', label: 'Historial', Icon: History },
@@ -70,20 +78,18 @@ export function AppLayout() {
         </div>
 
         <nav className="flex items-center gap-7 px-7 font-mono text-[11px] uppercase tracking-[0.16em] text-ink-soft">
-          {TOP_PAGES.filter((p) => !p.adminOnly || user?.role === 'admin').map(
-            ({ to, label, end }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                className={({ isActive }) =>
-                  `py-1.5 ${isActive ? 'border-b-[1.4px] border-terracotta text-ink' : ''}`
-                }
-              >
-                {label}
-              </NavLink>
-            ),
-          )}
+          {TOP_PAGES.map(({ to, label, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) =>
+                `py-1.5 ${isActive ? 'border-b-[1.4px] border-terracotta text-ink' : ''}`
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="ml-auto flex items-center gap-6">
