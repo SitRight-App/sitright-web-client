@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/features/iam/context/AuthContext'
 import { RecommendationsCard } from '@/features/recommendations/components/RecommendationsCard'
 import { useRecommendations } from '@/features/recommendations/hooks/useRecommendations'
 import { SessionControls } from '@/features/session-history/components/SessionControls'
+import { useMyVest } from '@/features/vest-management/hooks/useMyVest'
 import { staggerContainer, staggerItem } from '@/shared/ui/motion'
 import { BreakReminder } from '../components/BreakReminder'
 import { PostureAlert } from '../components/PostureAlert'
@@ -14,7 +16,11 @@ import { useCurrentPosture } from '../hooks/useCurrentPosture'
 import { useProlongedBadPosture } from '../hooks/useProlongedBadPosture'
 import { useRecentReadings } from '../hooks/useRecentReadings'
 import { useVestStatus } from '../hooks/useVestStatus'
-import { POSTURE_HEADLINES, isDeviation } from '../types/posture'
+import {
+  POSTURE_DASHBOARD_PHRASE,
+  POSTURE_HEADLINES,
+  isDeviation,
+} from '../types/posture'
 
 const dateFmt = new Intl.DateTimeFormat('es-PE', {
   weekday: 'long',
@@ -33,19 +39,35 @@ function capitalize(s: string): string {
 
 export function DashboardPage() {
   const { user } = useAuth()
-  const { data: reading, isLoading, isError } = useCurrentPosture()
+  const { data: vest, isLoading: vestLoading } = useMyVest()
+  const hasVest = vest !== null && vest !== undefined
+
+  // Sólo consultamos lecturas cuando hay chaleco vinculado: si no, los
+  // endpoints devuelven la última lectura registrada en el sistema (que
+  // no es la del usuario) y la UI mentiría.
+  const { data: reading, isLoading, isError } = useCurrentPosture({ enabled: hasVest })
 
   const vestStatus = useVestStatus(reading)
   const { isAlertActive, dismiss: dismissAlert } = useProlongedBadPosture(reading)
   const { showReminder, dismiss: dismissReminder } = useBreakReminder(vestStatus, reading)
   const { data: recommendations } = useRecommendations(reading?.posture_class)
-  const recent = useRecentReadings({ limit: 60, refetchInterval: 5_000 })
+  const recent = useRecentReadings({
+    limit: 60,
+    refetchInterval: 5_000,
+    enabled: hasVest,
+  })
 
-  const headline = reading ? POSTURE_HEADLINES[reading.posture_class] : 'Aún sin lectura.'
+  const phrase = reading
+    ? POSTURE_DASHBOARD_PHRASE[reading.posture_class]
+    : POSTURE_DASHBOARD_PHRASE.indeterminate
   const isWarn = reading ? isDeviation(reading.posture_class) : false
   const firstName = user?.name.split(' ')[0] ?? 'Hola'
 
   const now = new Date()
+
+  if (!vestLoading && !hasVest) {
+    return <UnlinkedDashboard firstName={firstName} now={now} />
+  }
 
   return (
     <div>
@@ -57,11 +79,11 @@ export function DashboardPage() {
           <h1 className="font-serif text-[44px] font-normal leading-[1] tracking-[-0.025em] text-ink">
             Buen día, {firstName}.
             <br />
-            Tu columna está{' '}
+            {phrase.lead}{' '}
             <em
-              className={`italic font-normal ${isWarn ? 'text-terracotta' : 'text-moss'}`}
+              className={`italic font-normal ${phrase.warn || isWarn ? 'text-terracotta' : 'text-moss'}`}
             >
-              {headline.toLowerCase()}
+              {phrase.emphasis}
             </em>
           </h1>
         </div>
@@ -281,6 +303,78 @@ export function DashboardPage() {
           isLoading={recent.isLoading}
           isError={recent.isError}
         />
+      </div>
+    </div>
+  )
+}
+
+interface UnlinkedDashboardProps {
+  firstName: string
+  now: Date
+}
+
+/**
+ * Estado del dashboard cuando el usuario no tiene chaleco vinculado.
+ * Evita mostrar lecturas y métricas que no le pertenecen.
+ */
+function UnlinkedDashboard({ firstName, now }: UnlinkedDashboardProps) {
+  return (
+    <div>
+      <div className="flex flex-wrap items-end justify-between gap-6 pb-8">
+        <div>
+          <div className="mb-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+            Panel <span className="text-terracotta">›</span> Tiempo real
+          </div>
+          <h1 className="font-serif text-[44px] font-normal leading-[1] tracking-[-0.025em] text-ink">
+            Buen día, {firstName}.
+            <br />
+            Aún no tienes <em className="italic font-normal text-terracotta">un chaleco vinculado.</em>
+          </h1>
+        </div>
+
+        <div className="text-right">
+          <div className="font-mono text-[11px] uppercase tracking-[0.10em] text-ink-faint">
+            {timeFmt.format(now)}
+          </div>
+          <div className="mt-1 font-serif text-xl tracking-tight text-ink">
+            {capitalize(dateFmt.format(now))}
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="relative editorial-card p-12 text-center"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, rgba(74,82,73,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(74,82,73,0.04) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }}
+      >
+        <p className="label-mono">Sin lecturas</p>
+        <h2 className="mt-3 font-serif text-3xl leading-tight tracking-tight text-ink">
+          Vincula tu chaleco para empezar
+          <br />
+          <em className="italic text-moss">a leer tu postura en vivo.</em>
+        </h2>
+        <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-ink-soft">
+          Pídele a tu administrador el código de vinculación y la dirección MAC del chaleco
+          asignado. Mientras tanto, no tiene sentido mostrarte lecturas — podrían ser de otro
+          dispositivo.
+        </p>
+        <div className="mt-7 inline-flex gap-2.5">
+          <Link
+            to="/vest"
+            className="border border-terracotta bg-terracotta px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:bg-terracotta-deep"
+          >
+            Ir a vincular el chaleco
+          </Link>
+          <Link
+            to="/history"
+            className="border border-sand bg-transparent px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-ink transition-colors hover:border-ink"
+          >
+            Revisar historial
+          </Link>
+        </div>
       </div>
     </div>
   )

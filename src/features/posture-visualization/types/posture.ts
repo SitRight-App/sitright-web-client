@@ -34,6 +34,37 @@ export const POSTURE_HEADLINES: Record<PostureClass, string> = {
   indeterminate: 'Aún sin lectura.',
 }
 
+/**
+ * Frases editoriales para el dashboard ("Buen día, X. {lead} {emphasis}").
+ * Separan el sujeto del énfasis para que la cursiva del cierre quede natural,
+ * sin construir oraciones como "Tu columna está reclinación excesiva".
+ */
+export const POSTURE_DASHBOARD_PHRASE: Record<
+  PostureClass,
+  { lead: string; emphasis: string; warn: boolean }
+> = {
+  adequate: {
+    lead: 'Tu columna está',
+    emphasis: 'alineada.',
+    warn: false,
+  },
+  forward_slouch: {
+    lead: 'Tu columna se inclina',
+    emphasis: 'hacia adelante.',
+    warn: true,
+  },
+  excessive_recline: {
+    lead: 'Tu columna está',
+    emphasis: 'demasiado reclinada.',
+    warn: true,
+  },
+  indeterminate: {
+    lead: 'Aún',
+    emphasis: 'no hay lecturas del chaleco.',
+    warn: false,
+  },
+}
+
 export const POSTURE_BG: Record<PostureClass, string> = {
   adequate: 'bg-moss',
   forward_slouch: 'bg-terracotta',
