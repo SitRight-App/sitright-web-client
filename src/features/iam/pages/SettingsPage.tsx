@@ -36,6 +36,7 @@ export function SettingsPage() {
   const [height, setHeight] = useState<string>('')
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [alertThreshold, setAlertThreshold] = useState<number>(30)
+  const [breakReminder, setBreakReminder] = useState<number>(60)
   const [language, setLanguage] = useState('es')
   const [saving, setSaving] = useState(false)
   const toast = useToast()
@@ -47,6 +48,7 @@ export function SettingsPage() {
     setHeight(user.anthropometric_data.height_cm?.toString() ?? '')
     setEmailNotifications(user.preferences.email_notifications)
     setAlertThreshold(user.preferences.alert_threshold_minutes)
+    setBreakReminder(user.preferences.break_reminder_minutes ?? 60)
     setLanguage(user.preferences.language)
   }, [user])
 
@@ -62,6 +64,7 @@ export function SettingsPage() {
         height_cm: height ? Number(height) : undefined,
         email_notifications: emailNotifications,
         alert_threshold_minutes: alertThreshold,
+        break_reminder_minutes: breakReminder,
         language,
       })
       setUser(updated)
@@ -204,7 +207,18 @@ export function SettingsPage() {
               />
             </FormField>
 
-            <FormField num="02" label="Idioma">
+            <FormField num="02" label="Pausa activa cada (min)">
+              <input
+                type="number"
+                min="15"
+                max="240"
+                value={breakReminder}
+                onChange={(e) => setBreakReminder(Number(e.target.value))}
+                className={fieldInput}
+              />
+            </FormField>
+
+            <FormField num="03" label="Idioma">
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}

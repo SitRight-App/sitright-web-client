@@ -3,18 +3,31 @@ import { useToast } from '@/shared/ui/toast'
 import { useLinkVest } from '../hooks/useMyVest'
 import type { LinkVestResponse } from '../types/vest'
 
+// HU-14 AC3 — validación cliente de formato MAC.
+const MAC_REGEX = /^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/
+
 export function LinkVestForm() {
   const linkMutation = useLinkVest()
   const toast = useToast()
   const [macAddress, setMacAddress] = useState('')
   const [pairingCode, setPairingCode] = useState('')
+  const [macError, setMacError] = useState<string | null>(null)
   const [credentials, setCredentials] = useState<LinkVestResponse | null>(null)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    setMacError(null)
+
+    const normalized = macAddress.toUpperCase().trim()
+    if (!MAC_REGEX.test(normalized)) {
+      // HU-14 AC3 — texto literal exigido por el AC.
+      setMacError('El identificador no es una dirección MAC válida')
+      return
+    }
+
     try {
       const response = await linkMutation.mutateAsync({
-        mac_address: macAddress.toUpperCase(),
+        mac_address: normalized,
         pairing_code: pairingCode,
       })
       setCredentials(response)
@@ -78,9 +91,20 @@ export function LinkVestForm() {
           required
           placeholder="AA:BB:CC:11:22:33"
           value={macAddress}
-          onChange={(e) => setMacAddress(e.target.value)}
-          className="w-full border-0 border-b-[1.2px] border-ink bg-transparent py-2.5 font-mono text-[15px] text-ink placeholder:italic placeholder:text-ink-faint focus:border-terracotta focus:outline-none"
+          onChange={(e) => {
+            setMacAddress(e.target.value)
+            if (macError) setMacError(null)
+          }}
+          aria-invalid={macError !== null}
+          className={`w-full border-0 border-b-[1.2px] bg-transparent py-2.5 font-mono text-[15px] text-ink placeholder:italic placeholder:text-ink-faint focus:outline-none ${
+            macError
+              ? 'border-terracotta focus:border-terracotta'
+              : 'border-ink focus:border-terracotta'
+          }`}
         />
+        {macError && (
+          <p className="mt-1.5 font-mono text-[11px] text-terracotta-deep">{macError}</p>
+        )}
       </div>
       <div>
         <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">

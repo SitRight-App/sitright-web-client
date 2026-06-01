@@ -1,3 +1,9 @@
+import { useRef, useState } from 'react'
+import {
+  getLatestRawReading,
+  type LatestRawReading,
+  type SensorTriple,
+} from '@/features/posture-visualization/services/postureService'
 import { useToast } from '@/shared/ui/toast'
 import { useCalibrateVest } from '../hooks/useMyVest'
 
@@ -6,24 +12,135 @@ interface Props {
   isCalibrated: boolean
 }
 
+const CALIBRATION_SECONDS = 5
+const SAMPLE_INTERVAL_MS = 500
+// HU-15 AC2: si la magnitud del vector de aceleración varía más que esto
+// entre la primera y la última muestra, asumimos movimiento significativo y
+// cancelamos la calibración. ~0.5 g cubre cabeceo notable sin disparar con
+// micro-oscilaciones normales.
+const MOVEMENT_THRESHOLD_G = 0.5
+
+type Phase = 'idle' | 'sampling' | 'submitting'
+
+function averageTriples(samples: SensorTriple[]): SensorTriple {
+  const n = samples.length || 1
+  return {
+    ax: samples.reduce((acc, s) => acc + s.ax, 0) / n,
+    ay: samples.reduce((acc, s) => acc + s.ay, 0) / n,
+    az: samples.reduce((acc, s) => acc + s.az, 0) / n,
+  }
+}
+
+function magnitude(t: SensorTriple): number {
+  return Math.sqrt(t.ax * t.ax + t.ay * t.ay + t.az * t.az)
+}
+
+function maxMagnitudeDeltaG(samples: LatestRawReading[]): number {
+  if (samples.length < 2) return 0
+  let maxDelta = 0
+  for (const sensor of ['cervical', 'dorsal', 'lumbar'] as const) {
+    const mags = samples.map((s) => magnitude(s[sensor]))
+    const delta = Math.max(...mags) - Math.min(...mags)
+    if (delta > maxDelta) maxDelta = delta
+  }
+  return maxDelta
+}
+
 export function CalibrationPanel({ vestId, isCalibrated }: Props) {
   const calibrate = useCalibrateVest(vestId)
   const toast = useToast()
+  const [phase, setPhase] = useState<Phase>('idle')
+  const [countdown, setCountdown] = useState(CALIBRATION_SECONDS)
+  const samplingTimerRef = useRef<number | null>(null)
+  const countdownTimerRef = useRef<number | null>(null)
+
+  function cleanupTimers() {
+    if (samplingTimerRef.current !== null) {
+      window.clearInterval(samplingTimerRef.current)
+      samplingTimerRef.current = null
+    }
+    if (countdownTimerRef.current !== null) {
+      window.clearInterval(countdownTimerRef.current)
+      countdownTimerRef.current = null
+    }
+  }
 
   async function handleCalibrate() {
+    if (phase !== 'idle') return
+    setPhase('sampling')
+    setCountdown(CALIBRATION_SECONDS)
+
+    const samples: LatestRawReading[] = []
+
+    // Sampling: durante 5 segundos, intentar leer la última lectura cada 500 ms.
+    // Si la lectura cambia, la añadimos. Esto cubre tanto el flujo de demo
+    // (1 lectura cada 5 s = 1 sample) como un futuro modo de calibración del
+    // firmware que envíe a mayor frecuencia.
+    const seenIds = new Set<string>()
+
+    async function takeSample() {
+      try {
+        const r = await getLatestRawReading()
+        if (r && !seenIds.has(r.id)) {
+          seenIds.add(r.id)
+          samples.push(r)
+        }
+      } catch {
+        /* lectura fallida — la ignoramos y reintentamos en el próximo tick */
+      }
+    }
+
+    await takeSample()
+
+    samplingTimerRef.current = window.setInterval(takeSample, SAMPLE_INTERVAL_MS)
+    countdownTimerRef.current = window.setInterval(() => {
+      setCountdown((c) => Math.max(0, c - 1))
+    }, 1000)
+
+    await new Promise((resolve) => window.setTimeout(resolve, CALIBRATION_SECONDS * 1000))
+
+    cleanupTimers()
+    await takeSample() // última muestra fuera del intervalo
+
+    if (samples.length === 0) {
+      toast.error(
+        'Sin lecturas del chaleco.',
+        'Verifica que esté encendido y enviando datos antes de calibrar.',
+      )
+      setPhase('idle')
+      return
+    }
+
+    // HU-15 AC2 — detectar movimiento significativo
+    const delta = maxMagnitudeDeltaG(samples)
+    if (delta > MOVEMENT_THRESHOLD_G) {
+      toast.error(
+        'Movimiento detectado durante la calibración.',
+        'Mantén la posición estable e intenta nuevamente.',
+      )
+      setPhase('idle')
+      return
+    }
+
+    setPhase('submitting')
     try {
-      const reference = { ax: 0, ay: 0, az: -1 }
       await calibrate.mutateAsync({
-        cervical: reference,
-        dorsal: reference,
-        lumbar: reference,
+        cervical: averageTriples(samples.map((s) => s.cervical)),
+        dorsal: averageTriples(samples.map((s) => s.dorsal)),
+        lumbar: averageTriples(samples.map((s) => s.lumbar)),
       })
-      toast.success('Calibración registrada.', 'Los sensores tomaron tu postura de referencia.')
+      toast.success(
+        'Calibración completada.',
+        `Tu referencia postural quedó registrada (${samples.length} muestra${samples.length === 1 ? '' : 's'}).`,
+      )
     } catch (err) {
       toast.error(
-        'No se pudo calibrar el chaleco.',
+        'No se pudo guardar la calibración.',
         err instanceof Error ? err.message : 'Error desconocido',
       )
+    } finally {
+      setPhase('idle')
+      setCountdown(CALIBRATION_SECONDS)
     }
   }
 
@@ -39,17 +156,32 @@ export function CalibrationPanel({ vestId, isCalibrated }: Props) {
       </div>
 
       <p className="max-w-md text-sm leading-relaxed text-ink-soft">
-        Coloca el chaleco sobre el trabajador en posición erguida ideal antes de calibrar. La
-        lectura actual quedará registrada como referencia para detectar desviaciones.
+        Coloca el chaleco sobre el trabajador en posición erguida ideal y mantén la
+        postura durante {CALIBRATION_SECONDS} segundos. El sistema captura el promedio
+        de los 3 sensores como referencia.
       </p>
+
+      {phase === 'sampling' && (
+        <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-terracotta-deep">
+          Mantén la posición… {countdown}s
+        </p>
+      )}
 
       <button
         type="button"
         onClick={handleCalibrate}
-        disabled={calibrate.isPending}
+        disabled={phase !== 'idle'}
         className="mt-6 inline-flex items-center gap-3 bg-moss-deep px-6 py-3.5 text-[13px] font-medium uppercase tracking-[0.05em] text-cream transition-colors hover:bg-ink disabled:opacity-60"
       >
-        <span>{calibrate.isPending ? 'Calibrando…' : 'Calibrar ahora'}</span>
+        <span>
+          {phase === 'sampling'
+            ? 'Calibrando…'
+            : phase === 'submitting'
+              ? 'Guardando…'
+              : isCalibrated
+                ? 'Recalibrar ahora'
+                : 'Calibrar ahora'}
+        </span>
         <span aria-hidden>→</span>
       </button>
     </div>

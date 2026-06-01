@@ -6,6 +6,7 @@ export interface Anthropometric {
 export interface Preferences {
   email_notifications: boolean
   alert_threshold_minutes: number
+  break_reminder_minutes: number
   language: string
 }
 
@@ -46,6 +47,7 @@ export interface UpdateProfileRequest {
   height_cm?: number
   email_notifications?: boolean
   alert_threshold_minutes?: number
+  break_reminder_minutes?: number
   language?: string
 }
 
