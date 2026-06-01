@@ -1,4 +1,14 @@
 import { useMemo } from 'react'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import type {
   PostureClass,
   TimelineReading,
@@ -11,17 +21,17 @@ interface Props {
   isError: boolean
 }
 
-const SEGMENT_BG: Record<PostureClass, string> = {
-  adequate: 'rgb(var(--color-moss))',
-  forward_slouch: 'rgb(var(--color-terracotta-soft))',
-  excessive_recline: 'rgb(var(--color-terracotta))',
-  indeterminate: 'rgb(var(--color-ink-faint) / 0.4)',
+const POSTURE_COLOR: Record<PostureClass, string> = {
+  adequate: 'rgb(45 74 54)',
+  forward_slouch: 'rgb(232 166 133)',
+  excessive_recline: 'rgb(200 98 60)',
+  indeterminate: 'rgb(138 144 136)',
 }
 
 const POSTURE_SHORT: Record<PostureClass, string> = {
   adequate: 'Adecuada',
-  forward_slouch: 'Cervical',
-  excessive_recline: 'Lumbar',
+  forward_slouch: 'Inclinación frontal',
+  excessive_recline: 'Reclinación',
   indeterminate: 'Indeterminada',
 }
 
@@ -31,45 +41,22 @@ const timeFmt = new Intl.DateTimeFormat('es-PE', {
   hour12: false,
 })
 
-const CHART_W = 800
-const CHART_H = 240
-
-interface LayoutPoint {
-  x: number
-  y: number
-  reading: TimelineReading
-}
-
-function computeLayout(readings: TimelineReading[]): LayoutPoint[] {
-  if (readings.length < 2) return []
-  const t0 = new Date(readings[0].timestamp).getTime()
-  const t1 = new Date(readings[readings.length - 1].timestamp).getTime()
-  const dt = Math.max(1, t1 - t0)
-  return readings.map((r) => {
-    const elapsed = new Date(r.timestamp).getTime() - t0
-    const x = (elapsed / dt) * CHART_W
-    // y: confidence 100% → top, 0% → bottom (within 12..220 pad)
-    const y = 12 + (1 - r.confidence) * 208
-    return { x, y, reading: r }
-  })
+interface ChartPoint {
+  time: number
+  confidence: number
+  posture: PostureClass
 }
 
 export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
-  const points = useMemo(() => computeLayout(readings), [readings])
-
-  const startTime = readings.length > 0 ? new Date(readings[0].timestamp) : null
-  const endTime = readings.length > 0 ? new Date(readings[readings.length - 1].timestamp) : null
-
-  const xTicks = useMemo(() => {
-    if (!startTime || !endTime) return [] as string[]
-    const ticks: string[] = []
-    const total = endTime.getTime() - startTime.getTime()
-    for (let i = 0; i <= 6; i++) {
-      const t = new Date(startTime.getTime() + (total * i) / 6)
-      ticks.push(timeFmt.format(t))
-    }
-    return ticks
-  }, [startTime, endTime])
+  const data = useMemo<ChartPoint[]>(
+    () =>
+      readings.map((r) => ({
+        time: new Date(r.timestamp).getTime(),
+        confidence: Math.round(r.confidence * 100),
+        posture: r.posture_class,
+      })),
+    [readings],
+  )
 
   if (isError) {
     return (
@@ -81,7 +68,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
   if (isLoading) {
     return (
       <div>
-        <Skeleton width="100%" height={CHART_H} />
+        <Skeleton width="100%" height={280} />
         <div className="ml-14 mt-4 flex gap-5">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} width={90} height={10} />
@@ -103,110 +90,88 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
 
   return (
     <div>
-      {/* Y axis + chart area */}
-      <div className="relative" style={{ height: CHART_H + 8 }}>
-        {/* Y axis */}
-        <div
-          className="absolute left-0 top-0 flex w-14 flex-col justify-between font-mono text-[9px] uppercase tracking-[0.12em] text-ink-faint"
-          style={{ top: 12, bottom: 24 }}
-        >
-          <span>100%</span>
-          <span>75%</span>
-          <span>50%</span>
-          <span>25%</span>
-          <span>0%</span>
-        </div>
-        {/* Chart area */}
-        <div
-          className="absolute border-l border-b border-sand"
-          style={{ left: 56, right: 0, top: 12, bottom: 24 }}
-        >
-          <svg
-            viewBox={`0 0 ${CHART_W} ${CHART_H}`}
-            preserveAspectRatio="none"
-            className="h-full w-full"
-          >
-            {/* Grid lines at 25/50/75 */}
-            {[0.25, 0.5, 0.75].map((p) => (
-              <line
-                key={p}
-                x1={0}
-                x2={CHART_W}
-                y1={12 + p * 208}
-                y2={12 + p * 208}
-                stroke="rgb(var(--color-ink-soft))"
-                strokeOpacity="0.10"
-                strokeWidth="1"
-                strokeDasharray="3 4"
-              />
-            ))}
-
-            {/* Color-band ribbon at bottom showing posture class */}
-            {points.length > 1 &&
-              points.slice(0, -1).map((p, i) => {
-                const next = points[i + 1]
-                const w = Math.max(1, next.x - p.x)
-                return (
-                  <rect
-                    key={p.reading.id}
-                    x={p.x}
-                    y={CHART_H - 8}
-                    width={w}
-                    height={8}
-                    fill={SEGMENT_BG[p.reading.posture_class]}
-                  />
-                )
-              })}
-
-            {/* Confidence line */}
-            <polyline
-              fill="none"
+      <div style={{ height: 280, width: '100%' }}>
+        <ResponsiveContainer>
+          <AreaChart data={data} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
+            <defs>
+              <linearGradient id="confidenceFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgb(var(--color-moss))" stopOpacity={0.18} />
+                <stop offset="100%" stopColor="rgb(var(--color-moss))" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 4" stroke="rgb(var(--color-ink-soft) / 0.10)" />
+            <XAxis
+              dataKey="time"
+              type="number"
+              scale="time"
+              domain={['dataMin', 'dataMax']}
+              tickFormatter={(v) => timeFmt.format(new Date(v))}
+              stroke="rgb(var(--color-ink-faint))"
+              tick={{ fontFamily: 'JetBrains Mono', fontSize: 10, fill: 'rgb(var(--color-ink-faint))' }}
+              minTickGap={48}
+            />
+            <YAxis
+              domain={[0, 100]}
+              ticks={[0, 25, 50, 75, 100]}
+              tickFormatter={(v) => `${v}%`}
+              stroke="rgb(var(--color-ink-faint))"
+              tick={{ fontFamily: 'JetBrains Mono', fontSize: 10, fill: 'rgb(var(--color-ink-faint))' }}
+              width={42}
+            />
+            <ReferenceLine
+              y={70}
+              stroke="rgb(var(--color-terracotta-soft))"
+              strokeDasharray="3 4"
+              strokeWidth={1}
+              ifOverflow="visible"
+            />
+            <Tooltip content={<TimelineTooltip />} cursor={{ stroke: 'rgb(var(--color-ink-soft) / 0.4)' }} />
+            <Area
+              type="monotone"
+              dataKey="confidence"
               stroke="rgb(var(--color-moss))"
-              strokeWidth="1.6"
-              points={points.map((p) => `${p.x},${p.y}`).join(' ')}
+              strokeWidth={1.6}
+              fill="url(#confidenceFill)"
+              isAnimationActive
+              animationDuration={500}
             />
-
-            {/* Confidence area */}
-            <polygon
-              fill="rgb(var(--color-moss) / 0.08)"
-              points={[
-                ...points.map((p) => `${p.x},${p.y}`),
-                `${points[points.length - 1].x},${CHART_H - 8}`,
-                `${points[0].x},${CHART_H - 8}`,
-              ].join(' ')}
-            />
-          </svg>
-        </div>
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
 
-      {/* X axis ticks */}
-      <div className="ml-14 mt-1.5 flex justify-between font-mono text-[9px] uppercase tracking-[0.12em] text-ink-faint">
-        {xTicks.map((t, i) => (
-          <span key={i}>{t}</span>
-        ))}
-      </div>
-
-      {/* Legend */}
       <div className="ml-14 mt-4 flex flex-wrap gap-5 font-mono text-[10px] uppercase tracking-[0.10em] text-ink-soft">
         {(['adequate', 'forward_slouch', 'excessive_recline'] as PostureClass[]).map((cls) => (
           <span key={cls} className="inline-flex items-center gap-1.5">
             <span
               className="inline-block h-2 w-2 rounded-full"
-              style={{ backgroundColor: SEGMENT_BG[cls] }}
+              style={{ backgroundColor: POSTURE_COLOR[cls] }}
             />
             {POSTURE_SHORT[cls]}
           </span>
         ))}
-        <span className="ml-auto">
-          {readings.length} lecturas
-          {startTime && endTime && (
-            <>
-              {' · '}
-              {timeFmt.format(startTime)}–{timeFmt.format(endTime)}
-            </>
-          )}
-        </span>
+        <span className="ml-auto">{readings.length} lecturas</span>
       </div>
+    </div>
+  )
+}
+
+interface TooltipProps {
+  active?: boolean
+  payload?: Array<{ payload: ChartPoint }>
+}
+
+function TimelineTooltip({ active, payload }: TooltipProps) {
+  if (!active || !payload?.length) return null
+  const p = payload[0].payload
+  return (
+    <div className="rounded border border-sand bg-cream-bone p-3 font-mono text-[11px] shadow-sm">
+      <p className="text-ink">{timeFmt.format(new Date(p.time))}</p>
+      <p
+        className="mt-1 font-serif text-[13px]"
+        style={{ color: POSTURE_COLOR[p.posture] }}
+      >
+        {POSTURE_SHORT[p.posture]} · {p.confidence}%
+      </p>
     </div>
   )
 }

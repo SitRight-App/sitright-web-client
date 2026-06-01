@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Bell, BellRing } from 'lucide-react'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import {
   useMarkNotificationRead,
@@ -54,7 +55,11 @@ export function NotificationsBell() {
         aria-label={`Notificaciones${unreadCount > 0 ? ` (${unreadCount} sin leer)` : ''}`}
         aria-expanded={open}
       >
-        <BellIcon hasUnread={unreadCount > 0} />
+        {unreadCount > 0 ? (
+          <BellRing className="h-[18px] w-[18px]" strokeWidth={1.6} />
+        ) : (
+          <Bell className="h-[18px] w-[18px]" strokeWidth={1.4} />
+        )}
         {unreadCount > 0 && (
           <span className="absolute right-0.5 top-0.5 grid h-4 min-w-[16px] place-items-center rounded-full bg-terracotta px-1 font-mono text-[9px] font-medium text-cream">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -73,27 +78,6 @@ export function NotificationsBell() {
         />
       )}
     </div>
-  )
-}
-
-interface BellIconProps {
-  hasUnread: boolean
-}
-
-function BellIcon({ hasUnread }: BellIconProps) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.4}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-[18px] w-[18px]"
-    >
-      <path d="M10 3a4 4 0 0 0-4 4v2.6c0 .8-.3 1.5-.8 2L4 13h12l-1.2-1.4c-.5-.5-.8-1.3-.8-2V7a4 4 0 0 0-4-4z" />
-      <path d="M8.5 16a1.5 1.5 0 0 0 3 0" strokeWidth={hasUnread ? 1.6 : 1.4} />
-    </svg>
   )
 }
 

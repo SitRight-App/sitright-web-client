@@ -1,4 +1,12 @@
 import { useMemo } from 'react'
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import type { PostureClass, TimelineReading } from '../types/posture'
 
 interface Props {
@@ -7,11 +15,11 @@ interface Props {
   isError: boolean
 }
 
-const SEGMENT_BG: Record<PostureClass, string> = {
-  adequate: 'bg-moss',
-  forward_slouch: 'bg-terracotta',
-  excessive_recline: 'bg-terracotta-deep',
-  indeterminate: 'bg-ink-faint/30',
+const POSTURE_COLOR: Record<PostureClass, string> = {
+  adequate: 'rgb(45 74 54)',
+  forward_slouch: 'rgb(232 166 133)',
+  excessive_recline: 'rgb(200 98 60)',
+  indeterminate: 'rgb(138 144 136)',
 }
 
 const POSTURE_SHORT: Record<PostureClass, string> = {
@@ -27,6 +35,14 @@ const timeFmt = new Intl.DateTimeFormat('es-PE', {
   hour12: false,
 })
 
+interface ChartPoint {
+  time: number
+  height: number
+  posture: PostureClass
+  fill: string
+  confidence: number
+}
+
 interface DistributionItem {
   posture: PostureClass
   count: number
@@ -41,9 +57,7 @@ function computeDistribution(readings: TimelineReading[]): DistributionItem[] {
     excessive_recline: 0,
     indeterminate: 0,
   }
-  for (const r of readings) {
-    counts[r.posture_class]++
-  }
+  for (const r of readings) counts[r.posture_class]++
   const total = readings.length
   return (Object.keys(counts) as PostureClass[])
     .filter((k) => counts[k] > 0)
@@ -56,8 +70,19 @@ function computeDistribution(readings: TimelineReading[]): DistributionItem[] {
 }
 
 export function PostureTimeline({ readings, isLoading, isError }: Props) {
+  const data = useMemo<ChartPoint[]>(
+    () =>
+      readings.map((r) => ({
+        time: new Date(r.timestamp).getTime(),
+        height: 1,
+        posture: r.posture_class,
+        fill: POSTURE_COLOR[r.posture_class],
+        confidence: Math.round(r.confidence * 100),
+      })),
+    [readings],
+  )
+
   const distribution = useMemo(() => computeDistribution(readings), [readings])
-  const totalReadings = readings.length
 
   const startTime = readings.length > 0 ? new Date(readings[0].timestamp) : null
   const endTime =
@@ -68,8 +93,7 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
       <span className="num-tag absolute right-5 top-5">№ 04</span>
       <p className="label-mono">Línea de tiempo · sesión</p>
       <h2 className="mt-2 font-serif text-2xl tracking-tight text-ink">
-        Tu jornada postural{' '}
-        <em className="italic text-moss">en vivo.</em>
+        Tu jornada postural <em className="italic text-moss">en vivo.</em>
       </h2>
 
       {isError && (
@@ -78,13 +102,13 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
         </p>
       )}
 
-      {isLoading && totalReadings === 0 && (
+      {isLoading && readings.length === 0 && (
         <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
           Esperando lecturas del chaleco…
         </p>
       )}
 
-      {totalReadings === 0 && !isLoading && !isError && (
+      {readings.length === 0 && !isLoading && !isError && (
         <div className="mt-6 border border-dashed border-sand p-6 text-center">
           <p className="font-serif text-lg text-ink">Sin lecturas recientes.</p>
           <p className="mt-1 text-xs text-ink-soft">
@@ -93,34 +117,27 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
         </div>
       )}
 
-      {totalReadings > 0 && (
+      {readings.length > 0 && (
         <>
-          {/* Strip de segmentos */}
-          <div className="mt-6">
-            <div
-              className="flex h-12 w-full overflow-hidden rounded border border-sand bg-cream"
-              role="img"
-              aria-label={`Línea de tiempo con ${totalReadings} lecturas posturales`}
-            >
-              {readings.map((r) => (
-                <div
-                  key={r.id}
-                  className={`${SEGMENT_BG[r.posture_class]} h-full flex-1 transition-opacity hover:opacity-70`}
-                  title={`${timeFmt.format(new Date(r.timestamp))} · ${POSTURE_SHORT[r.posture_class]} (${Math.round(r.confidence * 100)}%)`}
-                />
-              ))}
-            </div>
-
-            {startTime && endTime && (
-              <div className="mt-2 flex justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
-                <span>{timeFmt.format(startTime)}</span>
-                <span>{totalReadings} lecturas · cada 5 s</span>
-                <span>{timeFmt.format(endTime)}</span>
-              </div>
-            )}
+          <div className="mt-6" style={{ height: 56, width: '100%' }}>
+            <ResponsiveContainer>
+              <BarChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} barCategoryGap={0}>
+                <XAxis dataKey="time" hide />
+                <YAxis hide domain={[0, 1]} />
+                <Tooltip content={<TimelineTooltip />} cursor={{ fill: 'rgb(var(--color-ink-soft) / 0.08)' }} />
+                <Bar dataKey="height" isAnimationActive={false} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
-          {/* Distribución por clase */}
+          {startTime && endTime && (
+            <div className="mt-2 flex justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
+              <span>{timeFmt.format(startTime)}</span>
+              <span>{readings.length} lecturas · cada 5 s</span>
+              <span>{timeFmt.format(endTime)}</span>
+            </div>
+          )}
+
           <div className="mt-7 border-t border-dashed border-sand pt-5">
             <p className="label-mono mb-3">Distribución del intervalo</p>
             <ul className="space-y-2.5">
@@ -128,8 +145,13 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
                 <li key={d.posture}>
                   <div className="flex items-center justify-between text-xs">
                     <span className="flex items-center gap-2">
-                      <span className={`inline-block h-2 w-2 rounded-full ${SEGMENT_BG[d.posture]}`} />
-                      <span className="font-serif text-sm text-ink">{POSTURE_SHORT[d.posture]}</span>
+                      <span
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{ backgroundColor: POSTURE_COLOR[d.posture] }}
+                      />
+                      <span className="font-serif text-sm text-ink">
+                        {POSTURE_SHORT[d.posture]}
+                      </span>
                     </span>
                     <span className="font-mono text-[11px] text-ink-soft">
                       {d.count} · {Math.round(d.percentage)}%
@@ -137,8 +159,11 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
                   </div>
                   <div className="mt-1 h-[3px] overflow-hidden bg-sand/40">
                     <div
-                      className={`${SEGMENT_BG[d.posture]} h-full`}
-                      style={{ width: `${d.percentage}%` }}
+                      className="h-full"
+                      style={{
+                        width: `${d.percentage}%`,
+                        backgroundColor: POSTURE_COLOR[d.posture],
+                      }}
                     />
                   </div>
                 </li>
@@ -147,6 +172,27 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+interface TooltipProps {
+  active?: boolean
+  payload?: Array<{ payload: ChartPoint }>
+}
+
+function TimelineTooltip({ active, payload }: TooltipProps) {
+  if (!active || !payload?.length) return null
+  const p = payload[0].payload
+  return (
+    <div className="rounded border border-sand bg-cream-bone p-2.5 font-mono text-[10px] shadow-sm">
+      <p className="text-ink">{timeFmt.format(new Date(p.time))}</p>
+      <p
+        className="mt-0.5 font-serif text-[12px]"
+        style={{ color: p.fill }}
+      >
+        {POSTURE_SHORT[p.posture]} · {p.confidence}%
+      </p>
     </div>
   )
 }
