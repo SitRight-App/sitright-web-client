@@ -61,7 +61,10 @@ export function AppLayout() {
   return (
     <div className="grid min-h-screen grid-cols-[72px_1fr] grid-rows-[56px_1fr] bg-cream">
       {/* topbar */}
-      <header className="col-span-2 flex items-center border-b border-sand bg-cream pr-8">
+      <header
+        data-print-hide
+        className="col-span-2 flex items-center border-b border-sand bg-cream pr-8"
+      >
         <div className="grid h-14 w-[72px] place-items-center border-r border-sand bg-moss-deep text-cream">
           <Brandmark />
         </div>
@@ -110,7 +113,10 @@ export function AppLayout() {
       </header>
 
       {/* sidebar */}
-      <aside className="relative flex flex-col items-center gap-1.5 bg-moss-deep py-5 text-cream">
+      <aside
+        data-print-hide
+        className="relative flex flex-col items-center gap-1.5 bg-moss-deep py-5 text-cream"
+      >
         {SIDEBAR_ICONS.filter((p) => !p.adminOnly || user?.role === 'admin').map(
           ({ to, label, end, Icon }) => (
             <NavLink
@@ -149,7 +155,7 @@ export function AppLayout() {
       </aside>
 
       {/* main — anima cada cambio de ruta con un fade-up suave */}
-      <main className="overflow-y-auto px-12 py-8">
+      <main className="app-shell-main overflow-y-auto px-12 py-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}

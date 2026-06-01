@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Bell, BellRing } from 'lucide-react'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import {
+  useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useMyNotifications,
   useUnreadNotificationsCount,
@@ -26,6 +27,7 @@ export function NotificationsBell() {
   const { data: unreadCount = 0 } = useUnreadNotificationsCount()
   const notifications = useMyNotifications()
   const markRead = useMarkNotificationRead()
+  const markAllRead = useMarkAllNotificationsRead()
 
   // Cierra el dropdown al hacer click fuera o al presionar Escape.
   useEffect(() => {
@@ -75,6 +77,8 @@ export function NotificationsBell() {
           unreadCount={unreadCount}
           onMarkRead={(id) => markRead.mutate(id)}
           isMarking={markRead.isPending}
+          onMarkAllRead={() => markAllRead.mutate()}
+          isMarkingAll={markAllRead.isPending}
         />
       )}
     </div>
@@ -88,6 +92,8 @@ interface DropdownProps {
   unreadCount: number
   onMarkRead: (id: string) => void
   isMarking: boolean
+  onMarkAllRead: () => void
+  isMarkingAll: boolean
 }
 
 function NotificationsDropdown({
@@ -97,6 +103,8 @@ function NotificationsDropdown({
   unreadCount,
   onMarkRead,
   isMarking,
+  onMarkAllRead,
+  isMarkingAll,
 }: DropdownProps) {
   return (
     <div className="absolute right-0 top-12 z-40 w-[380px] overflow-hidden rounded-md border border-sand bg-cream-bone shadow-lg">
@@ -108,9 +116,19 @@ function NotificationsDropdown({
           </h3>
         </div>
         {unreadCount > 0 && (
-          <span className="rounded-full bg-terracotta/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-terracotta-deep">
-            {unreadCount} sin leer
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="rounded-full bg-terracotta/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-terracotta-deep">
+              {unreadCount} sin leer
+            </span>
+            <button
+              type="button"
+              onClick={onMarkAllRead}
+              disabled={isMarkingAll}
+              className="font-mono text-[10px] uppercase tracking-[0.14em] text-moss underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              {isMarkingAll ? 'Marcando…' : 'Marcar todas'}
+            </button>
+          </div>
         )}
       </div>
 

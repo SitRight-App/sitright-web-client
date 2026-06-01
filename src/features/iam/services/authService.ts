@@ -56,3 +56,9 @@ export async function markNotificationRead(notificationId: string): Promise<void
     method: 'PATCH',
   })
 }
+
+export async function markAllNotificationsRead(): Promise<{ marked_as_read: number }> {
+  return apiFetch<{ marked_as_read: number }>(`/users/me/notifications/read-all`, {
+    method: 'PATCH',
+  })
+}

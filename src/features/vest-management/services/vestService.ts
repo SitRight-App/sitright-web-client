@@ -31,3 +31,9 @@ export async function calibrateVest(
     body: JSON.stringify(body),
   })
 }
+
+export async function unlinkVest(vestId: string): Promise<VestDevice> {
+  return apiFetch<VestDevice>(`/vests/${vestId}/unlink`, {
+    method: 'POST',
+  })
+}

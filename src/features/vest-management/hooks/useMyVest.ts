@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { calibrateVest, getMyVest, linkVest } from '../services/vestService'
+import { calibrateVest, getMyVest, linkVest, unlinkVest } from '../services/vestService'
 import type { CalibrateVestRequest, LinkVestRequest } from '../types/vest'
 
 export function useMyVest() {
@@ -23,6 +23,17 @@ export function useCalibrateVest(vestId: string | undefined) {
     mutationFn: (body: CalibrateVestRequest) => {
       if (!vestId) throw new Error('Falta vestId')
       return calibrateVest(vestId, body)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['vest', 'me'] }),
+  })
+}
+
+export function useUnlinkVest(vestId: string | undefined) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => {
+      if (!vestId) throw new Error('Falta vestId')
+      return unlinkVest(vestId)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['vest', 'me'] }),
   })

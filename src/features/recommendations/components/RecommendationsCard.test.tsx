@@ -5,9 +5,23 @@
  *   Unhappy: lista vacía → no renderiza nada
  */
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { RecommendationsCard } from './RecommendationsCard'
 import type { Recommendation } from '../types/recommendation'
+
+vi.mock('@/features/iam/context/AuthContext', () => ({
+  useAuth: () => ({ user: { id: 'test-user' } }),
+}))
+
+vi.mock('@/shared/ui/toast/ToastProvider', () => ({
+  useToast: () => ({
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    push: vi.fn(),
+    dismiss: vi.fn(),
+  }),
+}))
 
 function makeRec(overrides: Partial<Recommendation>): Recommendation {
   return {

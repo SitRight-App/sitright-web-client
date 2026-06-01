@@ -152,7 +152,7 @@ export function SessionDetailPage() {
   }
 
   return (
-    <div>
+    <div className="session-detail-printable">
       <Crumbs session={session} />
       <Hero session={session} stats={stats} dominant={dominant} />
       <StatsRow session={session} stats={stats} dominant={dominant} />
@@ -168,6 +168,10 @@ export function SessionDetailPage() {
       />
     </div>
   )
+}
+
+function exportSessionToPdf() {
+  window.print()
 }
 
 function SessionDetailSkeleton() {
@@ -316,19 +320,20 @@ function Hero({ session, dominant }: HeroProps) {
             ? `Tu desviación dominante fue ${POSTURE_LABELS[dominant]?.toLowerCase() ?? dominant}. Revisa las recomendaciones activadas para corregir el patrón en próximas sesiones.`
             : 'No se identificó una desviación dominante. Mantén el ritmo y consulta las recomendaciones generales.'}
         </p>
-        <div className="flex gap-2.5">
+        <div className="flex gap-2.5 print:hidden">
           <Link
             to="/recommendations"
             className="flex-1 border border-terracotta bg-terracotta px-3.5 py-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:bg-terracotta-deep"
           >
             Ver acciones
           </Link>
-          <Link
-            to="/history"
+          <button
+            type="button"
+            onClick={exportSessionToPdf}
             className="flex-1 border border-cream/30 bg-transparent px-3.5 py-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:border-cream"
           >
-            Ir al historial
-          </Link>
+            Exportar PDF
+          </button>
         </div>
       </aside>
     </section>

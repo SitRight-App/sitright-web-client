@@ -74,3 +74,46 @@
     @apply rounded-[4px] border border-sand bg-cream-bone;
   }
 }
+
+/*
+ * Print stylesheet — usado por SessionDetailPage al hacer click en "Exportar PDF".
+ * Oculta navegación, headers y elementos interactivos para dejar sólo el
+ * informe imprimible. El usuario decide en el diálogo del navegador si guarda
+ * como PDF o imprime físicamente.
+ */
+@media print {
+  @page {
+    margin: 18mm 14mm;
+  }
+  html,
+  body,
+  #root {
+    background: #ffffff !important;
+  }
+  body {
+    color: rgb(var(--color-ink)) !important;
+  }
+  /* Oculta header/sidebar y cualquier elemento marcado data-print-hide. */
+  [data-print-hide] {
+    display: none !important;
+  }
+  /* El main del layout pasa a ocupar todo el ancho de la hoja. */
+  .app-shell-main {
+    grid-column: 1 / -1 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+  .session-detail-printable {
+    color: rgb(var(--color-ink)) !important;
+  }
+  .session-detail-printable a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+  .session-detail-printable section,
+  .session-detail-printable .editorial-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

@@ -1,10 +1,12 @@
+import { useEffect, useState } from 'react'
 import { useCurrentPosture } from '@/features/posture-visualization/hooks/useCurrentPosture'
 import type { PostureClass } from '@/features/posture-visualization/types/posture'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
+import { useToast } from '@/shared/ui/toast/ToastProvider'
 import { CalibrationPanel } from '../components/CalibrationPanel'
 import { LinkVestForm } from '../components/LinkVestForm'
 import { VestIllustration } from '../components/VestIllustration'
-import { useMyVest } from '../hooks/useMyVest'
+import { useMyVest, useUnlinkVest } from '../hooks/useMyVest'
 import type { VestDevice } from '../types/vest'
 
 const longDateFmt = new Intl.DateTimeFormat('es-PE', {
@@ -508,6 +510,25 @@ function CalibStep({ n, title, meta, done }: CalibStepProps) {
 }
 
 function DeviceMetaPanel({ vest }: PropsWithVest) {
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const unlink = useUnlinkVest(vest.id)
+  const toast = useToast()
+
+  const handleConfirm = () => {
+    unlink.mutate(undefined, {
+      onSuccess: () => {
+        toast.success('Chaleco desvinculado', 'Ya no recibirás lecturas de este dispositivo')
+        setConfirmOpen(false)
+      },
+      onError: (err) => {
+        toast.error(
+          'No se pudo desvincular',
+          err instanceof Error ? err.message : 'Reintenta en unos segundos',
+        )
+      },
+    })
+  }
+
   return (
     <section className="relative rounded-md border border-sand bg-cream-bone p-6">
       <span className="num-tag absolute right-5 top-5">№ 05</span>
@@ -537,13 +558,87 @@ function DeviceMetaPanel({ vest }: PropsWithVest) {
         </span>
         <button
           type="button"
+          onClick={() => setConfirmOpen(true)}
           className="border-b border-terracotta-soft pb-0.5 font-mono text-[11px] uppercase tracking-[0.14em] text-terracotta-deep transition-colors hover:border-terracotta hover:text-terracotta"
-          title="Desvincular chaleco (función pendiente de endpoint backend)"
         >
           Desvincular chaleco
         </button>
       </div>
+
+      {confirmOpen && (
+        <UnlinkConfirmDialog
+          mac={vest.mac_address}
+          isPending={unlink.isPending}
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={handleConfirm}
+        />
+      )}
     </section>
+  )
+}
+
+interface UnlinkConfirmDialogProps {
+  mac: string
+  isPending: boolean
+  onCancel: () => void
+  onConfirm: () => void
+}
+
+function UnlinkConfirmDialog({ mac, isPending, onCancel, onConfirm }: UnlinkConfirmDialogProps) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !isPending) onCancel()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onCancel, isPending])
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="unlink-title"
+      className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-6 backdrop-blur-[2px]"
+      onClick={() => !isPending && onCancel()}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[460px] overflow-hidden rounded-md border border-sand bg-cream-bone shadow-xl"
+      >
+        <div className="border-b border-sand bg-cream px-6 py-5">
+          <p className="label-mono">Zona de riesgo</p>
+          <h3 id="unlink-title" className="mt-2 font-serif text-2xl tracking-tight text-ink">
+            ¿Desvincular este chaleco?
+          </h3>
+        </div>
+        <div className="px-6 py-5">
+          <p className="text-sm leading-relaxed text-ink-soft">
+            El chaleco{' '}
+            <span className="font-mono text-[12px] tracking-[0.06em] text-ink">{mac}</span>{' '}
+            dejará de enviarte lecturas y deberás vincularlo de nuevo para usarlo. Tus sesiones
+            históricas se mantienen intactas.
+          </p>
+        </div>
+        <div className="flex items-center justify-end gap-3 border-t border-sand bg-cream-deep px-6 py-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isPending}
+            className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft hover:text-ink disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isPending}
+            className="rounded bg-terracotta px-4 py-2 font-mono text-[11px] uppercase tracking-[0.14em] text-cream transition-colors hover:bg-terracotta-deep disabled:opacity-50"
+          >
+            {isPending ? 'Desvinculando…' : 'Sí, desvincular'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
