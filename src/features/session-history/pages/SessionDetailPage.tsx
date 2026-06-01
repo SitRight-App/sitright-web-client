@@ -476,6 +476,7 @@ function DetailGrid({ session, readingsQuery }: DetailGridProps) {
           readings={readingsQuery.data ?? []}
           isLoading={readingsQuery.isLoading}
           isError={readingsQuery.isError}
+          durationMinutes={session.duration_minutes}
         />
       </section>
 

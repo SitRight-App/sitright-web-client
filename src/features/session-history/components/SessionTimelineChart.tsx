@@ -19,6 +19,11 @@ interface Props {
   readings: TimelineReading[]
   isLoading: boolean
   isError: boolean
+  /**
+   * Duración total de la sesión en minutos. Si es < 30, se muestra el aviso
+   * de "sesión corta" exigido por HU-10 AC2.
+   */
+  durationMinutes?: number | null
 }
 
 const POSTURE_COLOR: Record<PostureClass, string> = {
@@ -47,7 +52,7 @@ interface ChartPoint {
   posture: PostureClass
 }
 
-export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
+export function SessionTimelineChart({ readings, isLoading, isError, durationMinutes }: Props) {
   const data = useMemo<ChartPoint[]>(
     () =>
       readings.map((r) => ({
@@ -88,8 +93,17 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
     )
   }
 
+  const isShortSession = durationMinutes !== null && durationMinutes !== undefined && durationMinutes < 30
+
   return (
     <div>
+      {/* HU-10 AC2 — sesión corta (<30 min): mostrar lo que hay + aviso editorial */}
+      {isShortSession && (
+        <div className="mb-4 border-l-2 border-sand bg-sand/15 px-4 py-2.5 text-xs text-ink-soft">
+          Continúa usando el chaleco para ver una línea de tiempo más completa.
+        </div>
+      )}
+
       <div style={{ height: 280, width: '100%' }}>
         <ResponsiveContainer>
           <AreaChart data={data} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>

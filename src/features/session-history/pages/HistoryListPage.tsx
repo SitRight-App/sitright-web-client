@@ -90,6 +90,14 @@ export function HistoryListPage() {
       </div>
 
       <div className="mt-9">
+        {/* HU-09 AC2 — resumen diario con datos insuficientes (<30 min) */}
+        {!isLoading && closed.length > 0 && totalMinutes < 30 && (
+          <div className="mb-6 border-l-2 border-sand bg-sand/15 px-4 py-3 text-sm text-ink-soft">
+            <strong className="font-serif text-ink">No hay datos suficientes para generar el resumen.</strong>{' '}
+            Usa el chaleco al menos 30 minutos en el día para ver tu jornada postural completa.
+          </div>
+        )}
+
         {isError && (
           <div className="border-l-2 border-terracotta bg-terracotta/10 px-4 py-3 text-sm text-terracotta-deep">
             No se pudo obtener el historial.

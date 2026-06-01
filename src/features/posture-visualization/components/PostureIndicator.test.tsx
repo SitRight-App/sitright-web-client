@@ -23,13 +23,10 @@ function makeReading(overrides: Partial<LatestReading> = {}): LatestReading {
 }
 
 describe('PostureIndicator — HU-06', () => {
-  // Happy: postura adecuada muestra texto editorial alineado al mockup.
-  // El headline está partido en dos nodos por el split de cursiva ("Columna"
-  // en regular y "en línea." en <em>); por eso asertamos contra el sub
-  // ("Postura adecuada") y el énfasis ("en línea") por separado.
-  it('muestra etiquetas editoriales para la postura adecuada', () => {
+  // HU-06 AC1 — texto literal 'Postura correcta' + headline editorial.
+  it('muestra "Postura correcta" + headline para la postura adecuada', () => {
     render(<PostureIndicator reading={makeReading()} isLoading={false} />)
-    expect(screen.getByText(/postura adecuada/i)).toBeInTheDocument()
+    expect(screen.getByText(/postura correcta/i)).toBeInTheDocument()
     expect(screen.getByText(/en línea/i)).toBeInTheDocument()
   })
 

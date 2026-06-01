@@ -16,16 +16,18 @@ describe('VestStatusBadge — HU-07', () => {
     expect(screen.getByText(/85%/)).toBeInTheDocument()
   })
 
-  // Unhappy: batería baja → etiqueta corta (instrucción al usuario vive
-  // en otros componentes, p. ej. BreakReminder; este badge es minimal).
-  it('muestra "Batería baja" cuando status es battery_low', () => {
+  // HU-07 AC2 — el AC pide 'Batería baja, conectar cargador' destacado en
+  // tono amarillo (sand-light en la paleta editorial).
+  it('muestra "Batería baja, conectar cargador" cuando status es battery_low', () => {
     render(<VestStatusBadge status="battery_low" batteryPercent={5} />)
-    expect(screen.getByText(/batería baja/i)).toBeInTheDocument()
+    expect(screen.getByText(/batería baja, conectar cargador/i)).toBeInTheDocument()
   })
 
-  // Unhappy: chaleco desconectado
-  it('muestra "Sin conexión" cuando status es disconnected', () => {
+  // HU-06 AC3 — chaleco desconectado: texto literal 'Chaleco sin conexión'
+  // y hint que sugiere verificar la conexión WiFi.
+  it('muestra "Chaleco sin conexión" + hint de WiFi cuando status es disconnected', () => {
     render(<VestStatusBadge status="disconnected" />)
-    expect(screen.getByText(/sin conexión/i)).toBeInTheDocument()
+    expect(screen.getByText(/chaleco sin conexión/i)).toBeInTheDocument()
+    expect(screen.getByText(/verifica la conexión wifi/i)).toBeInTheDocument()
   })
 })
