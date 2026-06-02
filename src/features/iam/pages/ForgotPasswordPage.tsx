@@ -69,7 +69,7 @@ export function ForgotPasswordPage() {
                 to="/login"
                 className="mt-8 inline-block font-mono text-[11px] uppercase tracking-[0.16em] text-moss hover:underline"
               >
-                Volver al inicio de sesión →
+                Volver al inicio de sesión
               </Link>
             </div>
           ) : (
@@ -97,10 +97,9 @@ export function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="mt-8 flex w-full items-center justify-between bg-moss-deep px-6 py-4 text-[13px] font-medium uppercase tracking-[0.05em] text-cream transition-colors hover:bg-ink disabled:opacity-60"
+                className="mt-8 w-full bg-moss-deep px-6 py-4 text-[13px] font-medium uppercase tracking-[0.05em] text-cream transition-colors hover:bg-ink disabled:opacity-60"
               >
-                <span>{submitting ? 'Enviando…' : 'Enviar instrucciones'}</span>
-                <span aria-hidden>→</span>
+                {submitting ? 'Enviando…' : 'Enviar instrucciones'}
               </button>
             </form>
           )}

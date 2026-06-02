@@ -55,9 +55,9 @@ export function HistoryListPage() {
           </h1>
           <Link
             to="/history/weekly"
-            className="mt-4 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-moss underline-offset-2 hover:underline"
+            className="mt-4 inline-block font-mono text-[11px] uppercase tracking-[0.14em] text-moss underline-offset-2 hover:underline"
           >
-            Ver evolución semanal →
+            Ver evolución semanal
           </Link>
         </div>
 

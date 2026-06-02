@@ -337,10 +337,9 @@ function ChangePasswordPanel() {
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center gap-3 bg-moss-deep px-7 py-4 text-[13px] font-medium uppercase tracking-[0.05em] text-cream transition-colors hover:bg-ink disabled:opacity-60"
+            className="bg-moss-deep px-7 py-4 text-[13px] font-medium uppercase tracking-[0.05em] text-cream transition-colors hover:bg-ink disabled:opacity-60"
           >
-            <span>{submitting ? 'Cambiando…' : 'Actualizar contraseña'}</span>
-            <span aria-hidden>→</span>
+            {submitting ? 'Cambiando…' : 'Actualizar contraseña'}
           </button>
         </div>
       </form>
