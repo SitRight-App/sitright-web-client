@@ -2,9 +2,21 @@
  * HU-11 — Recordatorio de pausa activa
  *   Happy  : 720 lecturas conectado → recordatorio mostrado
  *   Unhappy: chaleco se desconecta → contador reiniciado, no aparece recordatorio falso
+ *
+ * El hook lee preferencias del usuario via useAuth; mockeamos el contexto
+ * para devolver el valor por defecto de 60 min sin necesitar el provider.
  */
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@/features/iam/context/AuthContext', () => ({
+  useAuth: () => ({
+    user: {
+      preferences: { break_reminder_minutes: 60, email_notifications: true },
+    },
+  }),
+}))
+
 import { useBreakReminder } from './useBreakReminder'
 import type { LatestReading } from '../types/posture'
 import type { VestStatus } from './useVestStatus'

@@ -1,8 +1,19 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { configureAuth, tokenStorage } from '@/shared/api/client'
+import { useToast } from '@/shared/ui/toast'
 import {
   getMe,
   login as loginApi,
+  logout as logoutApi,
   refresh as refreshApi,
   register as registerApi,
 } from '../services/authService'
@@ -19,9 +30,29 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+// HU-25 AC2 — auto-logout por inactividad. El AC pide 30 min.
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const inactivityTimerRef = useRef<number | null>(null)
+  const toast = useToast()
+
+  const expireSession = useCallback(() => {
+    // Avisar al usuario y descartar tokens.
+    toast.info('Tu sesión ha expirado por inactividad', 'Vuelve a iniciar sesión.')
+    logoutApi().catch(() => {})
+    tokenStorage.clear()
+    setUser(null)
+  }, [toast])
+
+  const resetInactivity = useCallback(() => {
+    if (inactivityTimerRef.current !== null) {
+      window.clearTimeout(inactivityTimerRef.current)
+    }
+    inactivityTimerRef.current = window.setTimeout(expireSession, INACTIVITY_TIMEOUT_MS)
+  }, [expireSession])
 
   useEffect(() => {
     configureAuth({
@@ -32,6 +63,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     })
   }, [])
+
+  // HU-25 AC2 — escucha de actividad: cualquier interacción reinicia el
+  // contador. Si el usuario está null no hay contador activo.
+  useEffect(() => {
+    if (!user) {
+      if (inactivityTimerRef.current !== null) {
+        window.clearTimeout(inactivityTimerRef.current)
+        inactivityTimerRef.current = null
+      }
+      return
+    }
+    const events: (keyof WindowEventMap)[] = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+    ]
+    resetInactivity()
+    for (const evt of events) {
+      window.addEventListener(evt, resetInactivity, { passive: true })
+    }
+    return () => {
+      for (const evt of events) {
+        window.removeEventListener(evt, resetInactivity)
+      }
+      if (inactivityTimerRef.current !== null) {
+        window.clearTimeout(inactivityTimerRef.current)
+        inactivityTimerRef.current = null
+      }
+    }
+  }, [user, resetInactivity])
 
   useEffect(() => {
     const access = tokenStorage.getAccess()
@@ -66,6 +129,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(me)
       },
       logout() {
+        // HU-25 AC1 — avisamos al backend para que quede en logs antes de
+        // descartar tokens. No bloqueamos la UI si la llamada falla.
+        logoutApi().catch(() => {})
         tokenStorage.clear()
         setUser(null)
       },

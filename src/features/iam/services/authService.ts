@@ -32,6 +32,34 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
   })
 }
 
+/** HU-25 AC1 — notifica al backend del cierre de sesión. Los JWT son
+ * stateless así que el backend sólo responde 204; pero llamar este endpoint
+ * deja constancia en logs y permite invalidación server-side a futuro. */
+export async function logout(): Promise<void> {
+  return apiFetch<void>('/auth/logout', { method: 'POST' })
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await apiFetch<{ message: string }>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+    skipAuth: true,
+  })
+}
+
+export async function changeMyPassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  return apiFetch<void>('/users/me/password', {
+    method: 'POST',
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  })
+}
+
 export async function getMe(): Promise<AuthUser> {
   return apiFetch<AuthUser>('/users/me')
 }

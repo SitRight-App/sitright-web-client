@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { useToast } from '@/shared/ui/toast'
 import { useAuth } from '../context/AuthContext'
-import { listMyNotifications, updateMe } from '../services/authService'
+import { changeMyPassword, listMyNotifications, updateMe } from '../services/authService'
 import type { AppNotification } from '../types/auth'
 
 function FormField({
@@ -243,8 +243,108 @@ export function SettingsPage() {
         </div>
       </form>
 
+      <ChangePasswordPanel />
       <NotificationsPanel />
     </div>
+  )
+}
+
+function ChangePasswordPanel() {
+  const toast = useToast()
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    if (newPassword.length < 8) {
+      toast.error(
+        'Contraseña inválida',
+        'La nueva contraseña debe tener al menos 8 caracteres.',
+      )
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Las contraseñas no coinciden', 'Vuelve a escribir la nueva.')
+      return
+    }
+    setSubmitting(true)
+    try {
+      await changeMyPassword(currentPassword, newPassword)
+      toast.success(
+        'Contraseña actualizada',
+        'Usa la nueva en tu próximo inicio de sesión.',
+      )
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (err) {
+      toast.error(
+        'No se pudo cambiar la contraseña',
+        err instanceof Error ? err.message : 'Reintenta en unos segundos',
+      )
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <section className="relative mt-6 editorial-card p-7">
+      <span className="num-tag absolute right-5 top-5">№ 04</span>
+      <div className="mb-5 border-b border-dashed border-sand pb-4">
+        <p className="label-mono">Seguridad</p>
+        <h2 className="mt-1.5 font-serif text-2xl tracking-tight text-ink">
+          Cambiar contraseña.
+        </h2>
+      </div>
+
+      <form onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-3">
+        <FormField num="01" label="Contraseña actual">
+          <input
+            type="password"
+            required
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className={fieldInput}
+          />
+        </FormField>
+        <FormField num="02" label="Nueva contraseña">
+          <input
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className={fieldInput}
+          />
+        </FormField>
+        <FormField num="03" label="Repetir nueva">
+          <input
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className={fieldInput}
+          />
+        </FormField>
+
+        <div className="lg:col-span-3">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="inline-flex items-center gap-3 bg-moss-deep px-7 py-4 text-[13px] font-medium uppercase tracking-[0.05em] text-cream transition-colors hover:bg-ink disabled:opacity-60"
+          >
+            <span>{submitting ? 'Cambiando…' : 'Actualizar contraseña'}</span>
+            <span aria-hidden>→</span>
+          </button>
+        </div>
+      </form>
+    </section>
   )
 }
 

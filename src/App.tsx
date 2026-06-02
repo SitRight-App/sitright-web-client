@@ -5,10 +5,12 @@ import { AppLayout } from '@/shared/layout/AppLayout'
 import { DashboardPage } from '@/features/posture-visualization/pages/DashboardPage'
 import { AuthProvider } from '@/features/iam/context/AuthContext'
 import { ProtectedRoute } from '@/features/iam/components/ProtectedRoute'
+import { ForgotPasswordPage } from '@/features/iam/pages/ForgotPasswordPage'
 import { LoginPage } from '@/features/iam/pages/LoginPage'
 import { RegisterPage } from '@/features/iam/pages/RegisterPage'
 import { HistoryListPage } from '@/features/session-history/pages/HistoryListPage'
 import { SessionDetailPage } from '@/features/session-history/pages/SessionDetailPage'
+import { WeeklyEvolutionPage } from '@/features/session-history/pages/WeeklyEvolutionPage'
 import { VestManagementPage } from '@/features/vest-management/pages/VestManagementPage'
 import { SettingsPage } from '@/features/iam/pages/SettingsPage'
 import { AdminPage } from '@/features/iam/pages/AdminPage'
@@ -29,11 +31,13 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
                   <Route index element={<DashboardPage />} />
                   <Route path="history" element={<HistoryListPage />} />
+                  <Route path="history/weekly" element={<WeeklyEvolutionPage />} />
                   <Route path="history/:sessionId" element={<SessionDetailPage />} />
                   <Route path="recommendations" element={<RecommendationsPage />} />
                   <Route path="vest" element={<VestManagementPage />} />

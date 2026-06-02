@@ -97,10 +97,13 @@ export function SessionTimelineChart({ readings, isLoading, isError, durationMin
 
   return (
     <div>
-      {/* HU-10 AC2 — sesión corta (<30 min): mostrar lo que hay + aviso editorial */}
+      {/* HU-10 AC2 + HU-19 AC2 — sesión corta: aviso de continuar +
+          advertencia explícita de que los resultados son referenciales. */}
       {isShortSession && (
         <div className="mb-4 border-l-2 border-sand bg-sand/15 px-4 py-2.5 text-xs text-ink-soft">
-          Continúa usando el chaleco para ver una línea de tiempo más completa.
+          <strong className="font-serif text-ink">Sesión corta:</strong> los
+          resultados son referenciales. Continúa usando el chaleco para ver una
+          línea de tiempo más completa.
         </div>
       )}
 

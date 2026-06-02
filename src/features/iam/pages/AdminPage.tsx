@@ -2,7 +2,8 @@ import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { staggerContainer, staggerItem } from '@/shared/ui/motion'
-import { useAllUsers } from '../hooks/useAdmin'
+import { useToast } from '@/shared/ui/toast'
+import { useAdminStats, useAllUsers, useDeactivateUser } from '../hooks/useAdmin'
 import type { AuthUser } from '../types/auth'
 
 const longDateFmt = new Intl.DateTimeFormat('es-PE', {
@@ -13,6 +14,7 @@ const longDateFmt = new Intl.DateTimeFormat('es-PE', {
 
 export function AdminPage() {
   const { data, isLoading, isError } = useAllUsers()
+  const { data: adminStats } = useAdminStats()
 
   const stats = useMemo(() => {
     const users = data?.users ?? []
@@ -50,16 +52,46 @@ export function AdminPage() {
         <AdminSkeleton />
       ) : (
         <>
+          {/* HU-22 AC1 — métricas globales del piloto: usuarios activos,
+              sesiones totales y promedio postura adecuada general. */}
           <motion.div
-            className="mt-8 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4"
+            className="mt-8 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3"
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
           >
-            <StatCard num="№ 01" title="Total usuarios" value={stats.total.toString()} dark />
-            <StatCard num="№ 02" title="Trabajadores" value={stats.workers.toString()} />
-            <StatCard num="№ 03" title="Administradores" value={stats.admins.toString()} />
-            <StatCard num="№ 04" title="Activos" value={stats.active.toString()} />
+            <StatCard
+              num="№ 01"
+              title="Usuarios activos"
+              value={(adminStats?.active_users ?? stats.active).toString()}
+              dark
+            />
+            <StatCard
+              num="№ 02"
+              title="Sesiones totales"
+              value={(adminStats?.total_sessions ?? 0).toString()}
+            />
+            <StatCard
+              num="№ 03"
+              title="Postura adecuada (promedio)"
+              value={
+                adminStats?.average_adequate_percentage !== undefined &&
+                adminStats?.average_adequate_percentage !== null
+                  ? `${Math.round(adminStats.average_adequate_percentage)}%`
+                  : '—'
+              }
+            />
+          </motion.div>
+
+          <motion.div
+            className="mt-3.5 grid gap-3.5 sm:grid-cols-3"
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+          >
+            <StatCard num="№ 04" title="Total usuarios" value={stats.total.toString()} />
+            <StatCard num="№ 05" title="Trabajadores" value={stats.workers.toString()} />
+            <StatCard num="№ 06" title="Administradores" value={stats.admins.toString()} />
           </motion.div>
 
           <section className="relative mt-6 editorial-card p-7">
@@ -77,6 +109,16 @@ export function AdminPage() {
             </div>
 
             {data && data.users.length > 0 && <UsersTable users={data.users} />}
+            {data && data.users.length === 0 && (
+              <div className="border border-dashed border-sand p-10 text-center">
+                <p className="font-serif text-[24px] tracking-tight text-ink">
+                  Aún no hay usuarios registrados en el sistema.
+                </p>
+                <p className="mt-2 text-sm text-ink-soft">
+                  Cuando alguien se registre desde la pantalla pública, aparecerá aquí.
+                </p>
+              </div>
+            )}
           </section>
         </>
       )}
@@ -119,20 +161,40 @@ function StatCard({ num, title, value, dark = false }: StatCardProps) {
 }
 
 function UsersTable({ users }: { users: AuthUser[] }) {
+  const deactivate = useDeactivateUser()
+  const toast = useToast()
+
+  const handleDeactivate = (u: AuthUser) => {
+    // HU-30 — confirmación previa.
+    if (!confirm(`¿Desactivar la cuenta de ${u.name}? El usuario no podrá iniciar sesión hasta ser reactivada.`)) {
+      return
+    }
+    deactivate.mutate(u.id, {
+      onSuccess: () => toast.success('Cuenta desactivada', `${u.name} no podrá iniciar sesión.`),
+      onError: (err) => {
+        toast.error(
+          'No se pudo desactivar',
+          err instanceof Error ? err.message : 'Reintenta en unos segundos',
+        )
+      },
+    })
+  }
+
   return (
     <div>
-      <div className="grid grid-cols-[1.4fr_1fr_120px_120px_120px] gap-5 border-b border-sand px-3 pb-3 font-mono text-[9px] uppercase tracking-[0.20em] text-ink-faint">
+      <div className="grid grid-cols-[1.4fr_1fr_110px_110px_120px_100px] gap-5 border-b border-sand px-3 pb-3 font-mono text-[9px] uppercase tracking-[0.20em] text-ink-faint">
         <span>Nombre</span>
         <span>Correo</span>
         <span>Rol</span>
         <span>Estado</span>
         <span>Alta</span>
+        <span />
       </div>
       <ul>
         {users.map((u) => (
           <li
             key={u.id}
-            className="grid grid-cols-[1.4fr_1fr_120px_120px_120px] items-center gap-5 border-b border-sand px-3 py-4 transition-colors hover:bg-cream/60"
+            className="grid grid-cols-[1.4fr_1fr_110px_110px_120px_100px] items-center gap-5 border-b border-sand px-3 py-4 transition-colors hover:bg-cream/60"
           >
             <span className="font-serif text-[15px] text-ink">{u.name}</span>
             <span className="font-mono text-[12px] text-ink-soft">{u.email}</span>
@@ -141,6 +203,16 @@ function UsersTable({ users }: { users: AuthUser[] }) {
             <span className="font-mono text-[11px] text-ink-soft">
               {longDateFmt.format(new Date(u.created_at))}
             </span>
+            {u.role !== 'admin' && u.is_active && (
+              <button
+                type="button"
+                onClick={() => handleDeactivate(u)}
+                disabled={deactivate.isPending}
+                className="font-mono text-[10px] uppercase tracking-[0.14em] text-terracotta-deep underline-offset-2 hover:underline disabled:opacity-50"
+              >
+                Desactivar
+              </button>
+            )}
           </li>
         ))}
       </ul>

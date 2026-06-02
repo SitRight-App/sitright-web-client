@@ -111,10 +111,18 @@ export function LoginPage() {
             </div>
 
             <div className="mb-5">
-              <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">
-                <span className="mr-2 text-terracotta">02</span>
-                Contraseña
-              </label>
+              <div className="mb-2 flex items-end justify-between">
+                <label className="block font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">
+                  <span className="mr-2 text-terracotta">02</span>
+                  Contraseña
+                </label>
+                <Link
+                  to="/forgot-password"
+                  className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-soft underline-offset-2 hover:text-terracotta hover:underline"
+                >
+                  Olvidé mi contraseña
+                </Link>
+              </div>
               <input
                 type="password"
                 required
