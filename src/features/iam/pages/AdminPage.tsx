@@ -12,6 +12,14 @@ const longDateFmt = new Intl.DateTimeFormat('es-PE', {
   year: 'numeric',
 })
 
+const shortDateFmt = new Intl.DateTimeFormat('es-PE', {
+  day: '2-digit',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+})
+
 export function AdminPage() {
   const { data, isLoading, isError } = useAllUsers()
   const { data: adminStats } = useAdminStats()
@@ -182,19 +190,21 @@ function UsersTable({ users }: { users: AuthUser[] }) {
 
   return (
     <div>
-      <div className="grid grid-cols-[1.4fr_1fr_110px_110px_120px_100px] gap-5 border-b border-sand px-3 pb-3 font-mono text-[9px] uppercase tracking-[0.20em] text-ink-faint">
+      <div className="grid grid-cols-[1.3fr_1fr_90px_100px_120px_130px_120px_100px] gap-5 border-b border-sand px-3 pb-3 font-mono text-[9px] uppercase tracking-[0.20em] text-ink-faint">
         <span>Nombre</span>
         <span>Correo</span>
         <span>Rol</span>
         <span>Estado</span>
         <span>Alta</span>
+        <span>Última sesión</span>
+        <span>Chaleco</span>
         <span />
       </div>
       <ul>
         {users.map((u) => (
           <li
             key={u.id}
-            className="grid grid-cols-[1.4fr_1fr_110px_110px_120px_100px] items-center gap-5 border-b border-sand px-3 py-4 transition-colors hover:bg-cream/60"
+            className="grid grid-cols-[1.3fr_1fr_90px_100px_120px_130px_120px_100px] items-center gap-5 border-b border-sand px-3 py-4 transition-colors hover:bg-cream/60"
           >
             <span className="font-serif text-[15px] text-ink">{u.name}</span>
             <span className="font-mono text-[12px] text-ink-soft">{u.email}</span>
@@ -203,6 +213,12 @@ function UsersTable({ users }: { users: AuthUser[] }) {
             <span className="font-mono text-[11px] text-ink-soft">
               {longDateFmt.format(new Date(u.created_at))}
             </span>
+            <span className="font-mono text-[11px] text-ink-soft">
+              {u.last_session_at
+                ? shortDateFmt.format(new Date(u.last_session_at))
+                : <span className="italic text-ink-faint">sin sesiones</span>}
+            </span>
+            <VestSummary vest={u.linked_vest ?? null} />
             {u.role !== 'admin' && u.is_active && (
               <button
                 type="button"
@@ -213,6 +229,7 @@ function UsersTable({ users }: { users: AuthUser[] }) {
                 Desactivar
               </button>
             )}
+            {(u.role === 'admin' || !u.is_active) && <span />}
           </li>
         ))}
       </ul>
@@ -232,6 +249,26 @@ function RoleBadge({ role }: { role: 'admin' | 'worker' }) {
     >
       <span className={`h-1.5 w-1.5 rounded-full ${isAdmin ? 'bg-terracotta' : 'bg-moss'}`} />
       {isAdmin ? 'Admin' : 'Trabajador'}
+    </span>
+  )
+}
+
+function VestSummary({ vest }: { vest: AuthUser['linked_vest'] | null }) {
+  if (!vest) {
+    return (
+      <span className="font-mono text-[10px] italic text-ink-faint">
+        sin chaleco
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex flex-col">
+      <span className="font-mono text-[10px] tracking-[0.06em] text-ink">
+        {vest.mac_address ?? '—'}
+      </span>
+      <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
+        {vest.is_calibrated ? 'Calibrado' : 'Sin calibrar'}
+      </span>
     </span>
   )
 }

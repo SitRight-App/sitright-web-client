@@ -10,6 +10,18 @@ export interface Preferences {
   language: string
 }
 
+/**
+ * HU-29 AC1 — datos extra que el panel admin necesita ver junto a la lista
+ * de usuarios. Se entregan solo desde `/admin/users` (el `/users/me` del
+ * usuario regular no los necesita).
+ */
+export interface LinkedVestSummary {
+  mac_address: string | null
+  is_calibrated: boolean
+  linked_at: string | null
+  battery_level: number | null
+}
+
 export interface AuthUser {
   id: string
   name: string
@@ -19,6 +31,10 @@ export interface AuthUser {
   created_at: string
   anthropometric_data: Anthropometric
   preferences: Preferences
+  /** ISO timestamp del inicio de la última sesión registrada (solo admin). */
+  last_session_at?: string | null
+  /** Resumen del chaleco vinculado a este usuario (solo admin). */
+  linked_vest?: LinkedVestSummary | null
 }
 
 export interface AuthTokens {

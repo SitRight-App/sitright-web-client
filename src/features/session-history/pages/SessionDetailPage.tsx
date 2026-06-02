@@ -170,8 +170,77 @@ export function SessionDetailPage() {
   )
 }
 
-function exportSessionToPdf() {
-  window.print()
+/**
+ * HU-21 — exporta el detalle de la sesión como PDF.
+ *
+ * Usa html2canvas para capturar el bloque `.session-detail-printable` y
+ * jsPDF para componer el archivo. Lo carga dinámicamente para no inflar el
+ * bundle inicial (la mayoría de usuarios no exporta cada visita).
+ *
+ * Si la captura falla, hace fallback a `window.print()` (que también
+ * permite guardar como PDF desde el diálogo del navegador).
+ */
+async function exportSessionToPdf(sessionId: string): Promise<void> {
+  const target = document.querySelector<HTMLElement>('.session-detail-printable')
+  if (!target) {
+    window.print()
+    return
+  }
+  try {
+    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf'),
+    ])
+    const canvas = await html2canvas(target, {
+      backgroundColor: '#F4EFE6',
+      scale: window.devicePixelRatio > 1 ? 2 : 1.5,
+      useCORS: true,
+    })
+    const imgData = canvas.toDataURL('image/png')
+    // A4 portrait, márgenes 12 mm
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
+    const margin = 12
+    const usableWidth = pageWidth - margin * 2
+    const ratio = canvas.height / canvas.width
+    const imgHeight = usableWidth * ratio
+    // Si la imagen es más alta que una página, se trocea en varias.
+    if (imgHeight <= pageHeight - margin * 2) {
+      pdf.addImage(imgData, 'PNG', margin, margin, usableWidth, imgHeight)
+    } else {
+      let yOffset = 0
+      const sliceHeight = pageHeight - margin * 2
+      const sliceCanvasHeight = (sliceHeight / usableWidth) * canvas.width
+      while (yOffset < canvas.height) {
+        const sliceCanvas = document.createElement('canvas')
+        sliceCanvas.width = canvas.width
+        sliceCanvas.height = Math.min(sliceCanvasHeight, canvas.height - yOffset)
+        const ctx = sliceCanvas.getContext('2d')
+        if (!ctx) break
+        ctx.drawImage(
+          canvas,
+          0,
+          yOffset,
+          canvas.width,
+          sliceCanvas.height,
+          0,
+          0,
+          canvas.width,
+          sliceCanvas.height,
+        )
+        const sliceData = sliceCanvas.toDataURL('image/png')
+        if (yOffset > 0) pdf.addPage()
+        const sliceImgHeight = (sliceCanvas.height / canvas.width) * usableWidth
+        pdf.addImage(sliceData, 'PNG', margin, margin, usableWidth, sliceImgHeight)
+        yOffset += sliceCanvas.height
+      }
+    }
+    pdf.save(`sitright-sesion-${sessionId.slice(0, 8)}.pdf`)
+  } catch {
+    // Fallback al diálogo de impresión del navegador.
+    window.print()
+  }
 }
 
 function SessionDetailSkeleton() {
@@ -329,7 +398,7 @@ function Hero({ session, dominant }: HeroProps) {
           </Link>
           <button
             type="button"
-            onClick={exportSessionToPdf}
+            onClick={() => void exportSessionToPdf(session.id)}
             className="flex-1 border border-cream/30 bg-transparent px-3.5 py-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:border-cream"
           >
             Exportar PDF
