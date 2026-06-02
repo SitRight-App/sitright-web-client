@@ -60,28 +60,26 @@ export function AdminPage() {
         <AdminSkeleton />
       ) : (
         <>
-          {/* HU-22 AC1 — métricas globales del piloto: usuarios activos,
-              sesiones totales y promedio postura adecuada general. */}
+          {/* HU-22 AC1 — métricas globales del piloto. Una sola fila: las 3
+              cifras que el AC pide explícitamente + el desglose por rol que
+              le aporta contexto al admin. */}
           <motion.div
-            className="mt-8 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3"
+            className="mt-8 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-5"
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
           >
             <StatCard
-              num="№ 01"
               title="Usuarios activos"
               value={(adminStats?.active_users ?? stats.active).toString()}
               dark
             />
             <StatCard
-              num="№ 02"
               title="Sesiones totales"
               value={(adminStats?.total_sessions ?? 0).toString()}
             />
             <StatCard
-              num="№ 03"
-              title="Postura adecuada (promedio)"
+              title="Postura adecuada (prom.)"
               value={
                 adminStats?.average_adequate_percentage !== undefined &&
                 adminStats?.average_adequate_percentage !== null
@@ -89,17 +87,8 @@ export function AdminPage() {
                   : '—'
               }
             />
-          </motion.div>
-
-          <motion.div
-            className="mt-3.5 grid gap-3.5 sm:grid-cols-3"
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-          >
-            <StatCard num="№ 04" title="Total usuarios" value={stats.total.toString()} />
-            <StatCard num="№ 05" title="Trabajadores" value={stats.workers.toString()} />
-            <StatCard num="№ 06" title="Administradores" value={stats.admins.toString()} />
+            <StatCard title="Trabajadores" value={stats.workers.toString()} />
+            <StatCard title="Administradores" value={stats.admins.toString()} />
           </motion.div>
 
           <section className="relative mt-6 editorial-card p-7">
@@ -135,27 +124,19 @@ export function AdminPage() {
 }
 
 interface StatCardProps {
-  num: string
   title: string
   value: string
   dark?: boolean
 }
 
-function StatCard({ num, title, value, dark = false }: StatCardProps) {
+function StatCard({ title, value, dark = false }: StatCardProps) {
   return (
     <motion.div
       variants={staggerItem}
-      className={`relative rounded border p-5 ${
+      className={`rounded border p-5 ${
         dark ? 'border-moss bg-moss text-cream' : 'border-sand bg-cream-bone text-ink'
       }`}
     >
-      <span
-        className={`absolute right-4 top-4 font-mono text-[10px] uppercase tracking-[0.16em] ${
-          dark ? 'text-cream/55' : 'text-ink-faint'
-        }`}
-      >
-        {num}
-      </span>
       <p
         className={`mb-4 font-mono text-[10px] uppercase tracking-[0.18em] ${
           dark ? 'text-sand' : 'text-ink-soft'
@@ -163,7 +144,7 @@ function StatCard({ num, title, value, dark = false }: StatCardProps) {
       >
         {title}
       </p>
-      <p className="font-serif text-[44px] leading-none tracking-[-0.035em]">{value}</p>
+      <p className="font-serif text-[36px] leading-none tracking-[-0.035em]">{value}</p>
     </motion.div>
   )
 }

@@ -42,12 +42,6 @@ export function RecommendationsCard({ recommendations, postureClass }: Props) {
       <h3 className="mt-2 font-serif text-2xl tracking-tight text-ink">
         {isGood ? 'Tu postura ha sido adecuada hoy.' : 'Pequeños ajustes ahora.'}
       </h3>
-      {/* HU-11 AC3 — sin desviaciones: mensaje motivacional + sugerir mantenimiento general. */}
-      {isGood && (
-        <p className="mt-3 max-w-md text-[13px] leading-relaxed text-ink-soft">
-          Continúa con estas rutinas de mantenimiento postural para sostener el ritmo.
-        </p>
-      )}
 
       <div className="mt-5 space-y-4">
         {visible.map((rec, i) => (

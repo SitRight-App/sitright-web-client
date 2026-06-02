@@ -1,10 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { useToast } from '@/shared/ui/toast'
 import { useAuth } from '../context/AuthContext'
-import { changeMyPassword, listMyNotifications, updateMe } from '../services/authService'
-import type { AppNotification } from '../types/auth'
+import { changeMyPassword, updateMe } from '../services/authService'
 
 function FormField({
   num,
@@ -244,7 +241,6 @@ export function SettingsPage() {
       </form>
 
       <ChangePasswordPanel />
-      <NotificationsPanel />
     </div>
   )
 }
@@ -347,107 +343,3 @@ function ChangePasswordPanel() {
   )
 }
 
-const dateTimeFmt = new Intl.DateTimeFormat('es-PE', {
-  day: '2-digit',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-})
-
-function NotificationsPanel() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['notifications', 'me'],
-    queryFn: listMyNotifications,
-    staleTime: 60_000,
-  })
-
-  return (
-    <section className="relative mt-6 editorial-card p-7">
-      <span className="num-tag absolute right-5 top-5">№ 04</span>
-      <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-dashed border-sand pb-4">
-        <div>
-          <p className="label-mono">Notificaciones</p>
-          <h2 className="mt-1.5 font-serif text-2xl tracking-tight text-ink">
-            Lo que llegó a tu correo.
-          </h2>
-        </div>
-        {data && data.length > 0 && (
-          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-faint">
-            {data.length} {data.length === 1 ? 'notificación' : 'notificaciones'}
-          </span>
-        )}
-      </div>
-
-      {isError && (
-        <p className="border-l-2 border-terracotta bg-terracotta/10 px-3 py-2 text-xs text-terracotta-deep">
-          No se pudieron cargar las notificaciones.
-        </p>
-      )}
-
-      {isLoading && (
-        <ul>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <li
-              key={i}
-              className="grid grid-cols-[28px_1fr_auto] items-start gap-4 py-3.5"
-            >
-              <Skeleton width={8} height={8} circle className="mt-1.5" />
-              <div className="space-y-1.5">
-                <SkeletonTextLine width="80%" />
-                <SkeletonTextLine width="40%" />
-              </div>
-              <SkeletonTextLine width={60} />
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {!isLoading && data && data.length === 0 && (
-        <div className="border border-dashed border-sand p-8 text-center">
-          <p className="font-serif text-lg text-ink">Sin notificaciones por ahora.</p>
-          <p className="mt-1 text-xs text-ink-soft">
-            Cuando tu chaleco detecte algo relevante, te avisamos por aquí.
-          </p>
-        </div>
-      )}
-
-      {data && data.length > 0 && (
-        <ul>
-          {data.slice(0, 10).map((n, i) => (
-            <NotificationItem key={n.id} notification={n} isLast={i === Math.min(data.length, 10) - 1} />
-          ))}
-        </ul>
-      )}
-    </section>
-  )
-}
-
-interface NotificationItemProps {
-  notification: AppNotification
-  isLast: boolean
-}
-
-function NotificationItem({ notification: n, isLast }: NotificationItemProps) {
-  return (
-    <li
-      className={`grid grid-cols-[28px_1fr_auto] items-start gap-4 py-3.5 ${
-        isLast ? '' : 'border-b border-dashed border-sand'
-      }`}
-    >
-      <span
-        className={`mt-1.5 inline-block h-2 w-2 rounded-full ${
-          n.is_read ? 'bg-ink-faint' : 'bg-terracotta'
-        }`}
-      />
-      <div>
-        <p className="font-serif text-base text-ink">{n.message}</p>
-        <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
-          {n.type} · {n.channel}
-        </p>
-      </div>
-      <span className="text-right font-mono text-[11px] text-ink-soft">
-        {dateTimeFmt.format(new Date(n.sent_at))}
-      </span>
-    </li>
-  )
-}

@@ -24,10 +24,13 @@ describe('VestStatusBadge — HU-07', () => {
   })
 
   // HU-06 AC3 — chaleco desconectado: texto literal 'Chaleco sin conexión'
-  // y hint que sugiere verificar la conexión WiFi.
-  it('muestra "Chaleco sin conexión" + hint de WiFi cuando status es disconnected', () => {
+  // y hint en el title (tooltip nativo del navegador) que sugiere verificar
+  // la conexión WiFi del chaleco.
+  it('muestra "Chaleco sin conexión" con tooltip de WiFi cuando status es disconnected', () => {
     render(<VestStatusBadge status="disconnected" />)
-    expect(screen.getByText(/chaleco sin conexión/i)).toBeInTheDocument()
-    expect(screen.getByText(/verifica la conexión wifi/i)).toBeInTheDocument()
+    const badge = screen.getByText(/chaleco sin conexión/i).closest('span')
+    expect(badge).toBeInTheDocument()
+    // El hint vive en title="...", expuesto a screen readers y al navegador.
+    expect(badge?.parentElement?.getAttribute('title')).toMatch(/verifica la conexión wifi/i)
   })
 })

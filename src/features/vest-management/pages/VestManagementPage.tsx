@@ -98,14 +98,24 @@ interface PropsWithVest {
 
 function VestStatusHeadPill({ vest }: PropsWithVest) {
   const { data: latest } = useCurrentPosture()
-  // Sólo consideramos la lectura si pertenece al chaleco vinculado; el
-  // endpoint /readings/latest aún no filtra por usuario, así que una lectura
-  // de otro vest podría colarse aquí (se ve sobre todo en demos con varios
-  // chalecos compartiendo backend).
   const isOurReading = latest?.vest_id === vest.id
   const secondsAgo =
     isOurReading && latest?.timestamp ? secondsSince(latest.timestamp) : null
   const isConnected = secondsAgo !== null && secondsAgo <= 30
+
+  // Estado más preciso: "nunca tuvo lectura" vs "lectura antigua" vs "live".
+  let label: string
+  if (isConnected) {
+    label = `Conectado · ${secondsAgo} s desde la última lectura`
+  } else if (!isOurReading) {
+    // Aún no llegó la primera lectura de este chaleco.
+    label = !vest.is_calibrated
+      ? 'Vinculado · sin calibrar'
+      : 'Esperando primera lectura'
+  } else {
+    label = 'Sin actividad reciente'
+  }
+
   return (
     <span
       className={`inline-flex items-center gap-2.5 rounded-full border px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] ${
@@ -115,11 +125,7 @@ function VestStatusHeadPill({ vest }: PropsWithVest) {
       }`}
     >
       <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-moss' : 'bg-ink-faint'}`} />
-      {isConnected
-        ? `Conectado · ${secondsAgo} s desde la última lectura`
-        : !vest.is_calibrated
-          ? 'Vinculado · sin calibrar'
-          : 'Sin actividad reciente'}
+      {label}
     </span>
   )
 }
