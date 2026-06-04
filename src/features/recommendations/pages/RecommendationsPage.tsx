@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { ArrowRight, Check } from 'lucide-react'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import {
   useAllRecommendations,
@@ -123,19 +124,19 @@ export function RecommendationsPage() {
 
   return (
     <div>
-      <div className="mb-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-        Panel <span className="text-terracotta">›</span> Recomendaciones
-      </div>
-
+      {/* Encabezado de sección: un único título display en font-semibold */}
       <div className="flex flex-wrap items-end justify-between gap-6 pb-8">
-        <h1 className="font-serif text-[44px] font-semibold leading-none tracking-[-0.025em] text-ink">
-          Pequeños gestos,
-          <br />
-          <em className="italic font-normal text-moss">columnas más sanas.</em>
-        </h1>
-        <div className="text-right font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-          Aplicadas hoy
-          <div className="mt-1.5 font-serif text-3xl normal-case tracking-tight text-ink">
+        <div>
+          <p className="label-mono">Recomendaciones</p>
+          <h1 className="mt-2 text-[34px] font-semibold leading-tight tracking-tight text-ink sm:text-[40px]">
+            Pequeños gestos, columnas más sanas.
+          </h1>
+        </div>
+        <div className="text-right">
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft">
+            Aplicadas hoy
+          </p>
+          <div className="mt-1.5 text-3xl font-semibold tracking-tight text-ink">
             {appliedCount}{' '}
             <span className="text-ink-faint">/ {gridEntries.length}</span>
           </div>
@@ -143,21 +144,21 @@ export function RecommendationsPage() {
       </div>
 
       {isError && (
-        <div className="mb-6 border-l-2 border-terracotta bg-terracotta/10 px-4 py-3 text-sm text-terracotta-deep">
+        <div className="mb-6 rounded-xl border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-sm text-terracotta-deep">
           No se pudo obtener el catálogo de recomendaciones. Verifica que el backend esté disponible.
         </div>
       )}
 
       {isLoading && (
         <>
-          <section className="mb-9 grid grid-cols-1 overflow-hidden rounded-md border border-sand bg-cream lg:grid-cols-[1.3fr_1fr]">
-            <div className="p-9" style={{ backgroundColor: 'rgb(var(--color-moss-deep))' }}>
-              <Skeleton width="60%" height={12} className="bg-sand/30" />
-              <Skeleton width="80%" height={48} className="mt-5 bg-sand/30" />
-              <Skeleton width="60%" height={48} className="mt-2 bg-sand/30" />
-              <Skeleton width="100%" height={56} className="mt-6 bg-sand/30" />
+          <section className="mb-9 grid grid-cols-1 overflow-hidden rounded-xl border border-sand bg-cream-bone lg:grid-cols-[1.3fr_1fr]">
+            <div className="bg-moss-deep p-8 lg:p-10">
+              <Skeleton width="60%" height={12} className="bg-cream-bone/15" />
+              <Skeleton width="80%" height={48} className="mt-5 bg-cream-bone/15" />
+              <Skeleton width="60%" height={48} className="mt-2 bg-cream-bone/15" />
+              <Skeleton width="100%" height={56} className="mt-6 bg-cream-bone/15" />
             </div>
-            <div className="bg-cream-deep p-9">
+            <div className="bg-cream-deep p-8 lg:p-10">
               <SkeletonTextLine width="40%" />
               <div className="mt-4 space-y-3.5">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -193,36 +194,32 @@ export function RecommendationsPage() {
       )}
 
       {gridEntries.length > 0 && (
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-            Categoría
-          </span>
+        <div className="mb-6 flex flex-wrap items-center gap-2.5">
+          <span className="mr-1 label-mono">Categoría</span>
           {(Object.keys(CATEGORY_LABELS) as CategoryFilter[]).map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setCategory(cat)}
-              className={`rounded-full border px-4 py-2 text-xs transition-colors ${
+              className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
                 category === cat
-                  ? 'border-ink bg-ink text-cream'
-                  : 'border-sand bg-transparent text-ink hover:border-ink'
+                  ? 'border-moss bg-moss text-cream-bone'
+                  : 'border-sand bg-cream-bone text-ink-soft hover:border-moss hover:text-ink'
               }`}
             >
               {CATEGORY_LABELS[cat]} · {counts[cat]}
             </button>
           ))}
-          <span className="ml-4 mr-1 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-            Estado
-          </span>
+          <span className="ml-4 mr-1 label-mono">Estado</span>
           {(['pending', 'applied'] as StatusFilter[]).map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => setStatus(status === s ? 'all' : s)}
-              className={`rounded-full border px-4 py-2 text-xs transition-colors ${
+              className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
                 status === s
-                  ? 'border-ink bg-ink text-cream'
-                  : 'border-sand bg-transparent text-ink hover:border-ink'
+                  ? 'border-moss bg-moss text-cream-bone'
+                  : 'border-sand bg-cream-bone text-ink-soft hover:border-moss hover:text-ink'
               }`}
             >
               {s === 'pending'
@@ -243,11 +240,12 @@ export function RecommendationsPage() {
           />
         ))}
         {!isLoading && filtered.length === 0 && !isError && (
-          <div className="col-span-full border border-dashed border-sand p-10 text-center">
-            <p className="font-serif text-2xl tracking-tight text-ink">
+          <div className="editorial-card col-span-full p-10 text-center sm:p-14">
+            <p className="label-mono">Sin resultados</p>
+            <p className="mt-3 text-2xl font-semibold tracking-tight text-ink">
               No hay recomendaciones en este filtro.
             </p>
-            <p className="mt-1.5 text-sm text-ink-soft">
+            <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
               Ajustá los filtros de categoría o estado.
             </p>
           </div>
@@ -269,46 +267,39 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
   const titleMain = featured.title.replace(titleEmphasis, '').trim()
 
   return (
-    <section className="mb-9 grid grid-cols-1 overflow-hidden rounded-md border border-sand bg-cream lg:grid-cols-[1.3fr_1fr]">
-      <div
-        className="relative p-9 lg:p-10 text-cream"
-        style={{
-          backgroundColor: 'rgb(var(--color-moss-deep))',
-          backgroundImage:
-            'radial-gradient(at 100% 0%, rgba(200,98,60,0.18), transparent 60%), radial-gradient(at 0% 100%, rgba(77,107,85,0.30), transparent 50%)',
-        }}
-      >
+    <section className="mb-9 grid grid-cols-1 overflow-hidden rounded-xl border border-sand bg-cream-bone lg:grid-cols-[1.3fr_1fr]">
+      {/* Panel de marca: verde plano sin blobs decorativos */}
+      <div className="bg-moss-deep p-8 text-cream-bone lg:p-10">
         {featured.featured_tagline && (
-          <div className="mb-6 inline-flex items-center gap-2.5 font-mono text-[10px] uppercase tracking-[0.20em] text-terracotta-soft">
-            <span className="inline-block h-px w-7 bg-terracotta-soft" />
+          <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.16em] text-cream-bone/60">
             {featured.featured_tagline}
-          </div>
+          </p>
         )}
-        <h2 className="mb-5 font-serif text-[52px] font-semibold leading-[0.98] tracking-[-0.03em]">
+        <h2 className="mb-5 text-[34px] font-semibold leading-tight tracking-tight sm:text-[44px]">
           {titleMain || featured.title}
           {titleEmphasis && (
             <>
-              <br />
-              <em className="italic font-light text-terracotta-soft">{titleEmphasis}</em>
+              {' '}
+              <span className="text-terracotta-soft">{titleEmphasis}</span>
             </>
           )}
         </h2>
         {featured.featured_body && (
-          <p className="mb-7 max-w-[460px] font-serif text-[15px] font-light leading-relaxed text-cream/80">
+          <p className="mb-8 max-w-[460px] text-[15px] leading-relaxed text-cream-bone/75">
             {featured.featured_body}
           </p>
         )}
         <div className="flex flex-wrap items-center gap-3">
           {featured.applied ? (
             <>
-              <span className="inline-flex items-center gap-2.5 border border-terracotta-soft bg-terracotta-soft/20 px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-cream-bone/25 bg-cream-bone/10 px-5 py-3 text-[15px] font-semibold text-cream-bone">
                 ✓ Aplicada{featured.appliedAt && ` · ${timeFmt.format(new Date(featured.appliedAt))}`}
               </span>
               <button
                 type="button"
                 onClick={onUnmark}
                 disabled={isMutating}
-                className="inline-flex items-center gap-2.5 border border-cream/30 bg-transparent px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:border-cream disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl border border-cream-bone/30 bg-transparent px-5 py-3 text-[15px] font-semibold text-cream-bone transition-all hover:border-cream-bone active:scale-[0.99] disabled:opacity-50"
               >
                 Desmarcar
               </button>
@@ -318,37 +309,35 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
               type="button"
               onClick={onMark}
               disabled={isMutating}
-              className="inline-flex items-center gap-2.5 border border-terracotta bg-terracotta px-5 py-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:bg-terracotta-deep disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-terracotta px-5 py-3 text-[15px] font-semibold text-cream-bone transition-all hover:bg-terracotta-deep active:scale-[0.99] disabled:opacity-50"
             >
               {isMutating ? 'Marcando…' : 'Marcar como aplicada'}
-              <span aria-hidden>→</span>
+              <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
             </button>
           )}
         </div>
       </div>
 
-      <div className="bg-cream-deep p-9 lg:p-10">
-        <div className="mb-5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">
+      <div className="bg-cream-deep p-8 lg:p-10">
+        <p className="mb-5 label-mono">
           Pasos · ≈ {featured.steps.length * 22} segundos
-        </div>
+        </p>
         <ol className="space-y-0">
           {featured.steps.map((step, i) => (
             <li
               key={i}
-              className={`grid grid-cols-[36px_1fr] gap-3.5 py-3.5 ${
-                i < featured.steps.length - 1
-                  ? 'border-b border-dashed border-sand'
-                  : ''
+              className={`grid grid-cols-[32px_1fr] gap-4 py-4 ${
+                i < featured.steps.length - 1 ? 'border-b border-sand' : ''
               }`}
             >
-              <span className="font-serif text-[22px] leading-none text-terracotta-deep">
+              <span className="font-mono text-[15px] font-semibold tabular-nums leading-snug text-terracotta-deep">
                 {String(i + 1).padStart(2, '0')}
               </span>
               <div>
-                <p className="text-[13px] leading-snug text-ink">{step.body}</p>
-                <em className="mt-1 block font-mono text-[10px] uppercase not-italic tracking-[0.10em] text-ink-faint">
+                <p className="text-[14px] leading-relaxed text-ink">{step.body}</p>
+                <span className="mt-1.5 block font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
                   {step.meta}
-                </em>
+                </span>
               </div>
             </li>
           ))}
@@ -372,20 +361,17 @@ function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
       type="button"
       onClick={onToggle}
       disabled={disabled}
-      className={`group relative flex min-h-[360px] flex-col rounded-md border p-6 text-left transition-all hover:-translate-y-0.5 hover:border-ink disabled:opacity-60 ${
+      className={`group relative flex min-h-[360px] flex-col rounded-xl border p-7 text-left transition-all hover:-translate-y-0.5 hover:border-moss disabled:opacity-60 ${
         isApplied
-          ? 'border-dashed border-moss/30 bg-moss/[0.05]'
+          ? 'border-moss/30 bg-moss/[0.05]'
           : 'border-sand bg-cream-bone'
       }`}
     >
-      <div className="mb-6 flex items-start justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-          {entry.number}
-        </span>
+      <div className="mb-6 flex items-start justify-end">
         <span
-          className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.16em] ${
+          className={`rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] ${
             isApplied
-              ? 'bg-moss/15 text-moss border border-moss/30'
+              ? 'border border-moss/30 bg-moss/15 text-moss'
               : TAG_STYLES[category] ?? TAG_STYLES.general
           }`}
         >
@@ -394,31 +380,34 @@ function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
       </div>
 
       <div
-        className={`mb-5 grid h-20 w-20 place-items-center rounded-full border border-sand ${
-          isApplied ? 'bg-moss/[0.08] text-moss' : 'bg-cream text-moss'
+        className={`mb-5 grid h-16 w-16 place-items-center rounded-xl border ${
+          isApplied
+            ? 'border-moss/25 bg-moss/[0.08] text-moss'
+            : 'border-sand bg-cream text-moss'
         }`}
       >
         <RecommendationIcon icon={entry.icon} />
       </div>
 
-      <h3 className="mb-2.5 font-serif text-[24px] font-semibold leading-tight tracking-[-0.02em] text-ink">
+      <h3 className="mb-2.5 text-[22px] font-semibold leading-tight tracking-tight text-ink">
         {entry.title}
       </h3>
-      <p className="mb-auto text-[13px] leading-relaxed text-ink-soft">{entry.description}</p>
+      <p className="mb-auto text-[14px] leading-relaxed text-ink-soft">{entry.description}</p>
 
-      <div className="mt-4 flex items-center justify-between border-t border-dashed border-sand pt-4 font-mono text-[11px] text-ink-soft">
+      <div className="mt-5 flex items-center justify-between border-t border-sand pt-4 font-mono text-[11px] text-ink-soft">
         <span>
           {isApplied && entry.appliedAt
             ? `Aplicada · ${timeFmt.format(new Date(entry.appliedAt))}`
             : entry.frequency_label}
         </span>
-        <span
-          className={`text-base transition-transform group-hover:translate-x-1 ${
-            isApplied ? 'text-moss' : 'text-ink'
-          }`}
-        >
-          {isApplied ? '✓' : '→'}
-        </span>
+        {isApplied ? (
+          <Check className="h-4 w-4 text-moss" strokeWidth={1.5} />
+        ) : (
+          <ArrowRight
+            className="h-4 w-4 text-ink transition-transform group-hover:translate-x-1"
+            strokeWidth={1.5}
+          />
+        )}
       </div>
     </button>
   )

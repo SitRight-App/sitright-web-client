@@ -29,43 +29,31 @@ export function VestManagementPage() {
 
   return (
     <div>
-      <div className="mb-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-        Panel <span className="text-terracotta">›</span> Chaleco
-      </div>
-
-      <div className="grid grid-cols-[1fr_auto] items-end gap-8 border-b border-sand pb-6">
-        <h1 className="font-serif text-[56px] font-semibold leading-[0.95] tracking-[-0.03em] text-ink">
-          {vest ? (
-            <>
-              Tu chaleco
-              <br />
-              <em className="italic text-moss">está vinculado.</em>
-            </>
-          ) : (
-            <>
-              Aún no hay
-              <br />
-              <em className="italic text-terracotta">chaleco vinculado.</em>
-            </>
-          )}
-        </h1>
+      {/* Encabezado delgado, alineado con el canon del dashboard */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-6">
+        <div>
+          <p className="text-[14px] text-ink-soft">Configuración del chaleco</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+            {vest ? 'Tu chaleco está vinculado' : 'Aún no hay chaleco vinculado'}
+          </h1>
+        </div>
 
         {vest && <VestStatusHeadPill vest={vest} />}
       </div>
 
       {isError && (
-        <p className="mt-6 border-l-2 border-terracotta bg-terracotta/10 px-4 py-3 text-sm text-terracotta-deep">
+        <div className="mb-4 rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-[14px] text-terracotta-deep">
           No se pudo consultar el estado del chaleco.
-        </p>
+        </div>
       )}
 
       {isLoading && (
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           <SkeletonCard>
             <SkeletonTextLine width="50%" />
             <Skeleton width="80%" height={32} className="mt-4" />
             <Skeleton width={220} height={220} className="mx-auto mt-8" circle />
-            <div className="mt-6 grid grid-cols-4 gap-4 border-t border-dashed border-sand pt-4">
+            <div className="mt-6 grid grid-cols-4 gap-4 border-t border-sand pt-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i}>
                   <SkeletonTextLine width="60%" />
@@ -118,10 +106,10 @@ function VestStatusHeadPill({ vest }: PropsWithVest) {
 
   return (
     <span
-      className={`inline-flex items-center gap-2.5 rounded-full border px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] ${
+      className={`inline-flex items-center gap-2.5 rounded-full border px-4 py-2 text-[13px] font-medium ${
         isConnected
           ? 'border-moss/25 bg-moss/10 text-moss'
-          : 'border-sand bg-sand/20 text-ink-soft'
+          : 'border-sand bg-cream-deep text-ink-soft'
       }`}
     >
       <span className={`h-2 w-2 rounded-full ${isConnected ? 'bg-moss' : 'bg-ink-faint'}`} />
@@ -132,33 +120,22 @@ function VestStatusHeadPill({ vest }: PropsWithVest) {
 
 function UnlinkedState() {
   return (
-    <div className="mt-8 grid gap-8 lg:grid-cols-2">
-      <div
-        className="relative editorial-card p-9"
-        style={{
-          backgroundImage:
-            'linear-gradient(to right, rgba(74,82,73,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(74,82,73,0.04) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-      >
-        <span className="num-tag absolute right-5 top-5">№ 01</span>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <div className="editorial-card p-8">
         <p className="label-mono">Estado</p>
-        <h2 className="mt-3 font-serif text-3xl leading-tight tracking-tight text-ink">
-          Aún no hay
-          <br />
-          <em className="italic text-terracotta">chaleco vinculado.</em>
+        <h2 className="mt-2 text-2xl font-semibold leading-tight tracking-tight text-ink">
+          Aún no hay chaleco vinculado
         </h2>
-        <p className="mt-4 max-w-md text-sm leading-relaxed text-ink-soft">
+        <p className="mt-4 max-w-md text-[15px] leading-relaxed text-ink-soft">
           Pide el código de vinculación a tu administrador. Lo necesitarás junto con la MAC
           impresa en la etiqueta interna del chaleco.
         </p>
       </div>
 
-      <div className="relative editorial-card p-9">
-        <span className="num-tag absolute right-5 top-5">№ 02</span>
+      <div className="editorial-card p-8">
         <p className="label-mono">Vinculación</p>
-        <h2 className="mt-3 mb-6 font-serif text-3xl tracking-tight text-ink">
-          Registrar mi chaleco.
+        <h2 className="mt-2 mb-6 text-2xl font-semibold tracking-tight text-ink">
+          Registrar mi chaleco
         </h2>
         <LinkVestForm />
       </div>
@@ -175,7 +152,7 @@ function LinkedState({ vest }: PropsWithVest) {
     : null
 
   return (
-    <div className="mt-8 grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-2">
       <ProductSheet vest={vest} warningSensor={warningSensor} />
       <div className="flex flex-col gap-4">
         <BatteryPanel vest={vest} />
@@ -204,31 +181,24 @@ interface ProductSheetProps extends PropsWithVest {
 
 function ProductSheet({ vest, warningSensor }: ProductSheetProps) {
   return (
-    <section
-      className="relative overflow-hidden rounded-md border border-sand bg-cream-deep p-9"
-      style={{
-        backgroundImage:
-          'radial-gradient(at 100% 0%, rgba(200,98,60,0.05), transparent 50%), radial-gradient(at 0% 100%, rgba(45,74,54,0.05), transparent 50%), linear-gradient(to right, rgba(74,82,73,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(74,82,73,0.04) 1px, transparent 1px)',
-        backgroundSize: 'auto, auto, 24px 24px, 24px 24px',
-      }}
-    >
+    <section className="editorial-card bg-cream-deep p-8">
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <p className="label-mono mb-2">Chaleco vinculado № 01</p>
-          <h2 className="font-serif text-2xl leading-none tracking-tight text-ink">
+          <p className="label-mono">Chaleco vinculado</p>
+          <h2 className="mt-2 text-2xl font-semibold leading-tight tracking-tight text-ink">
             SitRight Vest · A1
           </h2>
         </div>
-        <div className="text-right font-mono text-[11px] uppercase tracking-[0.10em] text-ink-soft">
-          MAC
-          <div className="mt-1 font-mono text-sm font-medium tracking-[0.08em] text-ink">
+        <div className="text-right">
+          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">MAC</p>
+          <div className="mt-1 font-mono text-[14px] font-medium tracking-[0.04em] text-ink">
             {vest.mac_address}
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-[1fr_280px_1fr] items-center gap-4">
-        <div className="flex flex-col gap-7">
+        <div className="flex flex-col gap-5">
           <Annotation
             label="Sensor 1 · cervical"
             name="MPU-6050"
@@ -251,7 +221,7 @@ function ProductSheet({ vest, warningSensor }: ProductSheetProps) {
 
         <VestIllustration warningSensor={warningSensor} />
 
-        <div className="flex flex-col items-end gap-7 text-right">
+        <div className="flex flex-col items-end gap-5 text-right">
           <Annotation
             label="Microcontrolador"
             name="ESP32 DevKit V1"
@@ -273,7 +243,7 @@ function ProductSheet({ vest, warningSensor }: ProductSheetProps) {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-4 gap-6 border-t border-dashed border-sand pt-5">
+      <div className="mt-6 grid grid-cols-4 gap-6 border-t border-sand pt-5">
         <Spec k="Frec. envío" v="5" suffix="s" />
         <Spec k="Lecturas / hora" v="720" />
         <Spec k="Rango IMU" v="±16" suffix="g" />
@@ -292,16 +262,19 @@ interface AnnotationProps {
 }
 
 function Annotation({ label, name, value, warn = false, align = 'left' }: AnnotationProps) {
-  const borderColor = warn ? 'border-terracotta' : 'border-moss'
+  // Resaltamos la desviación con borde completo + tinte de fondo (sin borde lateral de adorno).
+  const tone = warn
+    ? 'border-terracotta/40 bg-terracotta/10'
+    : 'border-sand bg-cream-bone'
   return (
-    <div
-      className={`max-w-[200px] py-1 ${
-        align === 'right' ? `border-r ${borderColor} pr-3.5` : `border-l ${borderColor} pl-3.5`
-      }`}
-    >
-      <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">{label}</p>
-      <p className="mb-1 font-serif text-[17px] leading-tight text-ink">{name}</p>
-      <p className="font-mono text-[10px] tracking-[0.04em] text-ink-soft">{value}</p>
+    <div className={`max-w-[200px] rounded-lg border px-3.5 py-2.5 ${tone}`}>
+      <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">{label}</p>
+      <p className={`mb-1 text-[15px] font-medium leading-tight ${align === 'right' ? 'text-right' : ''} ${warn ? 'text-terracotta-deep' : 'text-ink'}`}>
+        {name}
+      </p>
+      <p className={`font-mono text-[10px] tracking-[0.04em] text-ink-soft ${align === 'right' ? 'text-right' : ''}`}>
+        {value}
+      </p>
     </div>
   )
 }
@@ -315,10 +288,10 @@ interface SpecProps {
 function Spec({ k, v, suffix }: SpecProps) {
   return (
     <div>
-      <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">{k}</p>
-      <p className="font-serif text-lg text-ink">
+      <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">{k}</p>
+      <p className="text-[18px] font-semibold tracking-tight text-ink">
         {v}
-        {suffix && <small className="ml-1 text-[11px] text-ink-soft">{suffix}</small>}
+        {suffix && <small className="ml-1 text-[12px] font-medium text-ink-soft">{suffix}</small>}
       </p>
     </div>
   )
@@ -337,31 +310,25 @@ function BatteryPanel({ vest }: PropsWithVest) {
     percent >= 50 ? `Resistirá ${hoursLeft} h más` : percent >= 20 ? 'Carga moderada' : 'Carga baja'
 
   return (
-    <section
-      className="relative rounded-md border border-moss-deep bg-moss-deep p-6 text-cream"
-      style={{
-        backgroundImage:
-          'radial-gradient(at 100% 0%, rgba(200,98,60,0.18), transparent 60%)',
-      }}
-    >
-      <p className="mb-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-cream/80">
+    <section className="rounded-xl border border-moss-deep bg-moss-deep p-7 text-cream-bone">
+      <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-cream-bone/70">
         Batería del chaleco
       </p>
-      <h3 className="mb-4 font-serif text-2xl tracking-tight">{headline}</h3>
+      <h3 className="mt-2 text-2xl font-semibold tracking-tight">{headline}</h3>
 
-      <div className="grid grid-cols-[auto_1fr] items-center gap-5">
-        <div className="font-serif text-[68px] font-semibold leading-none tracking-[-0.04em]">
+      <div className="mt-5 grid grid-cols-[auto_1fr] items-center gap-5">
+        <div className="text-[64px] font-semibold leading-none tracking-tight tabular-nums">
           {percent}
-          <small className="ml-1 text-2xl opacity-65">%</small>
+          <small className="ml-1 text-2xl font-medium text-cream-bone/65">%</small>
         </div>
         <div>
-          <div className="mb-3 h-2 overflow-hidden rounded-full bg-cream/15">
+          <div className="mb-3 h-2 overflow-hidden rounded-full bg-cream-bone/15">
             <div
               className="h-full rounded-full bg-terracotta-soft"
               style={{ width: `${percent}%` }}
             />
           </div>
-          <div className="font-mono text-[11px] tracking-[0.08em] text-cream/75">
+          <div className="font-mono text-[11px] tracking-[0.08em] text-cream-bone/75">
             ≈ {hoursLeft} h restantes
           </div>
         </div>
@@ -403,27 +370,26 @@ function SensorsPanel({ warningSensor, latestTimestamp }: SensorsPanelProps) {
     },
   ]
   return (
-    <section className="relative rounded-md border border-sand bg-cream-bone p-6">
-      <span className="num-tag absolute right-5 top-5">№ 03</span>
+    <section className="editorial-card p-7">
       <p className="label-mono">Estado de los 3 sensores</p>
-      <h3 className="mt-1.5 font-serif text-2xl tracking-tight text-ink">Salud del bus I²C</h3>
+      <h3 className="mt-2 text-2xl font-semibold tracking-tight text-ink">Salud del bus I²C</h3>
       <ul className="mt-4">
         {sensors.map((s, i) => (
           <li
             key={s.pin}
             className={`grid grid-cols-[36px_1fr_auto] items-center gap-3.5 py-3.5 ${
-              i < sensors.length - 1 ? 'border-b border-dashed border-sand' : ''
+              i < sensors.length - 1 ? 'border-b border-sand' : ''
             }`}
           >
             <span
-              className={`grid h-9 w-9 place-items-center rounded-full font-mono text-sm font-medium text-cream ${
+              className={`grid h-9 w-9 place-items-center rounded-full font-mono text-[14px] font-medium text-cream-bone ${
                 s.isWarning ? 'bg-terracotta' : 'bg-moss-deep'
               }`}
             >
               {s.pin}
             </span>
             <div>
-              <p className="font-serif text-base text-ink">{s.title}</p>
+              <p className="text-[15px] font-medium text-ink">{s.title}</p>
               <p className="mt-0.5 font-mono text-[10px] tracking-[0.06em] text-ink-faint">
                 {s.meta}
               </p>
@@ -447,19 +413,17 @@ function CalibrationCard({ vest }: PropsWithVest) {
   const progressPercent = (stepsDone / stepsTotal) * 100
 
   return (
-    <section className="relative rounded-md border border-sand bg-cream-deep p-6">
-      <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">
-        № 04 · Calibración de referencia
-      </p>
-      <h3 className="mt-2 font-serif text-2xl tracking-tight text-ink">
+    <section className="editorial-card bg-cream-deep p-7">
+      <p className="label-mono">Calibración de referencia</p>
+      <h3 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
         {vest.is_calibrated ? 'Postura neutra capturada' : 'Recalibrar postura neutra'}
       </h3>
-      <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-soft">
+      <p className="mt-2 max-w-md text-[15px] leading-relaxed text-ink-soft">
         La calibración guarda los valores IMU en posición erguida como referencia. Recomendamos
         repetirla una vez al mes o si cambias de silla.
       </p>
 
-      <div className="mt-5 h-1 overflow-hidden rounded-full bg-moss/15">
+      <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-moss/15">
         <div
           className="h-full rounded-full bg-moss transition-all"
           style={{ width: `${progressPercent}%` }}
@@ -487,7 +451,7 @@ function CalibrationCard({ vest }: PropsWithVest) {
         />
       </div>
 
-      <div className="mt-5 border-t border-dashed border-sand pt-5">
+      <div className="mt-5 border-t border-sand pt-5">
         <CalibrationPanel vestId={vest.id} isCalibrated={vest.is_calibrated} />
       </div>
     </section>
@@ -504,21 +468,19 @@ interface CalibStepProps {
 function CalibStep({ n, title, meta, done }: CalibStepProps) {
   return (
     <div
-      className={`rounded border p-3.5 ${
-        done ? 'border-moss bg-moss text-cream' : 'border-sand bg-cream text-ink'
+      className={`rounded-lg border p-3.5 ${
+        done ? 'border-moss bg-moss text-cream-bone' : 'border-sand bg-cream-bone text-ink'
       }`}
     >
       <p
-        className={`mb-1.5 font-mono text-[9px] uppercase tracking-[0.18em] ${
-          done ? 'opacity-70' : 'opacity-70'
+        className={`mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] ${
+          done ? 'text-cream-bone/70' : 'text-ink-faint'
         }`}
       >
         Paso {n} {done && '· ✓'}
       </p>
-      <p className="font-serif text-[15px] leading-tight">{title}</p>
-      <p
-        className={`mt-1 text-[11px] opacity-60 ${done ? 'text-cream' : 'text-ink-soft'}`}
-      >
+      <p className="text-[15px] font-medium leading-tight">{title}</p>
+      <p className={`mt-1 text-[11px] ${done ? 'text-cream-bone/70' : 'text-ink-soft'}`}>
         {meta}
       </p>
     </div>
@@ -546,10 +508,9 @@ function DeviceMetaPanel({ vest }: PropsWithVest) {
   }
 
   return (
-    <section className="relative rounded-md border border-sand bg-cream-bone p-6">
-      <span className="num-tag absolute right-5 top-5">№ 05</span>
+    <section className="editorial-card p-7">
       <p className="label-mono">Información del chaleco</p>
-      <h3 className="mt-1.5 mb-4 font-serif text-2xl tracking-tight text-ink">
+      <h3 className="mt-2 mb-4 text-2xl font-semibold tracking-tight text-ink">
         Especificaciones técnicas
       </h3>
 
@@ -568,14 +529,15 @@ function DeviceMetaPanel({ vest }: PropsWithVest) {
         />
       </div>
 
-      <div className="mt-5 flex items-center justify-between border-t border-dashed border-sand pt-4">
-        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-terracotta-deep">
-          Zona de riesgo
-        </span>
+      <div className="mt-5 flex items-center justify-between gap-4 rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3">
+        <div>
+          <p className="text-[13px] font-medium text-terracotta-deep">Zona de riesgo</p>
+          <p className="mt-0.5 text-[12px] text-ink-soft">Desvincular detiene las lecturas</p>
+        </div>
         <button
           type="button"
           onClick={() => setConfirmOpen(true)}
-          className="border-b border-terracotta-soft pb-0.5 font-mono text-[11px] uppercase tracking-[0.14em] text-terracotta-deep transition-colors hover:border-terracotta hover:text-terracotta"
+          className="rounded-xl border border-terracotta/50 bg-cream-bone px-4 py-2 text-[13px] font-medium text-terracotta-deep transition-colors hover:border-terracotta hover:text-terracotta"
         >
           Desvincular chaleco
         </button>
@@ -619,18 +581,18 @@ function UnlinkConfirmDialog({ mac, isPending, onCancel, onConfirm }: UnlinkConf
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[460px] overflow-hidden rounded-md border border-sand bg-cream-bone shadow-xl"
+        className="w-full max-w-[460px] overflow-hidden rounded-xl border border-sand bg-cream-bone shadow-xl"
       >
         <div className="border-b border-sand bg-cream px-6 py-5">
           <p className="label-mono">Zona de riesgo</p>
-          <h3 id="unlink-title" className="mt-2 font-serif text-2xl tracking-tight text-ink">
+          <h3 id="unlink-title" className="mt-2 text-2xl font-semibold tracking-tight text-ink">
             ¿Desvincular este chaleco?
           </h3>
         </div>
         <div className="px-6 py-5">
-          <p className="text-sm leading-relaxed text-ink-soft">
+          <p className="text-[15px] leading-relaxed text-ink-soft">
             El chaleco{' '}
-            <span className="font-mono text-[12px] tracking-[0.06em] text-ink">{mac}</span>{' '}
+            <span className="font-mono text-[13px] tracking-[0.04em] text-ink">{mac}</span>{' '}
             dejará de enviarte lecturas y deberás vincularlo de nuevo para usarlo. Tus sesiones
             históricas se mantienen intactas.
           </p>
@@ -640,7 +602,7 @@ function UnlinkConfirmDialog({ mac, isPending, onCancel, onConfirm }: UnlinkConf
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft hover:text-ink disabled:opacity-50"
+            className="rounded-xl border border-sand bg-cream-bone px-5 py-2.5 text-[14px] font-medium text-ink transition-colors hover:border-ink disabled:opacity-50"
           >
             Cancelar
           </button>
@@ -648,7 +610,7 @@ function UnlinkConfirmDialog({ mac, isPending, onCancel, onConfirm }: UnlinkConf
             type="button"
             onClick={onConfirm}
             disabled={isPending}
-            className="rounded bg-terracotta px-4 py-2 font-mono text-[11px] uppercase tracking-[0.14em] text-cream transition-colors hover:bg-terracotta-deep disabled:opacity-50"
+            className="rounded-xl bg-terracotta px-5 py-2.5 text-[14px] font-semibold text-cream-bone transition-all hover:bg-terracotta-deep active:scale-[0.99] disabled:opacity-50"
           >
             {isPending ? 'Desvinculando…' : 'Sí, desvincular'}
           </button>
@@ -666,7 +628,7 @@ interface MetaRowProps {
 function MetaRow({ k, v }: MetaRowProps) {
   return (
     <div>
-      <p className="mb-0.5 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">{k}</p>
+      <p className="mb-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">{k}</p>
       <p className="font-mono text-[13px] tracking-[0.04em] text-ink">{v}</p>
     </div>
   )

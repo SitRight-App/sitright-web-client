@@ -36,22 +36,21 @@ export function AdminPage() {
 
   return (
     <div>
-      <div className="mb-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-        Panel <span className="text-terracotta">›</span> Administración
-      </div>
-
       <div className="flex flex-wrap items-end justify-between gap-6 border-b border-sand pb-6">
-        <h1 className="font-serif text-[56px] font-semibold leading-[0.95] tracking-[-0.03em] text-ink">
-          Gestión <em className="italic text-moss">del sistema.</em>
-        </h1>
-        <span className="inline-flex items-center gap-2.5 rounded-full border border-moss/25 bg-moss/10 px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-moss">
+        <div>
+          <p className="label-mono">Administración</p>
+          <h1 className="mt-2 text-[32px] font-semibold leading-tight tracking-tight text-ink sm:text-[40px]">
+            Gestión <span className="text-moss">del sistema</span>
+          </h1>
+        </div>
+        <span className="inline-flex items-center gap-2 rounded-full border border-moss/25 bg-moss/10 px-4 py-2 text-[13px] font-medium text-moss">
           <span className="h-2 w-2 rounded-full bg-moss" />
           Acceso administrador
         </span>
       </div>
 
       {isError && (
-        <p className="mt-6 border-l-2 border-terracotta bg-terracotta/10 px-4 py-3 text-sm text-terracotta-deep">
+        <p className="mt-6 rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-sm text-terracotta-deep">
           No se pudo cargar el directorio de usuarios.
         </p>
       )}
@@ -64,7 +63,7 @@ export function AdminPage() {
               cifras que el AC pide explícitamente + el desglose por rol que
               le aporta contexto al admin. */}
           <motion.div
-            className="mt-8 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-5"
+            className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
             initial="hidden"
             animate="visible"
             variants={staggerContainer}
@@ -91,24 +90,20 @@ export function AdminPage() {
             <StatCard title="Administradores" value={stats.admins.toString()} />
           </motion.div>
 
-          <section className="relative mt-6 editorial-card p-7">
-            <span className="num-tag absolute right-5 top-5">№ 05</span>
-            <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-dashed border-sand pb-4">
-              <div>
-                <p className="label-mono">Directorio</p>
-                <h2 className="mt-1.5 font-serif text-2xl tracking-tight text-ink">
-                  Usuarios del sistema
-                </h2>
-              </div>
-              <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-faint">
+          <section className="mt-4 rounded-xl border border-sand bg-cream-bone p-7">
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-sand pb-4">
+              <h2 className="text-xl font-semibold tracking-tight text-ink">
+                Usuarios del sistema
+              </h2>
+              <span className="text-[13px] text-ink-soft">
                 {stats.total} {stats.total === 1 ? 'cuenta' : 'cuentas'}
               </span>
             </div>
 
             {data && data.users.length > 0 && <UsersTable users={data.users} />}
             {data && data.users.length === 0 && (
-              <div className="border border-dashed border-sand p-10 text-center">
-                <p className="font-serif text-[24px] tracking-tight text-ink">
+              <div className="rounded-xl border border-sand bg-cream p-10 text-center">
+                <p className="text-xl font-semibold tracking-tight text-ink">
                   Aún no hay usuarios registrados en el sistema.
                 </p>
                 <p className="mt-2 text-sm text-ink-soft">
@@ -133,18 +128,22 @@ function StatCard({ title, value, dark = false }: StatCardProps) {
   return (
     <motion.div
       variants={staggerItem}
-      className={`rounded border p-5 ${
-        dark ? 'border-moss bg-moss text-cream' : 'border-sand bg-cream-bone text-ink'
+      className={`rounded-xl border p-5 ${
+        dark
+          ? 'border-moss-deep bg-moss text-cream-bone'
+          : 'border-sand bg-cream-bone text-ink'
       }`}
     >
       <p
-        className={`mb-4 font-mono text-[10px] uppercase tracking-[0.18em] ${
-          dark ? 'text-sand' : 'text-ink-soft'
+        className={`mb-3 text-[13px] font-medium ${
+          dark ? 'text-cream-bone/75' : 'text-ink-soft'
         }`}
       >
         {title}
       </p>
-      <p className="font-serif text-[36px] leading-none tracking-[-0.035em]">{value}</p>
+      <p className="font-mono text-[34px] font-semibold leading-none tabular-nums tracking-tight">
+        {value}
+      </p>
     </motion.div>
   )
 }
@@ -170,50 +169,52 @@ function UsersTable({ users }: { users: AuthUser[] }) {
   }
 
   return (
-    <div>
-      <div className="grid grid-cols-[1.3fr_1fr_90px_100px_120px_130px_120px_100px] gap-5 border-b border-sand px-3 pb-3 font-mono text-[9px] uppercase tracking-[0.20em] text-ink-faint">
-        <span>Nombre</span>
-        <span>Correo</span>
-        <span>Rol</span>
-        <span>Estado</span>
-        <span>Alta</span>
-        <span>Última sesión</span>
-        <span>Chaleco</span>
-        <span />
+    <div className="overflow-x-auto">
+      <div className="min-w-[920px]">
+        <div className="grid grid-cols-[1.3fr_1fr_90px_100px_120px_130px_120px_100px] gap-5 border-b border-sand px-3 pb-3 text-[12px] font-medium text-ink-soft">
+          <span>Nombre</span>
+          <span>Correo</span>
+          <span>Rol</span>
+          <span>Estado</span>
+          <span>Alta</span>
+          <span>Última sesión</span>
+          <span>Chaleco</span>
+          <span />
+        </div>
+        <ul className="divide-y divide-sand">
+          {users.map((u) => (
+            <li
+              key={u.id}
+              className="grid grid-cols-[1.3fr_1fr_90px_100px_120px_130px_120px_100px] items-center gap-5 px-3 py-4 transition-colors hover:bg-cream"
+            >
+              <span className="text-[15px] font-medium text-ink">{u.name}</span>
+              <span className="text-[13px] text-ink-soft">{u.email}</span>
+              <RoleBadge role={u.role} />
+              <ActiveBadge active={u.is_active} />
+              <span className="text-[13px] tabular-nums text-ink-soft">
+                {longDateFmt.format(new Date(u.created_at))}
+              </span>
+              <span className="text-[13px] tabular-nums text-ink-soft">
+                {u.last_session_at
+                  ? shortDateFmt.format(new Date(u.last_session_at))
+                  : <span className="text-ink-faint">sin sesiones</span>}
+              </span>
+              <VestSummary vest={u.linked_vest ?? null} />
+              {u.role !== 'admin' && u.is_active && (
+                <button
+                  type="button"
+                  onClick={() => handleDeactivate(u)}
+                  disabled={deactivate.isPending}
+                  className="inline-flex w-fit items-center rounded-lg border border-terracotta/40 bg-terracotta/10 px-3 py-1.5 text-[13px] font-medium text-terracotta-deep transition-colors hover:bg-terracotta/15 disabled:opacity-50"
+                >
+                  Desactivar
+                </button>
+              )}
+              {(u.role === 'admin' || !u.is_active) && <span />}
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul>
-        {users.map((u) => (
-          <li
-            key={u.id}
-            className="grid grid-cols-[1.3fr_1fr_90px_100px_120px_130px_120px_100px] items-center gap-5 border-b border-sand px-3 py-4 transition-colors hover:bg-cream/60"
-          >
-            <span className="font-serif text-[15px] text-ink">{u.name}</span>
-            <span className="font-mono text-[12px] text-ink-soft">{u.email}</span>
-            <RoleBadge role={u.role} />
-            <ActiveBadge active={u.is_active} />
-            <span className="font-mono text-[11px] text-ink-soft">
-              {longDateFmt.format(new Date(u.created_at))}
-            </span>
-            <span className="font-mono text-[11px] text-ink-soft">
-              {u.last_session_at
-                ? shortDateFmt.format(new Date(u.last_session_at))
-                : <span className="italic text-ink-faint">sin sesiones</span>}
-            </span>
-            <VestSummary vest={u.linked_vest ?? null} />
-            {u.role !== 'admin' && u.is_active && (
-              <button
-                type="button"
-                onClick={() => handleDeactivate(u)}
-                disabled={deactivate.isPending}
-                className="font-mono text-[10px] uppercase tracking-[0.14em] text-terracotta-deep underline-offset-2 hover:underline disabled:opacity-50"
-              >
-                Desactivar
-              </button>
-            )}
-            {(u.role === 'admin' || !u.is_active) && <span />}
-          </li>
-        ))}
-      </ul>
     </div>
   )
 }
@@ -222,9 +223,9 @@ function RoleBadge({ role }: { role: 'admin' | 'worker' }) {
   const isAdmin = role === 'admin'
   return (
     <span
-      className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.16em] ${
+      className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium ${
         isAdmin
-          ? 'border border-terracotta-soft bg-terracotta-soft/15 text-terracotta-deep'
+          ? 'border border-terracotta/40 bg-terracotta/10 text-terracotta-deep'
           : 'border border-moss/25 bg-moss/10 text-moss'
       }`}
     >
@@ -237,17 +238,15 @@ function RoleBadge({ role }: { role: 'admin' | 'worker' }) {
 function VestSummary({ vest }: { vest: AuthUser['linked_vest'] | null }) {
   if (!vest) {
     return (
-      <span className="font-mono text-[10px] italic text-ink-faint">
-        sin chaleco
-      </span>
+      <span className="text-[13px] text-ink-faint">sin chaleco</span>
     )
   }
   return (
     <span className="inline-flex flex-col">
-      <span className="font-mono text-[10px] tracking-[0.06em] text-ink">
+      <span className="font-mono text-[12px] tabular-nums text-ink">
         {vest.mac_address ?? '—'}
       </span>
-      <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
+      <span className="text-[12px] text-ink-faint">
         {vest.is_calibrated ? 'Calibrado' : 'Sin calibrar'}
       </span>
     </span>
@@ -257,8 +256,10 @@ function VestSummary({ vest }: { vest: AuthUser['linked_vest'] | null }) {
 function ActiveBadge({ active }: { active: boolean }) {
   return (
     <span
-      className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.16em] ${
-        active ? 'bg-moss/10 text-moss' : 'bg-sand/30 text-ink-soft'
+      className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium ${
+        active
+          ? 'border border-moss/25 bg-moss/10 text-moss'
+          : 'border border-sand bg-cream text-ink-soft'
       }`}
     >
       <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-moss' : 'bg-ink-faint'}`} />
@@ -270,15 +271,15 @@ function ActiveBadge({ active }: { active: boolean }) {
 function AdminSkeleton() {
   return (
     <>
-      <div className="mt-8 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
           <SkeletonCard key={i}>
             <SkeletonTextLine width="60%" className="mb-4" />
             <Skeleton width="40%" height={40} />
           </SkeletonCard>
         ))}
       </div>
-      <SkeletonCard className="mt-6 p-7">
+      <SkeletonCard className="mt-4 p-7">
         <SkeletonTextLine width="30%" />
         <Skeleton width="50%" height={28} className="mt-3" />
         <div className="mt-6 space-y-3">

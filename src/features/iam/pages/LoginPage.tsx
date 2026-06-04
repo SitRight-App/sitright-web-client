@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { Activity, ArrowRight, History, Sparkles } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Brandmark } from '@/shared/ui/Brandmark'
@@ -85,34 +85,36 @@ export function LoginPage() {
         </header>
 
         <motion.div
-          className="relative max-w-md"
+          className="relative max-w-lg"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease }}
         >
-          <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight xl:text-[52px]">
+          <span className="inline-flex items-center gap-2 rounded-full bg-cream-bone/10 px-3 py-1 text-[12px] font-medium text-cream-bone/80 ring-1 ring-cream-bone/15">
+            <span className="h-1.5 w-1.5 rounded-full bg-moss-soft" />
+            Monitoreo postural en vivo
+          </span>
+          <h1 className="mt-5 text-[40px] font-semibold leading-[1.05] tracking-tight xl:text-[56px]">
             Tu columna lleva la cuenta. Nosotros te la mostramos.
           </h1>
-          <p className="mt-6 max-w-[42ch] text-[15px] leading-relaxed text-cream-bone/70">
+          <p className="mt-6 max-w-[44ch] text-[15px] leading-relaxed text-cream-bone/70">
             El chaleco inteligente mide tu postura durante la jornada y el panel
             te dice qué corregir, antes de que aparezca el dolor.
           </p>
 
-          <ul className="mt-12 space-y-6">
+          <LivePreviewCard />
+
+          <ul className="mt-9 space-y-3.5">
             {VALUE_POINTS.map(({ Icon, text }, i) => (
               <motion.li
                 key={text}
-                className="flex items-start gap-4"
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease, delay: 0.25 + i * 0.1 }}
+                className="flex items-center gap-3 text-[13px] text-cream-bone/80"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, ease, delay: 0.5 + i * 0.09 }}
               >
-                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cream-bone/10 ring-1 ring-cream-bone/15">
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
-                </span>
-                <span className="pt-1.5 text-[14px] leading-relaxed text-cream-bone/85">
-                  {text}
-                </span>
+                <Icon className="h-4 w-4 shrink-0 text-moss-soft" strokeWidth={1.6} />
+                {text}
               </motion.li>
             ))}
           </ul>
@@ -226,6 +228,59 @@ export function LoginPage() {
         </motion.div>
       </section>
     </div>
+  )
+}
+
+/**
+ * Mini-preview del producto que flota sobre el panel de marca: una tarjeta
+ * clara con el estado de postura en vivo, igual al lenguaje del dashboard.
+ * Adelanta lo que el usuario verá al entrar. Flote sutil, respeta reduced-motion.
+ */
+function LivePreviewCard() {
+  const reduce = useReducedMotion()
+  return (
+    <motion.div
+      className="mt-10 w-full max-w-sm rounded-2xl border border-cream-bone/15 bg-cream-bone p-5 shadow-[0_24px_60px_-20px_rgba(15,30,20,0.55)]"
+      initial={{ opacity: 0, y: 24, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.7, ease, delay: 0.35 }}
+    >
+      <motion.div
+        animate={reduce ? undefined : { y: [0, -7, 0] }}
+        transition={reduce ? undefined : { duration: 5, ease: 'easeInOut', repeat: Infinity }}
+      >
+        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-moss">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-moss opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-moss" />
+          </span>
+          En vivo · Postura actual
+        </div>
+
+        <div className="mt-3 flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[22px] font-semibold leading-none tracking-tight text-ink">
+              Postura correcta
+            </p>
+            <p className="mt-2 text-[13px] text-ink-soft">
+              Confianza <span className="font-mono tabular-nums text-ink">94%</span> · Batería{' '}
+              <span className="font-mono tabular-nums text-ink">78%</span>
+            </p>
+          </div>
+          {/* Mini-columna: 3 zonas alineadas, la base en verde (adecuada) */}
+          <div className="flex flex-col items-center gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="h-2.5 w-2.5 rounded-full bg-moss" />
+            ))}
+          </div>
+        </div>
+
+        {/* Barra de confianza */}
+        <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-cream-deep">
+          <div className="h-full rounded-full bg-moss" style={{ width: '94%' }} />
+        </div>
+      </motion.div>
+    </motion.div>
   )
 }
 

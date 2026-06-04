@@ -125,9 +125,9 @@ function WeeklyTooltip({ active, payload }: TooltipProps) {
   const p = payload[0].payload
   if (!p) return null
   return (
-    <div className="rounded border border-sand bg-cream-bone p-2.5 font-mono text-[10px] shadow-sm">
+    <div className="rounded-lg border border-sand bg-cream-bone p-2.5 font-mono text-[10px] shadow-sm">
       <p className="text-ink">{p.label}</p>
-      <p className="mt-0.5 font-serif text-[13px] text-moss">
+      <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-moss">
         {p.percent !== null ? `${p.percent}% postura adecuada` : 'sin uso registrado'}
       </p>
       {p.validReadings > 0 && (
@@ -162,34 +162,33 @@ export function WeeklyEvolutionPage() {
 
   return (
     <div>
-      <div className="mb-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-        Panel <span className="text-terracotta">›</span>{' '}
-        <Link to="/history" className="hover:text-ink">Historial</Link>{' '}
-        <span className="text-terracotta">›</span> Evolución semanal
-      </div>
-
-      <div className="grid grid-cols-[1fr_auto] items-end gap-8 border-b border-sand pb-6">
-        <h1 className="font-serif text-[56px] font-semibold leading-[0.95] tracking-[-0.03em] text-ink">
-          Tu semana
-          <br />
-          <em className="font-normal italic text-moss">postural.</em>
-        </h1>
+      {/* Encabezado: título limpio + promedio destacado como métrica */}
+      <div className="flex flex-wrap items-end justify-between gap-6 pb-6">
+        <div>
+          <Link
+            to="/history"
+            className="text-[14px] text-ink-soft transition-colors hover:text-moss"
+          >
+            Historial
+          </Link>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">
+            Tu semana postural
+          </h1>
+        </div>
 
         {weeklyAvg !== null && (
-          <div className="text-right">
-            <p className="mb-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
-              Promedio adecuada
-            </p>
-            <p className="font-serif text-[56px] font-semibold leading-none tracking-tight">
+          <div className="rounded-xl border border-sand bg-cream-bone px-5 py-3.5 text-right">
+            <p className="label-mono text-ink-faint">Promedio adecuada</p>
+            <p className="mt-1.5 font-mono text-[32px] font-semibold leading-none tabular-nums tracking-tight text-ink">
               {weeklyAvg}
-              <small className="ml-1 text-2xl text-ink-soft">%</small>
+              <small className="ml-0.5 text-xl text-ink-soft">%</small>
             </p>
           </div>
         )}
       </div>
 
       {isError && (
-        <p className="mt-6 border-l-2 border-terracotta bg-terracotta/10 px-4 py-3 text-sm text-terracotta-deep">
+        <p className="mb-6 rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-[14px] text-terracotta-deep">
           No se pudo obtener el historial.
         </p>
       )}
@@ -202,20 +201,19 @@ export function WeeklyEvolutionPage() {
       )}
 
       {!isLoading && (
-        <div className="mt-8">
+        <div>
           {/* HU-20 AC2 — datos insuficientes (<3 días) */}
           {daysWithData < 3 && (
-            <div className="mb-6 border-l-2 border-sand bg-sand/15 px-4 py-3 text-sm text-ink-soft">
+            <div className="mb-6 rounded-lg border border-sand bg-cream-deep px-4 py-3 text-[14px] text-ink-soft">
               Se necesitan al menos 3 días de uso para mostrar una tendencia. Tienes{' '}
               {daysWithData} día{daysWithData === 1 ? '' : 's'} registrado{daysWithData === 1 ? '' : 's'}.
             </div>
           )}
 
-          <div className="relative editorial-card p-7">
-            <span className="num-tag absolute right-5 top-5">№ 01</span>
+          <div className="editorial-card rounded-xl p-7">
             <p className="label-mono">Postura adecuada por día</p>
-            <h2 className="mt-2 font-serif text-2xl tracking-tight text-ink">
-              Últimos <em className="italic text-moss">7 días.</em>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
+              Últimos 7 días
             </h2>
 
             <div className="mt-6" style={{ height: 320, width: '100%' }}>

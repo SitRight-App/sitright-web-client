@@ -1,21 +1,22 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { LogOut } from 'lucide-react'
 import { useToast } from '@/shared/ui/toast'
 import { useAuth } from '../context/AuthContext'
 import { changeMyPassword, updateMe } from '../services/authService'
 
 function FormField({
-  num,
   label,
   children,
 }: {
-  num: string
+  // `num` se mantiene aceptado en la firma para no romper llamadas existentes,
+  // pero ya no se pinta como adorno numérico.
+  num?: string
   label: string
   children: React.ReactNode
 }) {
   return (
     <div>
-      <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">
-        <span className="mr-2 text-terracotta">{num}</span>
+      <label className="mb-1.5 block text-[13px] font-medium text-ink">
         {label}
       </label>
       {children}
@@ -23,8 +24,9 @@ function FormField({
   )
 }
 
+// Input canónico: label arriba (en FormField) + caja redondeada con foco moss.
 const fieldInput =
-  'w-full border-0 border-b-[1.2px] border-ink bg-transparent py-2.5 text-[15px] text-ink placeholder:italic placeholder:text-ink-faint focus:border-terracotta focus:outline-none'
+  'w-full rounded-xl border border-sand bg-cream-bone px-4 py-3 text-[15px] text-ink placeholder:text-ink-faint transition-colors focus:border-moss focus:outline-none focus:ring-4 focus:ring-moss/15'
 
 export function SettingsPage() {
   const { user, setUser, logout } = useAuth()
@@ -78,15 +80,13 @@ export function SettingsPage() {
 
   return (
     <div>
-      <div className="mb-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-        Panel <span className="text-terracotta">›</span> Configuración
-      </div>
       <div className="flex flex-wrap items-end justify-between gap-6 border-b border-sand pb-6">
         <div>
-          <h1 className="font-serif text-[56px] font-semibold leading-[0.95] tracking-[-0.03em] text-ink">
-            Tu <em className="italic text-moss">perfil.</em>
+          <p className="label-mono">Configuración</p>
+          <h1 className="mt-2 text-[32px] font-semibold leading-tight tracking-tight text-ink sm:text-[40px]">
+            Tu <span className="text-moss">perfil</span>
           </h1>
-          <p className="mt-2 max-w-md text-sm text-ink-soft">
+          <p className="mt-2 max-w-md text-[15px] leading-relaxed text-ink-soft">
             Datos personales, antropometría y preferencias de notificación.
           </p>
         </div>
@@ -94,18 +94,17 @@ export function SettingsPage() {
         <button
           type="button"
           onClick={logout}
-          className="font-mono text-[11px] uppercase tracking-[0.16em] text-ink-soft hover:text-terracotta"
+          className="inline-flex items-center gap-2 rounded-xl border border-terracotta/40 bg-terracotta/10 px-4 py-2.5 text-[14px] font-medium text-terracotta-deep transition-colors hover:bg-terracotta/15 active:scale-[0.99]"
         >
-          Cerrar sesión →
+          <LogOut className="h-4 w-4" strokeWidth={1.5} />
+          Cerrar sesión
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 grid gap-6 lg:grid-cols-[1fr_1fr_1fr]">
-        <section className="relative editorial-card p-7">
-          <span className="num-tag absolute right-5 top-5">№ 01</span>
-          <p className="label-mono">Perfil</p>
-          <h2 className="mt-2 mb-5 font-serif text-2xl tracking-tight text-ink">
-            Datos básicos.
+      <form onSubmit={handleSubmit} className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr_1fr]">
+        <section className="rounded-xl border border-sand bg-cream-bone p-7">
+          <h2 className="mb-5 text-xl font-semibold tracking-tight text-ink">
+            Datos básicos
           </h2>
 
           <div className="space-y-5">
@@ -120,26 +119,22 @@ export function SettingsPage() {
               <input
                 value={user.email}
                 disabled
-                className={`${fieldInput} border-ink-faint text-ink-soft`}
+                className={`${fieldInput} cursor-not-allowed bg-cream text-ink-soft`}
               />
             </FormField>
             <FormField num="03" label="Rol">
               <input
                 value={user.role === 'admin' ? 'Administrador' : 'Trabajador'}
                 disabled
-                className={`${fieldInput} border-ink-faint text-ink-soft`}
+                className={`${fieldInput} cursor-not-allowed bg-cream text-ink-soft`}
               />
             </FormField>
           </div>
         </section>
 
-        <section className="relative editorial-card p-7">
-          <span className="num-tag absolute right-5 top-5">№ 02</span>
-          <p className="label-mono">Antropometría</p>
-          <h2 className="mt-2 mb-5 font-serif text-2xl tracking-tight text-ink">
-            Para ajustar
-            <br />
-            la lectura.
+        <section className="rounded-xl border border-sand bg-cream-bone p-7">
+          <h2 className="mb-5 text-xl font-semibold tracking-tight text-ink">
+            Antropometría
           </h2>
 
           <div className="space-y-5">
@@ -168,26 +163,24 @@ export function SettingsPage() {
           </div>
         </section>
 
-        <section className="relative editorial-card p-7">
-          <span className="num-tag absolute right-5 top-5">№ 03</span>
-          <p className="label-mono">Preferencias</p>
-          <h2 className="mt-2 mb-5 font-serif text-2xl tracking-tight text-ink">
-            Cómo te avisamos.
+        <section className="rounded-xl border border-sand bg-cream-bone p-7">
+          <h2 className="mb-5 text-xl font-semibold tracking-tight text-ink">
+            Cómo te avisamos
           </h2>
 
           <div className="space-y-5">
-            <label className="flex items-start gap-3 text-sm text-ink">
+            <label className="flex items-start gap-3 rounded-xl border border-sand bg-cream px-4 py-3 text-sm text-ink">
               <input
                 type="checkbox"
                 checked={emailNotifications}
                 onChange={(e) => setEmailNotifications(e.target.checked)}
-                className="mt-1 h-4 w-4 accent-ink"
+                className="mt-0.5 h-4 w-4 rounded accent-moss"
               />
               <span>
-                <span className="block font-serif text-base text-ink">
+                <span className="block text-[15px] font-medium text-ink">
                   Notificaciones por correo
                 </span>
-                <span className="block text-xs text-ink-soft">
+                <span className="mt-0.5 block text-xs text-ink-soft">
                   Recibe un resumen al final de cada jornada.
                 </span>
               </span>
@@ -219,7 +212,7 @@ export function SettingsPage() {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className={`${fieldInput} appearance-none`}
+                className={fieldInput}
               >
                 <option value="es">Español</option>
                 <option value="en">English</option>
@@ -232,10 +225,9 @@ export function SettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-3 bg-moss-deep px-7 py-4 text-[13px] font-medium uppercase tracking-[0.05em] text-cream transition-colors hover:bg-ink disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl bg-moss px-6 py-3 text-[15px] font-semibold text-cream-bone shadow-sm transition-all hover:bg-moss-deep active:scale-[0.99] disabled:opacity-60"
           >
             <span>{saving ? 'Guardando…' : 'Guardar cambios'}</span>
-            <span aria-hidden>→</span>
           </button>
         </div>
       </form>
@@ -286,13 +278,14 @@ function ChangePasswordPanel() {
   }
 
   return (
-    <section className="relative mt-6 editorial-card p-7">
-      <span className="num-tag absolute right-5 top-5">№ 04</span>
-      <div className="mb-5 border-b border-dashed border-sand pb-4">
-        <p className="label-mono">Seguridad</p>
-        <h2 className="mt-1.5 font-serif text-2xl tracking-tight text-ink">
-          Cambiar contraseña.
+    <section className="mt-4 rounded-xl border border-sand bg-cream-bone p-7">
+      <div className="mb-5 border-b border-sand pb-4">
+        <h2 className="text-xl font-semibold tracking-tight text-ink">
+          Cambiar contraseña
         </h2>
+        <p className="mt-1 text-[14px] text-ink-soft">
+          Usa al menos 8 caracteres en la nueva contraseña.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-3">
@@ -333,7 +326,7 @@ function ChangePasswordPanel() {
           <button
             type="submit"
             disabled={submitting}
-            className="bg-moss-deep px-7 py-4 text-[13px] font-medium uppercase tracking-[0.05em] text-cream transition-colors hover:bg-ink disabled:opacity-60"
+            className="inline-flex items-center rounded-xl bg-moss px-6 py-3 text-[15px] font-semibold text-cream-bone shadow-sm transition-all hover:bg-moss-deep active:scale-[0.99] disabled:opacity-60"
           >
             {submitting ? 'Cambiando…' : 'Actualizar contraseña'}
           </button>
