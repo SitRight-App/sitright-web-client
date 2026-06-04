@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Activity, ArrowRight, History, Sparkles } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Brandmark } from '@/shared/ui/Brandmark'
@@ -76,10 +76,27 @@ export function LoginPage() {
           className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-overlay"
           style={{ backgroundImage: NOISE }}
         />
+        {/* Marca de agua: la propia columna-S, sangrando por el borde inferior */}
+        <svg
+          aria-hidden
+          viewBox="0 0 48 48"
+          className="pointer-events-none absolute -bottom-24 -right-16 h-[640px] w-[640px] text-cream-bone/[0.05]"
+          fill="none"
+        >
+          <path
+            d="M29 13 C 20.5 16, 20.5 22, 24 24.5 C 27.5 27, 27.5 33, 19 36"
+            stroke="currentColor"
+            strokeWidth={3.2}
+            strokeLinecap="round"
+          />
+          <circle cx="29" cy="13" r="2.7" fill="currentColor" />
+          <circle cx="24" cy="24.5" r="2.7" fill="currentColor" />
+          <circle cx="19" cy="36" r="2.7" fill="currentColor" />
+        </svg>
 
         <header className="relative flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-xl bg-cream-bone/10 ring-1 ring-cream-bone/15">
-            <Brandmark />
+          <div className="grid h-11 w-11 place-items-center rounded-xl bg-cream-bone/10 ring-1 ring-cream-bone/15">
+            <Brandmark size={24} />
           </div>
           <span className="text-lg font-semibold tracking-tight">SitRight</span>
         </header>
@@ -102,9 +119,7 @@ export function LoginPage() {
             te dice qué corregir, antes de que aparezca el dolor.
           </p>
 
-          <LivePreviewCard />
-
-          <ul className="mt-9 space-y-3.5">
+          <ul className="mt-10 space-y-4">
             {VALUE_POINTS.map(({ Icon, text }, i) => (
               <motion.li
                 key={text}
@@ -228,59 +243,6 @@ export function LoginPage() {
         </motion.div>
       </section>
     </div>
-  )
-}
-
-/**
- * Mini-preview del producto que flota sobre el panel de marca: una tarjeta
- * clara con el estado de postura en vivo, igual al lenguaje del dashboard.
- * Adelanta lo que el usuario verá al entrar. Flote sutil, respeta reduced-motion.
- */
-function LivePreviewCard() {
-  const reduce = useReducedMotion()
-  return (
-    <motion.div
-      className="mt-10 w-full max-w-sm rounded-2xl border border-cream-bone/15 bg-cream-bone p-5 shadow-[0_24px_60px_-20px_rgba(15,30,20,0.55)]"
-      initial={{ opacity: 0, y: 24, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.7, ease, delay: 0.35 }}
-    >
-      <motion.div
-        animate={reduce ? undefined : { y: [0, -7, 0] }}
-        transition={reduce ? undefined : { duration: 5, ease: 'easeInOut', repeat: Infinity }}
-      >
-        <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] text-moss">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-moss opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-moss" />
-          </span>
-          En vivo · Postura actual
-        </div>
-
-        <div className="mt-3 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[22px] font-semibold leading-none tracking-tight text-ink">
-              Postura correcta
-            </p>
-            <p className="mt-2 text-[13px] text-ink-soft">
-              Confianza <span className="font-mono tabular-nums text-ink">94%</span> · Batería{' '}
-              <span className="font-mono tabular-nums text-ink">78%</span>
-            </p>
-          </div>
-          {/* Mini-columna: 3 zonas alineadas, la base en verde (adecuada) */}
-          <div className="flex flex-col items-center gap-1.5">
-            {[0, 1, 2].map((i) => (
-              <span key={i} className="h-2.5 w-2.5 rounded-full bg-moss" />
-            ))}
-          </div>
-        </div>
-
-        {/* Barra de confianza */}
-        <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-cream-deep">
-          <div className="h-full rounded-full bg-moss" style={{ width: '94%' }} />
-        </div>
-      </motion.div>
-    </motion.div>
   )
 }
 
