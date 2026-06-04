@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { Activity, History, Sparkles } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Activity, ArrowRight, History, Sparkles } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Brandmark } from '@/shared/ui/Brandmark'
 import { useAuth } from '../context/AuthContext'
@@ -9,10 +10,17 @@ interface LocationState {
 }
 
 const VALUE_POINTS = [
-  { Icon: Activity, text: 'Lectura de tu postura en tiempo real desde el chaleco.' },
-  { Icon: Sparkles, text: 'Recomendaciones ergonómicas cuando te desvías.' },
-  { Icon: History, text: 'Historial y evolución de cada jornada sentado.' },
+  { Icon: Activity, text: 'Lee tu postura en tiempo real desde el chaleco.' },
+  { Icon: Sparkles, text: 'Te avisa con ajustes ergonómicos cuando te desvías.' },
+  { Icon: History, text: 'Guarda el historial y la evolución de cada jornada.' },
 ]
+
+// Textura de ruido sutil para dar materialidad al panel de marca (sin esto la
+// superficie se ve plana). Capa fija, sin eventos de puntero.
+const NOISE =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"
+
+const ease = [0.16, 1, 0.3, 1] as const
 
 export function LoginPage() {
   const { login } = useAuth()
@@ -40,72 +48,108 @@ export function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
-      {/* Panel de marca — propuesta de valor concreta, no editorial */}
-      <section className="relative hidden flex-col justify-between bg-moss-deep p-12 text-cream lg:flex xl:p-16">
-        <header className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-lg bg-cream/10">
+    <div className="grid min-h-[100dvh] lg:grid-cols-[1.05fr_minmax(0,560px)]">
+      {/* ── Panel de marca: profundidad real (gradiente ambiental + ruido) ── */}
+      <section className="relative hidden overflow-hidden bg-moss-deep text-cream-bone lg:flex lg:flex-col lg:justify-between lg:p-14 xl:p-16">
+        {/* Resplandor ambiental tintado en el propio verde + acento terracota */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              'radial-gradient(60% 55% at 18% 12%, rgba(77,107,85,0.55) 0%, transparent 60%), radial-gradient(50% 50% at 92% 88%, rgba(200,98,60,0.20) 0%, transparent 55%)',
+          }}
+        />
+        {/* Cuadrícula muy tenue para estructura */}
+        <div
+          aria-hidden
+          className="absolute inset-0 opacity-[0.35]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(244,239,230,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(244,239,230,0.04) 1px, transparent 1px)',
+            backgroundSize: '46px 46px',
+          }}
+        />
+        {/* Grano */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-overlay"
+          style={{ backgroundImage: NOISE }}
+        />
+
+        <header className="relative flex items-center gap-3">
+          <div className="grid h-10 w-10 place-items-center rounded-xl bg-cream-bone/10 ring-1 ring-cream-bone/15">
             <Brandmark />
           </div>
           <span className="text-lg font-semibold tracking-tight">SitRight</span>
         </header>
 
-        <div className="max-w-md">
-          <h1 className="text-4xl font-semibold leading-[1.1] tracking-tight xl:text-5xl">
-            Tu postura, medida mientras trabajas.
+        <motion.div
+          className="relative max-w-md"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease }}
+        >
+          <h1 className="text-4xl font-semibold leading-[1.08] tracking-tight xl:text-[52px]">
+            Tu columna lleva la cuenta. Nosotros te la mostramos.
           </h1>
-          <p className="mt-5 text-[15px] leading-relaxed text-cream/70">
-            El chaleco inteligente lee tu columna durante la jornada y el panel te
-            devuelve, en vivo, qué corregir antes de que aparezca el dolor.
+          <p className="mt-6 max-w-[42ch] text-[15px] leading-relaxed text-cream-bone/70">
+            El chaleco inteligente mide tu postura durante la jornada y el panel
+            te dice qué corregir, antes de que aparezca el dolor.
           </p>
 
-          <ul className="mt-10 space-y-5">
-            {VALUE_POINTS.map(({ Icon, text }) => (
-              <li key={text} className="flex items-start gap-3.5">
-                <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-cream/10">
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={1.6} />
+          <ul className="mt-12 space-y-6">
+            {VALUE_POINTS.map(({ Icon, text }, i) => (
+              <motion.li
+                key={text}
+                className="flex items-start gap-4"
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease, delay: 0.25 + i * 0.1 }}
+              >
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cream-bone/10 ring-1 ring-cream-bone/15">
+                  <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
                 </span>
-                <span className="text-[14px] leading-relaxed text-cream/85">{text}</span>
-              </li>
+                <span className="pt-1.5 text-[14px] leading-relaxed text-cream-bone/85">
+                  {text}
+                </span>
+              </motion.li>
             ))}
           </ul>
-        </div>
+        </motion.div>
 
-        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-cream/45">
+        <p className="relative font-mono text-[11px] uppercase tracking-[0.16em] text-cream-bone/40">
           SitRight · Lima · 2026
         </p>
       </section>
 
-      {/* Panel de formulario */}
-      <section className="flex flex-col bg-cream px-6 py-10 sm:px-12 lg:px-16">
-        <header className="flex items-center justify-end text-[14px] text-ink-soft">
-          <span>
-            ¿Aún no tienes cuenta?{' '}
-            <Link to="/register" className="font-medium text-moss hover:text-moss-deep">
-              Crear acceso
-            </Link>
-          </span>
-        </header>
-
-        <div className="my-auto w-full max-w-[400px] py-10 sm:mx-auto">
-          {/* Marca visible en móvil, donde el panel de marca se oculta */}
-          <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="grid h-10 w-10 place-items-center rounded-lg bg-moss-deep text-cream">
+      {/* ── Panel de formulario ── */}
+      <section className="flex items-center justify-center bg-cream px-6 py-12 sm:px-10">
+        <motion.div
+          className="w-full max-w-[400px]"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease }}
+        >
+          {/* Marca en móvil (el panel de marca se oculta) */}
+          <div className="mb-10 flex items-center gap-3 lg:hidden">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-moss-deep text-cream-bone">
               <Brandmark />
             </div>
             <span className="text-lg font-semibold tracking-tight text-ink">SitRight</span>
           </div>
 
-          <h2 className="text-[32px] font-semibold leading-tight tracking-tight text-ink">
+          <p className="text-[13px] font-medium text-moss">Panel SitRight</p>
+          <h2 className="mt-2 text-[32px] font-semibold leading-tight tracking-tight text-ink">
             Inicia sesión
           </h2>
-          <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
-            Ingresa con tu correo. Tu sesión seguirá activa en este navegador
+          <p className="mt-2.5 text-[15px] leading-relaxed text-ink-soft">
+            Ingresa con tu correo. La sesión sigue activa en este navegador
             durante 12 horas.
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-8">
-            <div className="mb-4">
+          <form onSubmit={handleSubmit} className="mt-9 space-y-5">
+            <div>
               <label htmlFor="email" className="mb-1.5 block text-[13px] font-medium text-ink">
                 Correo electrónico
               </label>
@@ -117,18 +161,18 @@ export function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nombre@correo.com"
-                className="w-full rounded-lg border border-sand bg-cream-bone px-4 py-3 text-[15px] text-ink placeholder:text-ink-faint focus:border-moss focus:outline-none focus:ring-2 focus:ring-moss/20"
+                className="w-full rounded-xl border border-sand bg-cream-bone px-4 py-3 text-[15px] text-ink shadow-sm transition-colors placeholder:text-ink-faint focus:border-moss focus:outline-none focus:ring-4 focus:ring-moss/15"
               />
             </div>
 
-            <div className="mb-2">
+            <div>
               <div className="mb-1.5 flex items-baseline justify-between">
                 <label htmlFor="password" className="block text-[13px] font-medium text-ink">
                   Contraseña
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-[13px] text-ink-soft hover:text-moss"
+                  className="text-[13px] text-ink-soft transition-colors hover:text-moss"
                 >
                   Olvidé mi contraseña
                 </Link>
@@ -141,14 +185,14 @@ export function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full rounded-lg border border-sand bg-cream-bone px-4 py-3 text-[15px] text-ink placeholder:text-ink-faint focus:border-moss focus:outline-none focus:ring-2 focus:ring-moss/20"
+                className="w-full rounded-xl border border-sand bg-cream-bone px-4 py-3 text-[15px] text-ink shadow-sm transition-colors placeholder:text-ink-faint focus:border-moss focus:outline-none focus:ring-4 focus:ring-moss/15"
               />
             </div>
 
             {error && (
               <p
                 role="alert"
-                className="mt-4 rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-[14px] text-terracotta-deep"
+                className="rounded-xl border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-[14px] text-terracotta-deep"
               >
                 {error}
               </p>
@@ -157,14 +201,12 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-7 flex w-full items-center justify-center gap-2 rounded-lg bg-moss px-6 py-3.5 text-[15px] font-semibold text-cream-bone transition-colors hover:bg-moss-deep disabled:opacity-60"
+              className="group flex w-full items-center justify-between gap-2 rounded-xl bg-moss py-3 pl-5 pr-3 text-[15px] font-semibold text-cream-bone shadow-sm transition-all hover:bg-moss-deep active:scale-[0.99] disabled:opacity-60"
             >
               <span>{submitting ? 'Verificando…' : 'Acceder al panel'}</span>
-              {!submitting && (
-                <span aria-hidden className="text-base">
-                  →
-                </span>
-              )}
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-cream-bone/15 transition-transform group-hover:translate-x-0.5">
+                <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
+              </span>
             </button>
           </form>
 
@@ -174,7 +216,14 @@ export function LoginPage() {
               setPassword(creds.password)
             }}
           />
-        </div>
+
+          <p className="mt-8 text-center text-[14px] text-ink-soft">
+            ¿Aún no tienes cuenta?{' '}
+            <Link to="/register" className="font-medium text-moss hover:text-moss-deep">
+              Crear acceso
+            </Link>
+          </p>
+        </motion.div>
       </section>
     </div>
   )
@@ -195,16 +244,16 @@ function DemoCredentialsHint({ onUse }: { onUse: (creds: DemoCreds) => void }) {
   return (
     <div className="mt-8 border-t border-sand pt-6">
       <p className="mb-3 text-[13px] font-medium text-ink-soft">¿Solo quieres probar?</p>
-      <div className="flex flex-wrap gap-2.5">
+      <div className="grid grid-cols-2 gap-2.5">
         {DEMO_CREDS.map((c) => (
           <button
             key={c.email}
             type="button"
             onClick={() => onUse(c)}
-            className="inline-flex items-center gap-2 rounded-lg border border-sand bg-cream-bone px-3.5 py-2.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-moss hover:text-ink"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-sand bg-cream-bone px-3.5 py-2.5 text-[13px] font-medium text-ink-soft transition-colors hover:border-moss hover:text-ink"
           >
             <span className="h-1.5 w-1.5 rounded-full bg-moss" />
-            Entrar como {c.label}
+            {c.label}
           </button>
         ))}
       </div>
