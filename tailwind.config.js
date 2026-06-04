@@ -35,9 +35,13 @@ export default {
           DEFAULT: palette('sand'),
           light: palette('sand-light'),
         },
+        amber: palette('amber'),
       },
       fontFamily: {
-        serif: ['Fraunces', 'Georgia', 'serif'],
+        // Una sola familia sans en toda la app. `serif` se remapea a Geist a
+        // propósito: conserva compatibilidad con los usos existentes de
+        // `font-serif` sin editarlos, ya renderizados legibles.
+        serif: ['Geist', 'system-ui', 'sans-serif'],
         sans: ['Geist', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },

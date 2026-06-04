@@ -34,7 +34,7 @@ export function VestManagementPage() {
       </div>
 
       <div className="grid grid-cols-[1fr_auto] items-end gap-8 border-b border-sand pb-6">
-        <h1 className="font-serif text-[56px] font-normal leading-[0.95] tracking-[-0.03em] text-ink">
+        <h1 className="font-serif text-[56px] font-semibold leading-[0.95] tracking-[-0.03em] text-ink">
           {vest ? (
             <>
               Tu chaleco
@@ -325,7 +325,13 @@ function Spec({ k, v, suffix }: SpecProps) {
 }
 
 function BatteryPanel({ vest }: PropsWithVest) {
-  const percent = vest.battery_level ?? 0
+  // Fuente única de batería: el porcentaje de la última lectura en vivo (igual
+  // que el dashboard). `vest.battery_level` queda como respaldo cuando aún no
+  // llegó ninguna lectura de este chaleco — el backend no lo mantiene al día.
+  const { data: latest } = useCurrentPosture()
+  const livePercent =
+    latest?.vest_id === vest.id ? latest?.battery_percent : undefined
+  const percent = livePercent ?? vest.battery_level ?? 0
   const hoursLeft = batteryHoursRemaining(percent)
   const headline =
     percent >= 50 ? `Resistirá ${hoursLeft} h más` : percent >= 20 ? 'Carga moderada' : 'Carga baja'
@@ -338,16 +344,13 @@ function BatteryPanel({ vest }: PropsWithVest) {
           'radial-gradient(at 100% 0%, rgba(200,98,60,0.18), transparent 60%)',
       }}
     >
-      <span className="absolute right-5 top-5 font-mono text-[10px] uppercase tracking-[0.16em] text-cream/55">
-        № 02
-      </span>
-      <p className="mb-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-sand">
+      <p className="mb-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-cream/80">
         Batería del chaleco
       </p>
       <h3 className="mb-4 font-serif text-2xl tracking-tight">{headline}</h3>
 
       <div className="grid grid-cols-[auto_1fr] items-center gap-5">
-        <div className="font-serif text-[68px] leading-none tracking-[-0.04em]">
+        <div className="font-serif text-[68px] font-semibold leading-none tracking-[-0.04em]">
           {percent}
           <small className="ml-1 text-2xl opacity-65">%</small>
         </div>
@@ -358,9 +361,8 @@ function BatteryPanel({ vest }: PropsWithVest) {
               style={{ width: `${percent}%` }}
             />
           </div>
-          <div className="flex justify-between font-mono text-[10px] tracking-[0.10em] text-cream/70">
-            <span>≈ {hoursLeft} h restantes</span>
-            <span>Reporte cada 5 s</span>
+          <div className="font-mono text-[11px] tracking-[0.08em] text-cream/75">
+            ≈ {hoursLeft} h restantes
           </div>
         </div>
       </div>

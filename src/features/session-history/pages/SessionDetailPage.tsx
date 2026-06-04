@@ -357,7 +357,7 @@ function Hero({ session, dominant }: HeroProps) {
           </span>
         </div>
 
-        <h1 className="mb-5 font-serif text-[64px] font-normal leading-[0.92] tracking-[-0.035em] text-ink">
+        <h1 className="mb-5 font-serif text-[64px] font-semibold leading-[0.92] tracking-[-0.035em] text-ink">
           Una jornada
           <br />
           de <em className="italic text-moss">{adequatePct !== null && adequatePct >= 70 ? 'postura disciplinada.' : 'postura activa.'}</em>

@@ -77,7 +77,7 @@ export function RegisterPage() {
           <div className="mb-5 font-mono text-[10px] uppercase tracking-[0.20em] text-terracotta">
             Crear acceso
           </div>
-          <h2 className="mb-3 font-serif text-[48px] font-normal leading-[0.95] tracking-tight text-ink">
+          <h2 className="mb-3 font-serif text-[48px] font-semibold leading-[0.95] tracking-tight text-ink">
             Una cuenta,
             <br />
             una columna.

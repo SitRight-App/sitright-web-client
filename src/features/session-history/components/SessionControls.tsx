@@ -31,10 +31,9 @@ export function SessionControls() {
   }
 
   return (
-    <div className="relative editorial-card p-7">
-      <span className="num-tag absolute right-5 top-5">№ 05</span>
+    <div className="editorial-card p-7">
       <p className="label-mono">Control de sesión</p>
-      <h2 className="mt-2 font-serif text-2xl tracking-tight text-ink">
+      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
         {active ? (
           <>
             Tu jornada está <em className="italic text-moss">en curso.</em>
@@ -139,7 +138,7 @@ function ActiveSessionState({ startedAt, liveMs, readingCount, onClose, isPendin
           <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
             Duración
           </p>
-          <p className="font-serif text-[40px] leading-none tracking-tight text-ink">
+          <p className="font-serif text-[40px] font-semibold leading-none tracking-tight text-ink">
             {formatDuration(liveMs)}
           </p>
           <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.10em] text-ink-soft">
@@ -147,14 +146,11 @@ function ActiveSessionState({ startedAt, liveMs, readingCount, onClose, isPendin
           </p>
         </div>
         <div>
-          <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
+          <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
             Lecturas
           </p>
-          <p className="font-serif text-[40px] leading-none tracking-tight text-ink">
+          <p className="text-[40px] font-semibold leading-none tracking-tight text-ink">
             {readingCount.toLocaleString('es-PE')}
-          </p>
-          <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.10em] text-ink-soft">
-            Cada 5 s
           </p>
         </div>
       </div>

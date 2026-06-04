@@ -89,11 +89,10 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
     readings.length > 0 ? new Date(readings[readings.length - 1].timestamp) : null
 
   return (
-    <div className="relative editorial-card p-7">
-      <span className="num-tag absolute right-5 top-5">№ 04</span>
+    <div className="editorial-card p-7">
       <p className="label-mono">Línea de tiempo · sesión</p>
-      <h2 className="mt-2 font-serif text-2xl tracking-tight text-ink">
-        Tu jornada postural <em className="italic text-moss">en vivo.</em>
+      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
+        Tu jornada postural <span className="text-moss">en vivo.</span>
       </h2>
 
       {isError && (

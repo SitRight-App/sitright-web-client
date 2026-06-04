@@ -40,7 +40,7 @@ export function ForgotPasswordPage() {
             'radial-gradient(at 100% 0%, rgba(200,98,60,0.20), transparent 60%)',
         }}
       >
-        <h1 className="font-serif text-[44px] leading-tight tracking-tight">
+        <h1 className="font-serif text-[44px] font-semibold leading-tight tracking-tight">
           Recupera tu acceso<br />
           <em className="italic text-terracotta-soft">a SitRight.</em>
         </h1>

@@ -128,7 +128,7 @@ export function RecommendationsPage() {
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-6 pb-8">
-        <h1 className="font-serif text-[44px] font-normal leading-none tracking-[-0.025em] text-ink">
+        <h1 className="font-serif text-[44px] font-semibold leading-none tracking-[-0.025em] text-ink">
           Pequeños gestos,
           <br />
           <em className="italic font-normal text-moss">columnas más sanas.</em>
@@ -284,7 +284,7 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
             {featured.featured_tagline}
           </div>
         )}
-        <h2 className="mb-5 font-serif text-[52px] font-light leading-[0.98] tracking-[-0.03em]">
+        <h2 className="mb-5 font-serif text-[52px] font-semibold leading-[0.98] tracking-[-0.03em]">
           {titleMain || featured.title}
           {titleEmphasis && (
             <>
@@ -401,7 +401,7 @@ function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
         <RecommendationIcon icon={entry.icon} />
       </div>
 
-      <h3 className="mb-2.5 font-serif text-[24px] font-normal leading-tight tracking-[-0.02em] text-ink">
+      <h3 className="mb-2.5 font-serif text-[24px] font-semibold leading-tight tracking-[-0.02em] text-ink">
         {entry.title}
       </h3>
       <p className="mb-auto text-[13px] leading-relaxed text-ink-soft">{entry.description}</p>

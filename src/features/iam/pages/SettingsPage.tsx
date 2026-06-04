@@ -83,7 +83,7 @@ export function SettingsPage() {
       </div>
       <div className="flex flex-wrap items-end justify-between gap-6 border-b border-sand pb-6">
         <div>
-          <h1 className="font-serif text-[56px] font-normal leading-[0.95] tracking-[-0.03em] text-ink">
+          <h1 className="font-serif text-[56px] font-semibold leading-[0.95] tracking-[-0.03em] text-ink">
             Tu <em className="italic text-moss">perfil.</em>
           </h1>
           <p className="mt-2 max-w-md text-sm text-ink-soft">

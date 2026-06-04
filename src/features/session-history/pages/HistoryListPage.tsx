@@ -48,7 +48,7 @@ export function HistoryListPage() {
           <div className="mb-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
             Panel <span className="text-terracotta">›</span> Historial
           </div>
-          <h1 className="font-serif text-[64px] font-normal leading-[0.95] tracking-[-0.03em] text-ink">
+          <h1 className="font-serif text-[64px] font-semibold leading-[0.95] tracking-[-0.03em] text-ink">
             Sesiones
             <br />
             <em className="font-normal italic text-moss">guardadas.</em>
@@ -67,7 +67,7 @@ export function HistoryListPage() {
               <p className="mb-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
                 Sesiones
               </p>
-              <p className="font-serif text-[44px] leading-none tracking-tight">
+              <p className="font-serif text-[44px] font-semibold leading-none tracking-tight">
                 {sessions.length}
               </p>
             </div>
@@ -76,7 +76,7 @@ export function HistoryListPage() {
                 <p className="mb-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
                   Adecuada prom.
                 </p>
-                <p className="font-serif text-[44px] leading-none tracking-tight">
+                <p className="font-serif text-[44px] font-semibold leading-none tracking-tight">
                   {avgAdequate}
                   <small className="ml-1 text-lg text-ink-soft">%</small>
                 </p>
@@ -86,7 +86,7 @@ export function HistoryListPage() {
               <p className="mb-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
                 Tiempo total
               </p>
-              <p className="font-serif text-[44px] leading-none tracking-tight">
+              <p className="font-serif text-[44px] font-semibold leading-none tracking-tight">
                 {Math.round(totalMinutes / 60)}
                 <small className="ml-1 text-lg text-ink-soft">h</small>
               </p>

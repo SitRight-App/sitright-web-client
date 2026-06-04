@@ -41,7 +41,7 @@ export function AdminPage() {
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-6 border-b border-sand pb-6">
-        <h1 className="font-serif text-[56px] font-normal leading-[0.95] tracking-[-0.03em] text-ink">
+        <h1 className="font-serif text-[56px] font-semibold leading-[0.95] tracking-[-0.03em] text-ink">
           Gestión <em className="italic text-moss">del sistema.</em>
         </h1>
         <span className="inline-flex items-center gap-2.5 rounded-full border border-moss/25 bg-moss/10 px-4 py-2.5 font-mono text-[11px] uppercase tracking-[0.14em] text-moss">
