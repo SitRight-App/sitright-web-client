@@ -349,12 +349,18 @@ function SpineCard({ reading, status }: SpineCardProps) {
         </div>
 
         <div className="space-y-7 text-right">
-          {['Sensor 1 · 7A', 'Sensor 2 · 7B', 'Sensor 3 · 7C'].map((s) => (
-            <div key={s} className="rounded-md border border-sand bg-cream-bone px-4 py-2.5">
+          {[
+            { zone: 'Sensor cervical', mount: 'C7' },
+            { zone: 'Sensor dorsal', mount: 'D7' },
+            { zone: 'Sensor lumbar', mount: 'L7' },
+          ].map((s) => (
+            <div key={s.mount} className="rounded-md border border-sand bg-cream-bone px-4 py-2.5">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
-                {s}
+                {s.zone} · {s.mount}
               </p>
-              <p className="text-base font-medium text-ink">MPU-6050</p>
+              <p className={`text-base font-medium ${isLive ? 'text-moss' : 'text-ink-faint'}`}>
+                {isLive ? 'En línea' : 'Sin señal'}
+              </p>
             </div>
           ))}
         </div>
@@ -373,6 +379,7 @@ function SpineCard({ reading, status }: SpineCardProps) {
           <span className="h-2 w-2 rounded-full bg-ink-faint" />
           Sin datos
         </span>
+        <span className="ml-auto text-ink-faint">3× MPU-6050 · I²C</span>
       </div>
     </div>
   )

@@ -330,7 +330,7 @@ function Hero({ session, dominant }: HeroProps) {
     {
       label: 'Horario',
       value: ended
-        ? `${timeFmt.format(started)} — ${timeFmt.format(ended)}`
+        ? `${timeFmt.format(started)} a ${timeFmt.format(ended)}`
         : timeFmt.format(started),
     },
     ...(session.duration_minutes !== null

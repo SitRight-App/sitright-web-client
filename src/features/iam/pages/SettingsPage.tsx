@@ -221,7 +221,7 @@ export function SettingsPage() {
           </div>
         </section>
 
-        <div className="lg:col-span-3">
+        <div className="flex justify-end lg:col-span-3">
           <button
             type="submit"
             disabled={saving}
@@ -278,17 +278,18 @@ function ChangePasswordPanel() {
   }
 
   return (
-    <section className="mt-4 rounded-xl border border-sand bg-cream-bone p-7">
-      <div className="mb-5 border-b border-sand pb-4">
-        <h2 className="text-xl font-semibold tracking-tight text-ink">
-          Cambiar contraseña
-        </h2>
+    <form onSubmit={handleSubmit}>
+      <section className="mt-4 rounded-xl border border-sand bg-cream-bone p-7">
+        <div className="mb-5 border-b border-sand pb-4">
+          <h2 className="text-xl font-semibold tracking-tight text-ink">
+            Cambiar contraseña
+          </h2>
         <p className="mt-1 text-[14px] text-ink-soft">
           Usa al menos 8 caracteres en la nueva contraseña.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3">
         <FormField num="01" label="Contraseña actual">
           <input
             type="password"
@@ -321,18 +322,19 @@ function ChangePasswordPanel() {
             className={fieldInput}
           />
         </FormField>
-
-        <div className="lg:col-span-3">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex items-center rounded-xl bg-moss px-6 py-3 text-[15px] font-semibold text-cream-bone shadow-sm transition-all hover:bg-moss-deep active:scale-[0.99] disabled:opacity-60"
-          >
-            {submitting ? 'Cambiando…' : 'Actualizar contraseña'}
-          </button>
         </div>
-      </form>
-    </section>
+      </section>
+
+      <div className="mt-5 flex justify-end">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="inline-flex items-center rounded-xl bg-moss px-6 py-3 text-[15px] font-semibold text-cream-bone shadow-sm transition-all hover:bg-moss-deep active:scale-[0.99] disabled:opacity-60"
+        >
+          {submitting ? 'Cambiando…' : 'Actualizar contraseña'}
+        </button>
+      </div>
+    </form>
   )
 }
 
