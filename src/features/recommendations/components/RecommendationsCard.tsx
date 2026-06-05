@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useToast } from '@/shared/ui/toast/ToastProvider'
 import { useSnoozedRecommendations } from '../hooks/useSnoozedRecommendations'
-import type { Recommendation } from '../types/recommendation'
+import type { Recommendation, RecommendationCategory } from '../types/recommendation'
 
 interface Props {
   recommendations: Recommendation[]
@@ -20,15 +20,41 @@ const timeFmt = new Intl.DateTimeFormat('es-PE', {
   minute: '2-digit',
 })
 
+// Zona de la columna afectada por cada desviación postural. Las recomendaciones
+// de esa zona son las más relevantes para la postura actual.
+const AFFECTED_ZONE: Record<string, RecommendationCategory> = {
+  forward_slouch: 'cervical',
+  excessive_recline: 'lumbar',
+}
+
+/**
+ * Rango de prioridad (menor = se muestra primero). Ordena por: (1) destacadas,
+ * (2) zona desviada actual, (3) otra zona específica antes que las generales,
+ * (4) número de catálogo como desempate estable. Así, al recortar a `maxVisible`
+ * en el dashboard, se conservan las recomendaciones más pertinentes, no las
+ * primeras que devuelve el backend.
+ */
+function priorityRank(rec: Recommendation, affected: RecommendationCategory | undefined): number {
+  let rank = 0
+  if (!rec.is_featured) rank += 1000
+  if (affected && rec.category === affected) rank += 0
+  else if (rec.category !== 'general') rank += 100
+  else rank += 200
+  rank += Number(rec.number) || 0
+  return rank
+}
+
 export function RecommendationsCard({ recommendations, postureClass, maxVisible }: Props) {
   const isGood = postureClass === 'adequate'
   const { snooze, isSnoozed, snoozedUntil } = useSnoozedRecommendations()
   const toast = useToast()
 
-  const allVisible = useMemo(
-    () => recommendations.filter((r) => !isSnoozed(r.id)),
-    [recommendations, isSnoozed],
-  )
+  const allVisible = useMemo(() => {
+    const affected = AFFECTED_ZONE[postureClass]
+    return recommendations
+      .filter((r) => !isSnoozed(r.id))
+      .sort((a, b) => priorityRank(a, affected) - priorityRank(b, affected))
+  }, [recommendations, isSnoozed, postureClass])
   const visible = maxVisible ? allVisible.slice(0, maxVisible) : allVisible
   const hiddenCount = allVisible.length - visible.length
   const snoozedItems = useMemo(

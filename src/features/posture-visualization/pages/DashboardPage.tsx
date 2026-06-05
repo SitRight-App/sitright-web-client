@@ -14,7 +14,7 @@ import { useBreakReminder } from '../hooks/useBreakReminder'
 import { useCurrentPosture } from '../hooks/useCurrentPosture'
 import { useProlongedBadPosture } from '../hooks/useProlongedBadPosture'
 import { useRecentReadings } from '../hooks/useRecentReadings'
-import { useVestStatus } from '../hooks/useVestStatus'
+import { useVestStatus, type VestStatus } from '../hooks/useVestStatus'
 import type { LatestReading, PostureClass } from '../types/posture'
 import { POSTURE_HEADLINES, POSTURE_LABELS, isDeviation } from '../types/posture'
 
@@ -34,10 +34,15 @@ function capitalize(s: string): string {
 }
 
 function timeSince(iso: string): string {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (diff < 5) return 'ahora mismo'
-  if (diff < 60) return `hace ${diff} s`
-  return `hace ${Math.floor(diff / 60)} min`
+  const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (sec < 5) return 'hace un momento'
+  if (sec < 60) return `hace ${sec} s`
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `hace ${min} min`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `hace ${h} h`
+  const d = Math.floor(h / 24)
+  return `hace ${d} día${d === 1 ? '' : 's'}`
 }
 
 export function DashboardPage() {
@@ -105,7 +110,11 @@ export function DashboardPage() {
       <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
         {/* Protagonista: estado de postura en vivo, reactivo al color */}
         <motion.div variants={staggerItem}>
-          <LiveStatusBanner reading={reading ?? null} isLoading={isLoading} />
+          <LiveStatusBanner
+            reading={reading ?? null}
+            status={vestStatus}
+            isLoading={isLoading}
+          />
         </motion.div>
 
         {/* Columna vertebral + recomendaciones */}
@@ -153,26 +162,42 @@ export function DashboardPage() {
 
 interface LiveStatusProps {
   reading: LatestReading | null
+  status: VestStatus
   isLoading: boolean
 }
 
 /**
- * Banda protagonista del dashboard. Cambia de color según el estado postural
- * detectado: verde (adecuada), terracota (desviación) o neutro (sin datos).
+ * Banda protagonista del dashboard. Sólo presenta la postura como "en vivo"
+ * cuando el chaleco está realmente conectado (última lectura ≤ 30 s). Si la
+ * última lectura es vieja, el chaleco está desconectado y la banda pasa a un
+ * estado neutro — no tendría sentido mostrar una postura de hace horas como si
+ * fuera la actual.
  */
-function LiveStatusBanner({ reading, isLoading }: LiveStatusProps) {
+function LiveStatusBanner({ reading, status, isLoading }: LiveStatusProps) {
   const cls: PostureClass = reading?.posture_class ?? 'indeterminate'
   const isWarn = isDeviation(cls)
-  const hasData = reading !== null
+  // "En vivo" sólo si hay conexión real (connected o battery_low).
+  const isLive = (status === 'connected' || status === 'battery_low') && reading !== null
 
-  const tone = !hasData
+  const tone = !isLive
     ? 'border-sand bg-cream-bone text-ink'
     : isWarn
       ? 'border-terracotta-deep bg-terracotta text-cream-bone'
       : 'border-moss-deep bg-moss text-cream-bone'
 
-  const dotTone = !hasData ? 'bg-ink-faint' : 'bg-cream-bone'
-  const subTone = !hasData ? 'text-ink-soft' : 'text-cream-bone/80'
+  const dotTone = !isLive ? 'bg-ink-faint' : 'bg-cream-bone'
+  const subTone = !isLive ? 'text-ink-soft' : 'text-cream-bone/80'
+
+  // Título y subtítulo del estado neutro (sin conexión / sin lecturas / cargando).
+  let offlineTitle = 'Sin lecturas'
+  let offlineSub = 'Aún no llegan lecturas del chaleco.'
+  if (isLoading && reading === null) {
+    offlineSub = 'Conectando con el chaleco…'
+  } else if (reading !== null) {
+    // Hay una lectura, pero antigua → desconectado.
+    offlineTitle = 'Chaleco sin conexión'
+    offlineSub = `El chaleco no está enviando lecturas. Última ${timeSince(reading.timestamp)}.`
+  }
 
   return (
     <section className={`rounded-xl border p-7 sm:p-8 ${tone}`}>
@@ -180,26 +205,24 @@ function LiveStatusBanner({ reading, isLoading }: LiveStatusProps) {
         <div className="min-w-0">
           <div className={`flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] ${subTone}`}>
             <span className="relative flex h-2 w-2">
-              {hasData && (
+              {isLive && (
                 <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${dotTone} opacity-60`} />
               )}
               <span className={`relative inline-flex h-2 w-2 rounded-full ${dotTone}`} />
             </span>
-            {hasData ? 'En vivo · Postura actual' : 'Sin lecturas'}
+            {isLive ? 'En vivo · Postura actual' : 'Estado del chaleco'}
           </div>
           <h2 className="mt-3 text-[34px] font-semibold leading-none tracking-tight sm:text-[40px]">
-            {POSTURE_LABELS[cls]}
+            {isLive ? POSTURE_LABELS[cls] : offlineTitle}
           </h2>
           <p className={`mt-2.5 text-[14px] leading-relaxed ${subTone}`}>
-            {hasData
+            {isLive
               ? `${POSTURE_HEADLINES[cls]} Última lectura ${timeSince(reading.timestamp)}.`
-              : isLoading
-                ? 'Conectando con el chaleco…'
-                : 'Aún no llegan lecturas del chaleco.'}
+              : offlineSub}
           </p>
         </div>
 
-        {hasData && (
+        {isLive && (
           <div className="flex items-stretch gap-6 sm:gap-8">
             <Stat label="Confianza" value={`${Math.round(reading.confidence * 100)}%`} tone={subTone} />
             <span className="w-px self-stretch bg-cream-bone/20" />
