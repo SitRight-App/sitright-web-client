@@ -16,22 +16,7 @@ import { ActiveSessionPill } from '@/features/session-history/components/ActiveS
 import { Brandmark } from '@/shared/ui/Brandmark'
 import { pageTransition } from '@/shared/ui/motion'
 
-type NavPage = { to: string; label: string; end?: boolean }
-
-/**
- * Topbar: navegación editorial de las 4 secciones principales de contenido.
- * Refleja `prototypes/02-dashboard.html` (top-pages). Configuración y
- * Administración quedan fuera adrede — son utilidades, viven sólo en el
- * sidebar (icono).
- */
-const TOP_PAGES: NavPage[] = [
-  { to: '/', label: 'Postura en vivo', end: true },
-  { to: '/history', label: 'Historial' },
-  { to: '/recommendations', label: 'Recomendaciones' },
-  { to: '/vest', label: 'Chaleco' },
-]
-
-type SidebarItem = {
+type NavItem = {
   to: string
   label: string
   end?: boolean
@@ -40,10 +25,10 @@ type SidebarItem = {
 }
 
 /**
- * Sidebar: quick-switcher icónico. Replica las 4 secciones del topbar para
- * navegación inmediata + agrega Configuración (y Admin si el rol lo permite).
+ * Navegación única de la app: una sola barra lateral con icono + etiqueta.
+ * (Antes había topbar y sidebar duplicando las mismas secciones.)
  */
-const SIDEBAR_ICONS: SidebarItem[] = [
+const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Tiempo real', end: true, Icon: Activity },
   { to: '/history', label: 'Historial', Icon: History },
   { to: '/recommendations', label: 'Recomendaciones', Icon: Sparkles },
@@ -66,102 +51,81 @@ export function AppLayout() {
     navigate('/login', { replace: true })
   }
 
+  const items = NAV_ITEMS.filter((p) => !p.adminOnly || user?.role === 'admin')
+
   return (
-    <div className="grid min-h-screen grid-cols-[72px_1fr] grid-rows-[56px_1fr] bg-cream">
-      {/* topbar */}
+    <div className="grid min-h-screen grid-cols-[64px_1fr] grid-rows-[64px_1fr] lg:grid-cols-[220px_1fr]">
+      {/* Marca (esquina superior izquierda, sobre el sidebar) */}
+      <div
+        data-print-hide
+        className="flex items-center gap-3 bg-moss-deep px-4 text-cream-bone lg:px-5"
+      >
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cream-bone/10 ring-1 ring-cream-bone/15">
+          <Brandmark size={22} />
+        </div>
+        <span className="hidden text-lg font-semibold tracking-tight lg:inline">SitRight</span>
+      </div>
+
+      {/* Topbar: contexto + sesión + notificaciones + usuario */}
       <header
         data-print-hide
-        className="col-span-2 flex items-center border-b border-sand bg-cream pr-8"
+        className="flex items-center justify-end gap-5 border-b border-sand bg-cream pr-6"
       >
-        <div className="grid h-14 w-[72px] place-items-center border-r border-sand bg-moss-deep text-cream">
-          <Brandmark />
-        </div>
-
-        <nav className="flex items-center gap-7 px-7 font-mono text-[11px] uppercase tracking-[0.16em] text-ink-soft">
-          {TOP_PAGES.map(({ to, label, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `py-1.5 ${isActive ? 'border-b-[1.4px] border-terracotta text-ink' : ''}`
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="ml-auto flex items-center gap-6">
-          <ActiveSessionPill />
-
-          <NotificationsBell />
-
-          {user && (
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex items-center gap-2.5"
-              title="Cerrar sesión"
-            >
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-moss-deep font-serif text-sm italic text-cream">
-                {userInitial(user.name)}
+        <ActiveSessionPill />
+        <NotificationsBell />
+        {user && (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex items-center gap-2.5"
+            title="Cerrar sesión"
+          >
+            <div className="grid h-8 w-8 place-items-center rounded-full bg-moss-deep text-sm font-semibold text-cream-bone">
+              {userInitial(user.name)}
+            </div>
+            <div className="hidden text-left leading-tight sm:block">
+              <div className="text-[13px] font-medium text-ink">{user.name.split(' ')[0]}</div>
+              <div className="text-[11px] text-ink-faint">
+                {user.role === 'admin' ? 'Administrador' : 'Trabajador'}
               </div>
-              <div className="text-left leading-tight">
-                <div className="text-xs text-ink">{user.name.split(' ')[0]}</div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
-                  {user.role === 'admin' ? 'Admin' : 'Trabajador'}
-                </div>
-              </div>
-            </button>
-          )}
-        </div>
+            </div>
+          </button>
+        )}
       </header>
 
-      {/* sidebar */}
+      {/* Sidebar: navegación única (icono + etiqueta) */}
       <aside
         data-print-hide
-        className="relative flex flex-col items-center gap-1.5 bg-moss-deep py-5 text-cream"
+        className="flex flex-col gap-1 bg-moss-deep p-3 text-cream-bone lg:px-4 lg:py-5"
       >
-        {SIDEBAR_ICONS.filter((p) => !p.adminOnly || user?.role === 'admin').map(
-          ({ to, label, end, Icon }) => (
+        <nav className="flex flex-col gap-1">
+          {items.map(({ to, label, end, Icon }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               title={label}
               className={({ isActive }) =>
-                `relative grid h-11 w-11 place-items-center rounded-md transition-all ${
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium transition-colors ${
                   isActive
-                    ? 'opacity-100'
-                    : 'opacity-55 hover:bg-white/5 hover:opacity-90'
+                    ? 'bg-cream-bone/12 text-cream-bone'
+                    : 'text-cream-bone/60 hover:bg-cream-bone/5 hover:text-cream-bone'
                 }`
               }
             >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <span className="absolute -left-2.5 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r bg-terracotta" />
-                  )}
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={1.4} />
-                </>
-              )}
+              <Icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.6} />
+              <span className="hidden lg:inline">{label}</span>
             </NavLink>
-          ),
-        )}
+          ))}
+        </nav>
 
-        <div className="mt-auto py-4">
-          <span
-            className="font-mono text-[9px] uppercase tracking-[0.32em] text-sand opacity-55"
-            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-          >
-            SitRight · Lima · 2026
-          </span>
-        </div>
+        <p className="mt-auto hidden px-3 font-mono text-[11px] uppercase tracking-[0.14em] text-cream-bone/35 lg:block">
+          SitRight · Lima · 2026
+        </p>
       </aside>
 
-      {/* main — anima cada cambio de ruta con un fade-up suave */}
-      <main className="app-shell-main overflow-y-auto px-12 py-8">
+      {/* Main — anima cada cambio de ruta con un fade-up suave */}
+      <main className="app-shell-main overflow-y-auto bg-cream px-6 py-7 lg:px-12 lg:py-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
