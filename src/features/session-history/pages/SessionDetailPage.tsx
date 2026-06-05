@@ -11,7 +11,7 @@ import { SessionSpineSnapshot } from '../components/SessionSpineSnapshot'
 import { SessionTimelineChart } from '../components/SessionTimelineChart'
 import { useSession } from '../hooks/useSessions'
 import { useSessionReadings } from '../hooks/useSessionReadings'
-import type { PostureSession } from '../types/session'
+import type { PostureSession, SessionSummary } from '../types/session'
 
 const dateLongFmt = new Intl.DateTimeFormat('es-PE', {
   day: '2-digit',
@@ -118,6 +118,77 @@ function deriveStats(readings: TimelineReading[], dominant: string | null): Deri
   }
 }
 
+const DEVIATION_CLASSES = ['forward_slouch', 'excessive_recline'] as const
+
+/**
+ * Construye un resumen con la misma forma que `SessionSummary` a partir de las
+ * lecturas reales. Se usa cuando la sesión aún no tiene resumen consolidado
+ * (p. ej. sigue abierta) pero sí hay lecturas en su ventana: así todas las
+ * métricas salen de la misma fuente y dejan de contradecirse.
+ */
+function summarizeReadings(readings: TimelineReading[]): SessionSummary {
+  const counts: Record<string, number> = {}
+  for (const r of readings) counts[r.posture_class] = (counts[r.posture_class] ?? 0) + 1
+  const valid = readings.filter((r) => r.posture_class !== 'indeterminate').length
+  const adequate = counts['adequate'] ?? 0
+  let dominant: string | null = null
+  let maxCount = 0
+  for (const d of DEVIATION_CLASSES) {
+    const c = counts[d] ?? 0
+    if (c > maxCount) {
+      maxCount = c
+      dominant = d
+    }
+  }
+  return {
+    total_readings: readings.length,
+    valid_readings: valid,
+    adequate_percentage: valid > 0 ? (adequate / valid) * 100 : 0,
+    dominant_deviation: dominant,
+    total_minutes: 0,
+    counts_by_class: counts,
+  }
+}
+
+interface EffectiveSession {
+  summary: SessionSummary | null
+  readingCount: number
+  dominant: string | null
+  /** true cuando el resumen se derivó de lecturas en vivo (sesión sin consolidar). */
+  provisional: boolean
+}
+
+/**
+ * Vista coherente de la sesión: usa el resumen consolidado del backend si
+ * existe; si no, lo deriva de las lecturas reales y lo marca como provisional.
+ */
+function resolveEffective(session: PostureSession, readings: TimelineReading[]): EffectiveSession {
+  const s = session.summary
+  if (s && s.valid_readings > 0) {
+    return {
+      summary: s,
+      readingCount: session.reading_count,
+      dominant: s.dominant_deviation,
+      provisional: false,
+    }
+  }
+  if (readings.length > 0) {
+    const derived = summarizeReadings(readings)
+    return {
+      summary: derived,
+      readingCount: readings.length,
+      dominant: derived.dominant_deviation,
+      provisional: true,
+    }
+  }
+  return {
+    summary: s,
+    readingCount: session.reading_count,
+    dominant: s?.dominant_deviation ?? null,
+    provisional: false,
+  }
+}
+
 export function SessionDetailPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const { data: session, isLoading, isError } = useSession(sessionId)
@@ -127,19 +198,20 @@ export function SessionDetailPage() {
     endedAt: session?.ended_at,
   })
 
-  const dominant = session?.summary?.dominant_deviation ?? null
-  const recs = useRecommendations(dominant ?? undefined)
-
-  const stats = useMemo(
-    () => deriveStats(readingsQuery.data ?? [], dominant),
-    [readingsQuery.data, dominant],
+  const readings = readingsQuery.data ?? []
+  const effective = useMemo(
+    () => (session ? resolveEffective(session, readings) : null),
+    [session, readings],
   )
+  const dominant = effective?.dominant ?? null
+  const recs = useRecommendations(dominant ?? undefined)
+  const stats = useMemo(() => deriveStats(readings, dominant), [readings, dominant])
 
   if (isLoading) {
     return <SessionDetailSkeleton />
   }
 
-  if (isError || !session) {
+  if (isError || !session || !effective) {
     return (
       <div>
         <Link to="/history" className="text-[14px] font-medium text-moss hover:text-moss-deep">
@@ -155,18 +227,10 @@ export function SessionDetailPage() {
   return (
     <div className="session-detail-printable">
       <Crumbs session={session} />
-      <Hero session={session} stats={stats} dominant={dominant} />
-      <StatsRow session={session} stats={stats} dominant={dominant} />
-      <DetailGrid
-        session={session}
-        readingsQuery={readingsQuery}
-        dominant={dominant}
-      />
-      <SecondRow
-        session={session}
-        recommendations={recs.data ?? []}
-        dominant={dominant}
-      />
+      <Hero session={session} effective={effective} />
+      <StatsRow stats={stats} effective={effective} />
+      <DetailGrid session={session} readingsQuery={readingsQuery} effective={effective} />
+      <SecondRow recommendations={recs.data ?? []} effective={effective} />
     </div>
   )
 }
@@ -307,16 +371,15 @@ function Crumbs({ session }: { session: PostureSession }) {
 
 interface HeroProps {
   session: PostureSession
-  stats: DerivedStats
-  dominant: string | null
+  effective: EffectiveSession
 }
 
-function Hero({ session, dominant }: HeroProps) {
+function Hero({ session, effective }: HeroProps) {
+  const { dominant, readingCount, provisional, summary } = effective
   const started = new Date(session.started_at)
   const ended = session.ended_at ? new Date(session.ended_at) : null
-  const adequatePct = session.summary?.adequate_percentage
-    ? Math.round(session.summary.adequate_percentage)
-    : null
+  const adequatePct =
+    summary?.adequate_percentage != null ? Math.round(summary.adequate_percentage) : null
 
   const lede =
     adequatePct !== null
@@ -336,7 +399,7 @@ function Hero({ session, dominant }: HeroProps) {
     ...(session.duration_minutes !== null
       ? [{ label: 'Duración', value: formatHoursMinutes(session.duration_minutes) }]
       : []),
-    { label: 'Lecturas', value: session.reading_count.toLocaleString('es-PE') },
+    { label: 'Lecturas', value: readingCount.toLocaleString('es-PE') },
   ]
 
   return (
@@ -366,6 +429,12 @@ function Hero({ session, dominant }: HeroProps) {
           </span>
         </h1>
         <p className="mt-5 max-w-[640px] text-[16px] leading-relaxed text-ink-soft">{lede}</p>
+        {provisional && (
+          <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-amber/40 bg-amber/10 px-3 py-1 text-[12px] font-medium text-ink-soft">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber" />
+            Datos provisionales · la sesión sigue abierta
+          </p>
+        )}
       </div>
 
       <aside className="rounded-xl bg-moss-deep p-7 text-cream-bone">
@@ -403,13 +472,12 @@ function Hero({ session, dominant }: HeroProps) {
 }
 
 interface StatsRowProps {
-  session: PostureSession
   stats: DerivedStats
-  dominant: string | null
+  effective: EffectiveSession
 }
 
-function StatsRow({ session, stats, dominant }: StatsRowProps) {
-  const summary = session.summary
+function StatsRow({ stats, effective }: StatsRowProps) {
+  const { summary, dominant } = effective
   const dominantCount = dominant && summary?.counts_by_class[dominant] ? summary.counts_by_class[dominant] : null
   const dominantPct =
     dominantCount !== null && summary?.valid_readings
@@ -504,11 +572,11 @@ function StatCard({ title, value, meta, variant = 'default', valueSize = 'lg' }:
 interface DetailGridProps {
   session: PostureSession
   readingsQuery: ReturnType<typeof useSessionReadings>
-  dominant: string | null
+  effective: EffectiveSession
 }
 
-function DetailGrid({ session, readingsQuery }: DetailGridProps) {
-  const summary = session.summary
+function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
+  const { summary, readingCount } = effective
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
@@ -533,7 +601,7 @@ function DetailGrid({ session, readingsQuery }: DetailGridProps) {
           Cómo se repartieron tus{' '}
           {summary?.valid_readings
             ? summary.valid_readings.toLocaleString('es-PE')
-            : session.reading_count.toLocaleString('es-PE')}{' '}
+            : readingCount.toLocaleString('es-PE')}{' '}
           lecturas.
         </h3>
         {summary && Object.keys(summary.counts_by_class).length > 0 ? (
@@ -578,13 +646,12 @@ function DetailGrid({ session, readingsQuery }: DetailGridProps) {
 }
 
 interface SecondRowProps {
-  session: PostureSession
   recommendations: Array<{ id: string; number: string; title: string; description: string }>
-  dominant: string | null
+  effective: EffectiveSession
 }
 
-function SecondRow({ session, recommendations, dominant }: SecondRowProps) {
-  const summary = session.summary
+function SecondRow({ recommendations, effective }: SecondRowProps) {
+  const { summary, dominant } = effective
   const dominantSensor = dominant ? sensorFromPosture(dominant) : null
   const dominantPct =
     dominant && summary?.counts_by_class[dominant] && summary.valid_readings
