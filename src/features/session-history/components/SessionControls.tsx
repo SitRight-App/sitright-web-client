@@ -11,6 +11,10 @@ import { useActiveSession, useCloseSession, useStartSession } from '../hooks/use
  * - Con chaleco pero sin sesión activa: botón "Iniciar sesión".
  * - Con sesión activa: cronómetro en vivo + "Cerrar sesión".
  */
+// Una jornada real no supera ~12 h. Más allá, la sesión casi seguro quedó sin
+// cerrar: dejamos de presentar el cronómetro como si la jornada siguiera en curso.
+const STALE_SESSION_MS = 12 * 60 * 60 * 1000
+
 export function SessionControls() {
   const { data: vest, isLoading: vestLoading } = useMyVest()
   const { data: active, isLoading: activeLoading } = useActiveSession()
@@ -19,6 +23,7 @@ export function SessionControls() {
   const liveMs = useLiveDuration(active?.started_at ?? null)
 
   const isLoading = vestLoading || activeLoading
+  const isStale = active != null && liveMs > STALE_SESSION_MS
 
   const handleStart = () => {
     if (!vest) return
@@ -34,13 +39,17 @@ export function SessionControls() {
     <div className="editorial-card p-7">
       <p className="label-mono">Control de sesión</p>
       <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
-        {active ? (
+        {isStale ? (
           <>
-            Tu jornada está <em className="italic text-moss">en curso.</em>
+            Tu jornada quedó <span className="text-terracotta-deep">sin cerrar.</span>
+          </>
+        ) : active ? (
+          <>
+            Tu jornada está <span className="text-moss">en curso.</span>
           </>
         ) : (
           <>
-            ¿Empiezas <em className="italic text-moss">a registrar</em>?
+            ¿Empiezas <span className="text-moss">a registrar</span>?
           </>
         )}
       </h2>
@@ -69,6 +78,7 @@ export function SessionControls() {
           readingCount={active.reading_count}
           onClose={handleClose}
           isPending={closeMutation.isPending}
+          isStale={isStale}
         />
       )}
     </div>
@@ -124,21 +134,29 @@ interface ActiveProps {
   readingCount: number
   onClose: () => void
   isPending: boolean
+  isStale: boolean
 }
 
-function ActiveSessionState({ startedAt, liveMs, readingCount, onClose, isPending }: ActiveProps) {
+function ActiveSessionState({
+  startedAt,
+  liveMs,
+  readingCount,
+  onClose,
+  isPending,
+  isStale,
+}: ActiveProps) {
   const startedAtFmt = new Date(startedAt).toLocaleTimeString('es-PE', {
     hour: '2-digit',
     minute: '2-digit',
   })
   return (
     <div className="mt-5">
-      <div className="grid grid-cols-2 gap-4 border-t border-dashed border-sand pt-5">
+      <div className="grid grid-cols-2 gap-4 border-t border-sand pt-5">
         <div>
-          <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
-            Duración
+          <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
+            {isStale ? 'Abierta hace' : 'Duración'}
           </p>
-          <p className="font-serif text-[40px] font-semibold leading-none tracking-tight text-ink">
+          <p className="text-[40px] font-semibold leading-none tracking-tight text-ink">
             {formatDuration(liveMs)}
           </p>
           <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.10em] text-ink-soft">
@@ -146,7 +164,7 @@ function ActiveSessionState({ startedAt, liveMs, readingCount, onClose, isPendin
           </p>
         </div>
         <div>
-          <p className="mb-1 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+          <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
             Lecturas
           </p>
           <p className="text-[40px] font-semibold leading-none tracking-tight text-ink">
@@ -154,6 +172,13 @@ function ActiveSessionState({ startedAt, liveMs, readingCount, onClose, isPendin
           </p>
         </div>
       </div>
+
+      {isStale && (
+        <div className="mt-4 rounded-lg border border-amber/40 bg-amber/10 px-4 py-3 text-[13px] leading-relaxed text-ink-soft">
+          Esta sesión lleva más de 12 h abierta. Ciérrala para guardar el resumen
+          de tu jornada.
+        </div>
+      )}
 
       <button
         type="button"
