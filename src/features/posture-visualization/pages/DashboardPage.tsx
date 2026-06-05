@@ -120,7 +120,7 @@ export function DashboardPage() {
         {/* Columna vertebral + recomendaciones */}
         <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_360px]">
           <motion.div variants={staggerItem}>
-            <SpineCard reading={reading ?? null} />
+            <SpineCard reading={reading ?? null} status={vestStatus} />
           </motion.div>
 
           <motion.div variants={staggerItem}>
@@ -245,11 +245,14 @@ function Stat({ label, value, tone }: { label: string; value: string; tone: stri
 
 interface SpineCardProps {
   reading: LatestReading | null
+  status: VestStatus
 }
 
 /** Visualización de la columna por zona (cervical · dorsal · lumbar). */
-function SpineCard({ reading }: SpineCardProps) {
-  const isWarn = reading ? isDeviation(reading.posture_class) : false
+function SpineCard({ reading, status }: SpineCardProps) {
+  // Sólo refleja postura si hay conexión real; si no, todas las zonas "Sin datos".
+  const isLive = (status === 'connected' || status === 'battery_low') && reading !== null
+  const isWarn = isLive && reading ? isDeviation(reading.posture_class) : false
 
   return (
     <div className="editorial-card h-full bg-cream-deep p-8">
@@ -262,25 +265,23 @@ function SpineCard({ reading }: SpineCardProps) {
         <div className="space-y-7">
           {(['Cervical', 'Dorsal', 'Lumbar'] as const).map((zone, i) => {
             const isAlertZone = isWarn && i === 2
+            const boxClass = !isLive
+              ? 'border-sand bg-cream-bone'
+              : isAlertZone
+                ? 'border-terracotta/40 bg-terracotta/10'
+                : 'border-sand bg-cream-bone'
+            const textClass = !isLive
+              ? 'text-ink-faint'
+              : isAlertZone
+                ? 'text-terracotta-deep'
+                : 'text-moss'
+            const stateLabel = !isLive ? 'Sin datos' : isAlertZone ? 'Desviada' : 'Adecuada'
             return (
-              <div
-                key={zone}
-                className={`rounded-md border px-4 py-2.5 ${
-                  isAlertZone
-                    ? 'border-terracotta/40 bg-terracotta/10'
-                    : 'border-sand bg-cream-bone'
-                }`}
-              >
+              <div key={zone} className={`rounded-md border px-4 py-2.5 ${boxClass}`}>
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
                   {zone} · {['C-zone', 'D-zone', 'L-zone'][i]}
                 </p>
-                <p
-                  className={`text-base font-medium ${
-                    isAlertZone ? 'text-terracotta-deep' : 'text-moss'
-                  }`}
-                >
-                  {isAlertZone ? 'Desviada' : 'Adecuada'}
-                </p>
+                <p className={`text-base font-medium ${textClass}`}>{stateLabel}</p>
               </div>
             )
           })}
@@ -308,38 +309,42 @@ function SpineCard({ reading }: SpineCardProps) {
               { y: 90, label: 'C', warn: false },
               { y: 210, label: 'D', warn: false },
               { y: 340, label: 'L', warn: isWarn },
-            ].map(({ y, label, warn }) => (
-              <g key={label}>
-                <circle
-                  cx="120"
-                  cy={y}
-                  r={warn ? 38 : 32}
-                  fill={warn ? 'rgba(200,98,60,0.14)' : 'rgba(45,74,54,0.10)'}
-                  stroke={warn ? '#C8623C' : '#2D4A36'}
-                  strokeWidth="0.8"
-                  strokeDasharray="2 3"
-                />
-                <circle
-                  cx="120"
-                  cy={y}
-                  r="22"
-                  fill={warn ? '#C8623C' : '#2D4A36'}
-                  stroke={warn ? '#E8A685' : '#4D6B55'}
-                  strokeWidth="1"
-                />
-                <text
-                  x="120"
-                  y={y + 5}
-                  textAnchor="middle"
-                  fill="#FFFFFF"
-                  fontFamily="JetBrains Mono, monospace"
-                  fontSize="13"
-                  fontWeight="500"
-                >
-                  {label}
-                </text>
-              </g>
-            ))}
+            ].map(({ y, label, warn }) => {
+              // Sin conexión → nodo gris neutro; con conexión → verde o terracota.
+              const halo = !isLive
+                ? 'rgba(92,100,91,0.10)'
+                : warn
+                  ? 'rgba(200,98,60,0.14)'
+                  : 'rgba(45,74,54,0.10)'
+              const haloStroke = !isLive ? '#5C645B' : warn ? '#C8623C' : '#2D4A36'
+              const coreFill = !isLive ? '#5C645B' : warn ? '#C8623C' : '#2D4A36'
+              const coreStroke = !isLive ? '#8A9088' : warn ? '#E8A685' : '#4D6B55'
+              return (
+                <g key={label}>
+                  <circle
+                    cx="120"
+                    cy={y}
+                    r={warn ? 38 : 32}
+                    fill={halo}
+                    stroke={haloStroke}
+                    strokeWidth="0.8"
+                    strokeDasharray="2 3"
+                  />
+                  <circle cx="120" cy={y} r="22" fill={coreFill} stroke={coreStroke} strokeWidth="1" />
+                  <text
+                    x="120"
+                    y={y + 5}
+                    textAnchor="middle"
+                    fill="#FFFFFF"
+                    fontFamily="JetBrains Mono, monospace"
+                    fontSize="13"
+                    fontWeight="500"
+                  >
+                    {label}
+                  </text>
+                </g>
+              )
+            })}
           </svg>
         </div>
 
