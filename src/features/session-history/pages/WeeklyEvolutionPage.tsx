@@ -138,7 +138,9 @@ function WeeklyTooltip({ active, payload }: TooltipProps) {
 }
 
 export function WeeklyEvolutionPage() {
-  const { data: sessions, isLoading, isError } = useSessions({ limit: 200 })
+  // El backend limita `limit` a 100 (más que suficiente para la vista semanal).
+  // Pedir 200 devolvía 422 y la página no cargaba.
+  const { data: sessions, isLoading, isError } = useSessions({ limit: 100 })
 
   const points = useMemo(() => buildWeek(sessions ?? []), [sessions])
   const trend = useMemo(() => trendLine(points), [points])
