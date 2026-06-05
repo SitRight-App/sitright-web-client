@@ -19,6 +19,18 @@ function secondsSince(iso: string): number {
   return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))
 }
 
+/** Tiempo transcurrido en formato humano (s / min / h / días), no segundos crudos. */
+function humaneSince(iso: string): string {
+  const sec = secondsSince(iso)
+  if (sec < 60) return `hace ${sec} s`
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `hace ${min} min`
+  const h = Math.floor(min / 60)
+  if (h < 24) return `hace ${h} h`
+  const d = Math.floor(h / 24)
+  return `hace ${d} día${d === 1 ? '' : 's'}`
+}
+
 function batteryHoursRemaining(percent: number): number {
   // Suposición: autonomía ~8 h al 100 %, lineal.
   return Math.max(0, Math.round((percent / 100) * 8))
@@ -201,19 +213,19 @@ function ProductSheet({ vest, warningSensor }: ProductSheetProps) {
         <div className="flex flex-col gap-5">
           <Annotation
             label="Sensor 1 · cervical"
-            name="MPU-6050"
+            name="I²C 0x68"
             value="conectado · ID 7A"
             warn={warningSensor === 'cervical'}
           />
           <Annotation
             label="Sensor 2 · dorsal"
-            name="MPU-6050"
+            name="I²C 0x69"
             value="conectado · ID 7B"
             warn={warningSensor === 'dorsal'}
           />
           <Annotation
             label="Sensor 3 · lumbar"
-            name="MPU-6050"
+            name="I²C 0x6A"
             value="conectado · ID 7C"
             warn={warningSensor === 'lumbar'}
           />
@@ -343,7 +355,7 @@ interface SensorsPanelProps {
 }
 
 function SensorsPanel({ warningSensor, latestTimestamp }: SensorsPanelProps) {
-  const lastDelta = latestTimestamp ? `Δ ${secondsSince(latestTimestamp)} s` : '—'
+  const lastDelta = latestTimestamp ? humaneSince(latestTimestamp) : 'sin lectura'
   const sensors: Array<{
     pin: 'C' | 'D' | 'L'
     title: string
@@ -352,19 +364,19 @@ function SensorsPanel({ warningSensor, latestTimestamp }: SensorsPanelProps) {
   }> = [
     {
       pin: 'C',
-      title: 'Cervical · MPU-6050',
+      title: 'Cervical',
       meta: 'i²c 0x68 · ID 7A · vértebra C7',
       isWarning: warningSensor === 'cervical',
     },
     {
       pin: 'D',
-      title: 'Dorsal · MPU-6050',
+      title: 'Dorsal',
       meta: 'i²c 0x69 · ID 7B · vértebra T6',
       isWarning: warningSensor === 'dorsal',
     },
     {
       pin: 'L',
-      title: 'Lumbar · MPU-6050',
+      title: 'Lumbar',
       meta: 'i²c 0x6A · ID 7C · vértebra L5',
       isWarning: warningSensor === 'lumbar',
     },
@@ -373,6 +385,7 @@ function SensorsPanel({ warningSensor, latestTimestamp }: SensorsPanelProps) {
     <section className="editorial-card p-7">
       <p className="label-mono">Estado de los 3 sensores</p>
       <h3 className="mt-2 text-2xl font-semibold tracking-tight text-ink">Salud del bus I²C</h3>
+      <p className="mt-1 text-[13px] text-ink-soft">3 × MPU-6050 · bus I²C a 400 kHz</p>
       <ul className="mt-4">
         {sensors.map((s, i) => (
           <li

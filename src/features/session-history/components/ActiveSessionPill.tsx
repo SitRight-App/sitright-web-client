@@ -10,9 +10,16 @@ import { useActiveSession } from '../hooks/useSessions'
  * - Sin sesión activa: fondo sand claro + indicador estático. Click navega al
  *   dashboard donde se puede iniciar una.
  */
+// Una jornada real no dura más de ~12 h. Si una sesión sigue "activa" más allá
+// de eso, casi seguro quedó sin cerrar (el trabajador se fue) y un cronómetro en
+// vivo engañaría. En ese caso la mostramos como "sin cerrar" en vez de seguir
+// contando horas.
+const STALE_SESSION_MS = 12 * 60 * 60 * 1000
+
 export function ActiveSessionPill() {
   const { data: active, isLoading } = useActiveSession()
   const liveMs = useLiveDuration(active?.started_at ?? null)
+  const isStale = active != null && liveMs > STALE_SESSION_MS
 
   if (isLoading) {
     return (
@@ -20,6 +27,19 @@ export function ActiveSessionPill() {
         <span className="h-1.5 w-1.5 rounded-full bg-ink-faint" />
         Sin estado
       </span>
+    )
+  }
+
+  if (isStale) {
+    return (
+      <Link
+        to="/"
+        className="inline-flex items-center gap-2 rounded-full border border-amber/40 bg-amber/10 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:border-amber"
+        title="Esta sesión lleva demasiado tiempo abierta. Ciérrala desde el panel."
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-amber" />
+        Sesión sin cerrar
+      </Link>
     )
   }
 
