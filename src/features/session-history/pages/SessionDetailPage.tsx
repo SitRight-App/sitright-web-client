@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { ArrowRight, Download } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { useRecommendations } from '@/features/recommendations/hooks/useRecommendations'
 import type {
@@ -141,10 +142,10 @@ export function SessionDetailPage() {
   if (isError || !session) {
     return (
       <div>
-        <Link to="/history" className="font-mono text-xs uppercase tracking-[0.16em] text-ink-faint">
+        <Link to="/history" className="text-[14px] font-medium text-moss hover:text-moss-deep">
           ← Historial
         </Link>
-        <p className="mt-5 border-l-2 border-terracotta bg-terracotta/10 px-4 py-3 text-sm text-terracotta-deep">
+        <p className="mt-5 rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-[14px] text-terracotta-deep">
           No se pudo cargar la sesión.
         </p>
       </div>
@@ -192,7 +193,7 @@ async function exportSessionToPdf(sessionId: string): Promise<void> {
       import('jspdf'),
     ])
     const canvas = await html2canvas(target, {
-      backgroundColor: '#F4EFE6',
+      backgroundColor: '#FAFAF9',
       scale: window.devicePixelRatio > 1 ? 2 : 1.5,
       useCORS: true,
     })
@@ -246,17 +247,16 @@ async function exportSessionToPdf(sessionId: string): Promise<void> {
 function SessionDetailSkeleton() {
   return (
     <div>
-      <SkeletonTextLine width={260} className="mb-4" />
-      <section className="mb-9 grid gap-12 border-b border-sand pb-8 lg:grid-cols-[1fr_360px]">
+      <SkeletonTextLine width={200} className="mb-4" />
+      <section className="mb-9 grid gap-10 border-b border-sand pb-8 lg:grid-cols-[1fr_360px]">
         <div>
           <div className="mb-5 flex flex-wrap gap-7">
             {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonTextLine key={i} width={120} />
+              <SkeletonTextLine key={i} width={100} />
             ))}
           </div>
-          <Skeleton width="70%" height={56} className="mb-3" />
-          <Skeleton width="60%" height={56} className="mb-4" />
-          <Skeleton width="100%" height={56} />
+          <Skeleton width="70%" height={44} className="mb-3" />
+          <Skeleton width="90%" height={20} />
         </div>
         <Skeleton width="100%" height={280} />
       </section>
@@ -264,7 +264,7 @@ function SessionDetailSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => (
           <SkeletonCard key={i}>
             <SkeletonTextLine width="60%" className="mb-4" />
-            <Skeleton width="50%" height={40} />
+            <Skeleton width="50%" height={36} />
             <SkeletonTextLine width="70%" className="mt-3" />
           </SkeletonCard>
         ))}
@@ -272,12 +272,12 @@ function SessionDetailSkeleton() {
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <SkeletonCard>
           <SkeletonTextLine width="40%" />
-          <Skeleton width="70%" height={28} className="mt-2" />
+          <Skeleton width="70%" height={26} className="mt-2" />
           <Skeleton width="100%" height={260} className="mt-6" />
         </SkeletonCard>
         <SkeletonCard className="bg-cream-deep">
           <SkeletonTextLine width="30%" />
-          <Skeleton width="80%" height={24} className="mt-3" />
+          <Skeleton width="80%" height={22} className="mt-3" />
           <div className="mt-6 space-y-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i}>
@@ -295,16 +295,12 @@ function SessionDetailSkeleton() {
 function Crumbs({ session }: { session: PostureSession }) {
   const startDate = new Date(session.started_at)
   return (
-    <div className="mb-4 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-      <Link to="/" className="hover:text-ink">
-        Panel
-      </Link>
-      <span className="mx-2 text-terracotta">›</span>
-      <Link to="/history" className="hover:text-ink">
+    <div className="mb-5 flex items-center gap-2 text-[13px] text-ink-soft">
+      <Link to="/history" className="font-medium text-moss hover:text-moss-deep">
         Historial
       </Link>
-      <span className="mx-2 text-terracotta">›</span>
-      Sesión {dateLongFmt.format(startDate)}
+      <span className="text-ink-faint">/</span>
+      <span className="text-ink-faint">Sesión del {dateLongFmt.format(startDate)}</span>
     </div>
   )
 }
@@ -329,62 +325,57 @@ function Hero({ session, dominant }: HeroProps) {
         : `Mantuviste postura adecuada el ${adequatePct}% del tiempo, sin desviaciones dominantes registradas.`
       : 'Esta sesión aún no tiene resumen consolidado.'
 
-  return (
-    <section className="mb-9 grid gap-12 border-b border-sand pb-8 lg:grid-cols-[1fr_360px]">
-      <div>
-        <div className="mb-5 flex flex-wrap gap-7 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">
-          <span>
-            <strong className="font-medium text-terracotta">SES №</strong> {session.id.slice(0, 8)}
-          </span>
-          <span>
-            <strong className="font-medium text-terracotta">INI</strong> {timeFmt.format(started)}
-            {ended && (
-              <>
-                {' — '}
-                <strong className="font-medium text-terracotta">FIN</strong> {timeFmt.format(ended)}
-              </>
-            )}
-          </span>
-          {session.duration_minutes !== null && (
-            <span>
-              <strong className="font-medium text-terracotta">DURACIÓN</strong>{' '}
-              {formatHoursMinutes(session.duration_minutes)}
-            </span>
-          )}
-          <span>
-            <strong className="font-medium text-terracotta">LECTURAS</strong>{' '}
-            {session.reading_count.toLocaleString('es-PE')}
-          </span>
-        </div>
+  const meta: Array<{ label: string; value: string }> = [
+    { label: 'Sesión', value: session.id.slice(0, 8) },
+    {
+      label: 'Horario',
+      value: ended
+        ? `${timeFmt.format(started)} — ${timeFmt.format(ended)}`
+        : timeFmt.format(started),
+    },
+    ...(session.duration_minutes !== null
+      ? [{ label: 'Duración', value: formatHoursMinutes(session.duration_minutes) }]
+      : []),
+    { label: 'Lecturas', value: session.reading_count.toLocaleString('es-PE') },
+  ]
 
-        <h1 className="mb-5 font-serif text-[64px] font-semibold leading-[0.92] tracking-[-0.035em] text-ink">
-          Una jornada
-          <br />
-          de <em className="italic text-moss">{adequatePct !== null && adequatePct >= 70 ? 'postura disciplinada.' : 'postura activa.'}</em>
+  return (
+    <section className="mb-9 grid gap-10 border-b border-sand pb-8 lg:grid-cols-[1fr_360px]">
+      <div>
+        <dl className="mb-6 flex flex-wrap gap-x-8 gap-y-3">
+          {meta.map((m) => (
+            <div key={m.label}>
+              <dt className="text-[12px] font-medium text-ink-faint">{m.label}</dt>
+              <dd className="mt-0.5 text-[15px] font-medium text-ink">
+                {m.label === 'Sesión' ? (
+                  <span className="font-mono tabular-nums">{m.value}</span>
+                ) : (
+                  m.value
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        <h1 className="text-[40px] font-semibold leading-[1.05] tracking-tight text-ink">
+          Una jornada de{' '}
+          <span className="text-moss">
+            {adequatePct !== null && adequatePct >= 70
+              ? 'postura disciplinada.'
+              : 'postura activa.'}
+          </span>
         </h1>
-        <p className="max-w-[640px] font-serif text-[17px] font-light leading-relaxed text-ink-soft">
-          {lede}
-        </p>
+        <p className="mt-5 max-w-[640px] text-[16px] leading-relaxed text-ink-soft">{lede}</p>
       </div>
 
-      <aside
-        className="relative rounded p-7 text-cream"
-        style={{
-          backgroundColor: 'rgb(var(--color-moss-deep))',
-          backgroundImage:
-            'radial-gradient(at 100% 0%, rgba(200,98,60,0.18), transparent 60%)',
-        }}
-      >
-        <span className="absolute right-5 top-5 font-mono text-[10px] uppercase tracking-[0.16em] text-cream/55">
-          № 00
-        </span>
-        <p className="mb-2.5 font-mono text-[10px] uppercase tracking-[0.18em] text-sand">
+      <aside className="rounded-xl bg-moss-deep p-7 text-cream-bone">
+        <p className="mb-2.5 text-[12px] font-medium uppercase tracking-[0.12em] text-cream-bone/60">
           Análisis automático
         </p>
-        <h3 className="mb-3 font-serif text-2xl leading-tight tracking-tight">
+        <h3 className="mb-3 text-2xl font-semibold leading-tight tracking-tight">
           {dominant ? 'Detectamos un patrón.' : 'Jornada balanceada.'}
         </h3>
-        <p className="mb-5 text-[13px] leading-relaxed text-cream/70">
+        <p className="mb-6 text-[14px] leading-relaxed text-cream-bone/70">
           {dominant
             ? `Tu desviación dominante fue ${POSTURE_LABELS[dominant]?.toLowerCase() ?? dominant}. Revisa las recomendaciones activadas para corregir el patrón en próximas sesiones.`
             : 'No se identificó una desviación dominante. Mantén el ritmo y consulta las recomendaciones generales.'}
@@ -392,15 +383,17 @@ function Hero({ session, dominant }: HeroProps) {
         <div className="flex gap-2.5 print:hidden">
           <Link
             to="/recommendations"
-            className="flex-1 border border-terracotta bg-terracotta px-3.5 py-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:bg-terracotta-deep"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-cream-bone px-3.5 py-3 text-[14px] font-semibold text-moss-deep transition-colors hover:bg-cream"
           >
             Ver acciones
+            <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
           </Link>
           <button
             type="button"
             onClick={() => void exportSessionToPdf(session.id)}
-            className="flex-1 border border-cream/30 bg-transparent px-3.5 py-3 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-colors hover:border-cream"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-cream-bone/30 bg-transparent px-3.5 py-3 text-[14px] font-medium text-cream-bone transition-colors hover:border-cream-bone"
           >
+            <Download className="h-4 w-4" strokeWidth={1.8} />
             Exportar PDF
           </button>
         </div>
@@ -426,14 +419,12 @@ function StatsRow({ session, stats, dominant }: StatsRowProps) {
   return (
     <div className="mb-7 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        num="№ 01"
         title="Postura adecuada"
         value={summary ? `${Math.round(summary.adequate_percentage)}%` : '—'}
         meta={summary ? `${summary.valid_readings.toLocaleString('es-PE')} lecturas válidas` : ''}
         variant="dark"
       />
       <StatCard
-        num="№ 02"
         title="Desviación dominante"
         value={
           dominant
@@ -449,7 +440,6 @@ function StatsRow({ session, stats, dominant }: StatsRowProps) {
         variant={dominant ? 'alert' : 'default'}
       />
       <StatCard
-        num="№ 03"
         title="Pausas detectadas"
         value={stats.pauseEstimate.toString()}
         meta={
@@ -459,7 +449,6 @@ function StatsRow({ session, stats, dominant }: StatsRowProps) {
         }
       />
       <StatCard
-        num="№ 04"
         title="Confianza ML media"
         value={`${stats.avgConfidencePercent}%`}
         meta={
@@ -473,7 +462,6 @@ function StatsRow({ session, stats, dominant }: StatsRowProps) {
 }
 
 interface StatCardProps {
-  num: string
   title: string
   value: string
   meta: string
@@ -481,41 +469,34 @@ interface StatCardProps {
   valueSize?: 'lg' | 'md'
 }
 
-function StatCard({ num, title, value, meta, variant = 'default', valueSize = 'lg' }: StatCardProps) {
+function StatCard({ title, value, meta, variant = 'default', valueSize = 'lg' }: StatCardProps) {
   const styles: Record<NonNullable<StatCardProps['variant']>, string> = {
     default: 'border-sand bg-cream-bone text-ink',
-    dark: 'border-moss bg-moss text-cream',
-    alert: 'border-terracotta-deep bg-terracotta text-cream',
+    dark: 'border-moss-deep bg-moss text-cream-bone',
+    alert: 'border-terracotta-deep bg-terracotta text-cream-bone',
   }
   const metaStyle: Record<NonNullable<StatCardProps['variant']>, string> = {
     default: 'text-ink-soft',
-    dark: 'text-cream/70',
-    alert: 'text-cream/70',
+    dark: 'text-cream-bone/70',
+    alert: 'text-cream-bone/70',
   }
   const titleStyle: Record<NonNullable<StatCardProps['variant']>, string> = {
     default: 'text-ink-soft',
-    dark: 'text-sand',
-    alert: 'text-sand',
+    dark: 'text-cream-bone/80',
+    alert: 'text-cream-bone/80',
   }
 
   return (
-    <div className={`relative rounded border p-5 ${styles[variant]}`}>
-      <span
-        className={`absolute right-4 top-4 font-mono text-[10px] uppercase tracking-[0.16em] ${variant === 'default' ? 'text-ink-faint' : 'text-cream/55'}`}
-      >
-        {num}
-      </span>
-      <p className={`mb-4 font-mono text-[10px] uppercase tracking-[0.18em] ${titleStyle[variant]}`}>
-        {title}
-      </p>
+    <div className={`rounded-xl border p-5 ${styles[variant]}`}>
+      <p className={`mb-3 text-[12px] font-medium ${titleStyle[variant]}`}>{title}</p>
       <p
-        className={`font-serif leading-none tracking-[-0.035em] ${
-          valueSize === 'lg' ? 'text-[48px]' : 'text-[28px]'
+        className={`font-semibold leading-none tracking-tight ${
+          valueSize === 'lg' ? 'font-mono tabular-nums text-[40px]' : 'text-[24px]'
         }`}
       >
         {value}
       </p>
-      <p className={`mt-2.5 font-mono text-[11px] ${metaStyle[variant]}`}>{meta}</p>
+      <p className={`mt-3 text-[13px] ${metaStyle[variant]}`}>{meta}</p>
     </div>
   )
 }
@@ -531,15 +512,12 @@ function DetailGrid({ session, readingsQuery }: DetailGridProps) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-      <section className="relative rounded border border-sand bg-cream-bone p-7">
-        <span className="num-tag absolute right-5 top-5">№ 05</span>
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-4 border-b border-dashed border-sand pb-4">
-          <div>
-            <p className="label-mono mb-1.5">Línea de tiempo de la sesión</p>
-            <h2 className="font-serif text-2xl tracking-tight text-ink">
-              Cómo se comportó tu columna
-            </h2>
-          </div>
+      <section className="rounded-xl border border-sand bg-cream-bone p-7">
+        <div className="mb-5 border-b border-sand pb-4">
+          <p className="label-mono mb-1.5">Línea de tiempo de la sesión</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-ink">
+            Cómo se comportó tu columna
+          </h2>
         </div>
         <SessionTimelineChart
           readings={readingsQuery.data ?? []}
@@ -549,10 +527,9 @@ function DetailGrid({ session, readingsQuery }: DetailGridProps) {
         />
       </section>
 
-      <section className="relative rounded border border-sand bg-cream-deep p-7">
-        <span className="num-tag absolute right-5 top-5">№ 06</span>
+      <section className="rounded-xl border border-sand bg-cream-deep p-7">
         <p className="label-mono">Distribución</p>
-        <h3 className="mt-1.5 mb-6 font-serif text-xl leading-tight tracking-tight text-ink">
+        <h3 className="mb-6 mt-1.5 text-xl font-semibold leading-tight tracking-tight text-ink">
           Cómo se repartieron tus{' '}
           {summary?.valid_readings
             ? summary.valid_readings.toLocaleString('es-PE')
@@ -570,11 +547,11 @@ function DetailGrid({ session, readingsQuery }: DetailGridProps) {
                 return (
                   <li key={cls}>
                     <div className="flex items-baseline justify-between">
-                      <span className="font-serif text-[15px] text-ink">
+                      <span className="text-[15px] font-medium text-ink">
                         {POSTURE_LABELS[cls] ?? cls}
                       </span>
                       <span
-                        className={`font-serif text-xl ${cls === 'adequate' ? 'text-ink' : 'text-terracotta-deep'}`}
+                        className={`font-mono text-lg font-semibold tabular-nums ${cls === 'adequate' ? 'text-ink' : 'text-terracotta-deep'}`}
                       >
                         {pct}%
                       </span>
@@ -585,7 +562,7 @@ function DetailGrid({ session, readingsQuery }: DetailGridProps) {
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.10em] text-ink-faint">
+                    <p className="mt-1 text-[12px] text-ink-faint">
                       {count.toLocaleString('es-PE')} lecturas
                     </p>
                   </li>
@@ -593,7 +570,7 @@ function DetailGrid({ session, readingsQuery }: DetailGridProps) {
               })}
           </ul>
         ) : (
-          <p className="text-sm text-ink-soft">Aún sin distribución consolidada.</p>
+          <p className="text-[14px] text-ink-soft">Aún sin distribución consolidada.</p>
         )}
       </section>
     </div>
@@ -616,56 +593,52 @@ function SecondRow({ session, recommendations, dominant }: SecondRowProps) {
 
   return (
     <div className="mt-4 grid gap-4 lg:grid-cols-[360px_1fr]">
-      <section className="relative rounded border border-sand bg-cream-deep p-6">
-        <span className="num-tag absolute right-5 top-5">№ 07</span>
+      <section className="rounded-xl border border-sand bg-cream-deep p-6">
         <p className="label-mono">Posición promedio</p>
-        <h3 className="mt-2 mb-3 font-serif text-xl leading-tight tracking-tight text-ink">
-          Promedio
-          <br />
-          de la sesión.
+        <h3 className="mb-3 mt-2 text-xl font-semibold leading-tight tracking-tight text-ink">
+          Promedio de la sesión.
         </h3>
         <SessionSpineSnapshot
           warningSensor={dominantSensor}
           deviationPercentage={dominantPct}
         />
-        <div className="mt-3 border-t border-dashed border-sand pt-3 font-mono text-[10px] uppercase tracking-[0.10em] text-ink-soft">
+        <div className="mt-3 border-t border-sand pt-3 text-[13px] text-ink-soft">
           {dominantSensor
             ? `Desviación en ${dominantSensor}`
             : 'Sin desviación dominante registrada'}
         </div>
       </section>
 
-      <section className="relative rounded border border-sand bg-cream-bone p-6">
-        <span className="num-tag absolute right-5 top-5">№ 08</span>
-        <div className="mb-3.5">
+      <section className="rounded-xl border border-sand bg-cream-bone p-6">
+        <div className="mb-4">
           <p className="label-mono">Recomendaciones disparadas en esta sesión</p>
-          <h2 className="mt-1.5 font-serif text-2xl tracking-tight text-ink">
+          <h2 className="mt-1.5 text-2xl font-semibold tracking-tight text-ink">
             Qué activó tu columna.
           </h2>
         </div>
 
         {recommendations.length === 0 ? (
-          <p className="text-sm text-ink-soft">
+          <p className="text-[14px] text-ink-soft">
             Sin recomendaciones específicas para el patrón postural de esta sesión.
           </p>
         ) : (
-          <ul className="space-y-3.5">
+          <ul className="space-y-3">
             {recommendations.slice(0, 4).map((r, i) => (
               <li
                 key={r.id}
-                className="grid grid-cols-[40px_1fr_auto] items-center gap-4 rounded border border-sand-light bg-cream/60 p-4 transition-colors hover:border-sand hover:bg-cream"
+                className="grid grid-cols-[32px_1fr_auto] items-center gap-4 rounded-xl border border-sand bg-cream/60 p-4 transition-colors hover:border-moss/40 hover:bg-cream"
               >
-                <span className="text-center font-serif text-2xl leading-none text-terracotta-deep">
+                <span className="text-center font-mono text-base font-semibold tabular-nums text-terracotta-deep">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <div>
-                  <p className="font-serif text-[15px] text-ink">{r.title}</p>
-                  <p className="mt-0.5 text-[12px] leading-snug text-ink-soft">
+                  <p className="text-[15px] font-medium text-ink">{r.title}</p>
+                  <p className="mt-0.5 text-[13px] leading-snug text-ink-soft">
                     {r.description}
                   </p>
                 </div>
                 {dominant && (
-                  <span className="whitespace-nowrap rounded-full border border-terracotta-soft bg-terracotta-soft/15 px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.16em] text-terracotta-deep">
+                  <span className="whitespace-nowrap rounded-full border border-terracotta/30 bg-terracotta/10 px-2.5 py-1 text-[11px] font-medium text-terracotta-deep">
                     {POSTURE_LABELS[dominant]?.toLowerCase() ?? dominant}
                   </span>
                 )}
