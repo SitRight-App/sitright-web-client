@@ -184,7 +184,7 @@ export function RegisterPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="group flex w-full items-center justify-between gap-2 rounded-xl bg-moss py-3 pl-5 pr-3 text-[15px] font-semibold text-cream-bone shadow-sm transition-all hover:bg-moss-deep active:scale-[0.99] disabled:opacity-60"
+              className="group flex w-full items-center justify-between gap-2 rounded-xl bg-moss py-3 pl-5 pr-3 text-[15px] font-semibold text-cream-bone shadow-sm transition hover:bg-moss-deep active:scale-[0.97] disabled:opacity-60"
             >
               <span>{submitting ? 'Creando…' : 'Crear cuenta'}</span>
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-cream-bone/15 transition-transform group-hover:translate-x-0.5">

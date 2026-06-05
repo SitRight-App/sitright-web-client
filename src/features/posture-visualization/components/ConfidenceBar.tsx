@@ -13,7 +13,7 @@ export function ConfidenceBar({ value, accent }: Props) {
       </div>
       <div className="h-[3px] w-full overflow-hidden bg-cream/10">
         <div
-          className={`h-full transition-all duration-500 ${accent ?? 'bg-cream'}`}
+          className={`h-full transition-[width] duration-500 ease-out ${accent ?? 'bg-cream'}`}
           style={{ width: `${percent}%` }}
         />
       </div>

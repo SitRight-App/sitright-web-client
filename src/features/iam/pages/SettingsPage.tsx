@@ -94,7 +94,7 @@ export function SettingsPage() {
         <button
           type="button"
           onClick={logout}
-          className="inline-flex items-center gap-2 rounded-xl border border-terracotta/40 bg-terracotta/10 px-4 py-2.5 text-[14px] font-medium text-terracotta-deep transition-colors hover:bg-terracotta/15 active:scale-[0.99]"
+          className="inline-flex items-center gap-2 rounded-xl border border-terracotta/40 bg-terracotta/10 px-4 py-2.5 text-[14px] font-medium text-terracotta-deep transition-colors hover:bg-terracotta/15 active:scale-[0.97]"
         >
           <LogOut className="h-4 w-4" strokeWidth={1.5} />
           Cerrar sesión
@@ -225,7 +225,7 @@ export function SettingsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-moss px-6 py-3 text-[15px] font-semibold text-cream-bone shadow-sm transition-all hover:bg-moss-deep active:scale-[0.99] disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl bg-moss px-6 py-3 text-[15px] font-semibold text-cream-bone shadow-sm transition hover:bg-moss-deep active:scale-[0.97] disabled:opacity-60"
           >
             <span>{saving ? 'Guardando…' : 'Guardar cambios'}</span>
           </button>
@@ -329,7 +329,7 @@ function ChangePasswordPanel() {
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex items-center rounded-xl bg-moss px-6 py-3 text-[15px] font-semibold text-cream-bone shadow-sm transition-all hover:bg-moss-deep active:scale-[0.99] disabled:opacity-60"
+          className="inline-flex items-center rounded-xl bg-moss px-6 py-3 text-[15px] font-semibold text-cream-bone shadow-sm transition hover:bg-moss-deep active:scale-[0.97] disabled:opacity-60"
         >
           {submitting ? 'Cambiando…' : 'Actualizar contraseña'}
         </button>

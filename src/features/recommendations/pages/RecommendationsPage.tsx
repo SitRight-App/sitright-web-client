@@ -299,7 +299,7 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
                 type="button"
                 onClick={onUnmark}
                 disabled={isMutating}
-                className="inline-flex items-center gap-2 rounded-xl border border-cream-bone/30 bg-transparent px-5 py-3 text-[15px] font-semibold text-cream-bone transition-all hover:border-cream-bone active:scale-[0.99] disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-xl border border-cream-bone/30 bg-transparent px-5 py-3 text-[15px] font-semibold text-cream-bone transition hover:border-cream-bone active:scale-[0.97] disabled:opacity-50"
               >
                 Desmarcar
               </button>
@@ -309,7 +309,7 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
               type="button"
               onClick={onMark}
               disabled={isMutating}
-              className="inline-flex items-center gap-2 rounded-xl bg-terracotta px-5 py-3 text-[15px] font-semibold text-cream-bone transition-all hover:bg-terracotta-deep active:scale-[0.99] disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-terracotta px-5 py-3 text-[15px] font-semibold text-cream-bone transition hover:bg-terracotta-deep active:scale-[0.97] disabled:opacity-50"
             >
               {isMutating ? 'Marcando…' : 'Marcar como aplicada'}
               <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
@@ -361,7 +361,7 @@ function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
       type="button"
       onClick={onToggle}
       disabled={disabled}
-      className={`group relative flex min-h-[360px] flex-col rounded-xl border p-7 text-left transition-all hover:-translate-y-0.5 hover:border-moss disabled:opacity-60 ${
+      className={`group relative flex min-h-[360px] flex-col rounded-xl border p-7 text-left transition hover:-translate-y-0.5 hover:border-moss disabled:opacity-60 ${
         isApplied
           ? 'border-moss/30 bg-moss/[0.05]'
           : 'border-sand bg-cream-bone'

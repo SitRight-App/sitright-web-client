@@ -171,7 +171,7 @@ export function HistoryListPage() {
                   <span>
                     <StatusPill status={s.status} />
                   </span>
-                  <span className="flex justify-end text-ink-faint transition-all group-hover:translate-x-0.5 group-hover:text-moss">
+                  <span className="flex justify-end text-ink-faint transition group-hover:translate-x-0.5 group-hover:text-moss">
                     <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
                   </span>
                 </Link>

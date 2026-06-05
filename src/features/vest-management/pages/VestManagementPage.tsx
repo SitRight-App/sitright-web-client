@@ -438,7 +438,7 @@ function CalibrationCard({ vest }: PropsWithVest) {
 
       <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-moss/15">
         <div
-          className="h-full rounded-full bg-moss transition-all"
+          className="h-full rounded-full bg-moss transition"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -623,7 +623,7 @@ function UnlinkConfirmDialog({ mac, isPending, onCancel, onConfirm }: UnlinkConf
             type="button"
             onClick={onConfirm}
             disabled={isPending}
-            className="rounded-xl bg-terracotta px-5 py-2.5 text-[14px] font-semibold text-cream-bone transition-all hover:bg-terracotta-deep active:scale-[0.99] disabled:opacity-50"
+            className="rounded-xl bg-terracotta px-5 py-2.5 text-[14px] font-semibold text-cream-bone transition hover:bg-terracotta-deep active:scale-[0.97] disabled:opacity-50"
           >
             {isPending ? 'Desvinculando…' : 'Sí, desvincular'}
           </button>

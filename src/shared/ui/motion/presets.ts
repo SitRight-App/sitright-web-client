@@ -8,7 +8,9 @@ import type { Variants } from 'framer-motion'
  * registre que algo cambió, sin distraer.
  */
 
-const EASE = [0.2, 0.7, 0.2, 1] as const
+// Ease-out fuerte (Emil Kowalski): arranca rápido, se siente responsive. Las
+// curvas CSS por defecto son demasiado tibias para entradas de UI.
+const EASE = [0.23, 1, 0.32, 1] as const
 
 /** Fade + leve subida desde abajo. Para títulos y headers de página. */
 export const fadeUp: Variants = {

@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MotionConfig } from 'framer-motion'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ToastProvider } from '@/shared/ui/toast'
 import { AppLayout } from '@/shared/layout/AppLayout'
@@ -25,6 +26,9 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      {/* reducedMotion="user": framer-motion respeta la preferencia del SO y
+          reemplaza los desplazamientos por fundidos cuando el usuario lo pide. */}
+      <MotionConfig reducedMotion="user">
       <ToastProvider>
         <BrowserRouter>
           <AuthProvider>
@@ -50,6 +54,7 @@ export default function App() {
           </AuthProvider>
         </BrowserRouter>
       </ToastProvider>
+      </MotionConfig>
     </QueryClientProvider>
   )
 }

@@ -106,7 +106,7 @@ export function AppLayout() {
               end={end}
               title={label}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium transition-colors ${
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium transition-colors active:scale-[0.97] ${
                   isActive
                     ? 'bg-cream-bone/12 text-cream-bone'
                     : 'text-cream-bone/60 hover:bg-cream-bone/5 hover:text-cream-bone'

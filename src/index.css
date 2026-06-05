@@ -78,6 +78,22 @@
   }
 }
 
+/*
+ * Movimiento reducido: si el usuario lo pide a nivel de SO, cortamos las
+ * animaciones CSS en bucle (puntos pulsantes, ping, entrada de toasts) que no
+ * aportan comprensión. Las transiciones de color/opacidad se conservan porque
+ * sí ayudan a entender los cambios de estado (Emil: "menos y más suave, no cero").
+ * Las animaciones de framer-motion las maneja <MotionConfig reducedMotion="user">.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 @layer components {
   .label-mono {
     @apply font-mono uppercase text-[11px] tracking-[0.14em] text-ink-soft;

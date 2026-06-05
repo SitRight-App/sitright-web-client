@@ -56,7 +56,8 @@ export default {
         },
       },
       animation: {
-        'toast-in': 'toast-in 0.25s cubic-bezier(0.2, 0.7, 0.2, 1) forwards',
+        // Ease-out fuerte (Emil): arranque inmediato, se siente responsive.
+        'toast-in': 'toast-in 0.22s cubic-bezier(0.23, 1, 0.32, 1) forwards',
       },
     },
   },
