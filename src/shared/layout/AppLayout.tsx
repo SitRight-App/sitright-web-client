@@ -125,7 +125,7 @@ export function AppLayout() {
       </aside>
 
       {/* Main — anima cada cambio de ruta con un fade-up suave */}
-      <main className="app-shell-main overflow-y-auto bg-cream px-6 py-7 lg:px-12 lg:py-8">
+      <main className="app-shell-main overflow-y-auto bg-cream px-6 py-5 lg:px-12 lg:py-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}

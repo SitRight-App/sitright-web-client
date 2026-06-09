@@ -75,7 +75,7 @@ export function DashboardPage() {
   return (
     <div>
       {/* Encabezado delgado */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-3">
         <div>
           <p className="text-[14px] text-ink-soft">Buen día,</p>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">{firstName}</h1>
@@ -117,21 +117,34 @@ export function DashboardPage() {
           />
         </motion.div>
 
-        {/* Columna vertebral + recomendaciones */}
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_360px]">
+        {/* Riel principal (columna vertebral) + riel de acción (control de sesión) */}
+        <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_340px]">
           <motion.div variants={staggerItem}>
             <SpineCard reading={reading ?? null} status={vestStatus} />
           </motion.div>
+          <motion.div variants={staggerItem}>
+            <SessionControls />
+          </motion.div>
+        </div>
 
+        {/* Jornada (línea de tiempo) + recomendaciones (secundarias) */}
+        <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_340px]">
+          <motion.div variants={staggerItem}>
+            <PostureTimeline
+              readings={recent.data ?? []}
+              isLoading={recent.isLoading}
+              isError={recent.isError}
+            />
+          </motion.div>
           <motion.div variants={staggerItem}>
             {recommendations && recommendations.length > 0 ? (
               <RecommendationsCard
                 recommendations={recommendations}
                 postureClass={reading?.posture_class ?? 'indeterminate'}
-                maxVisible={3}
+                maxVisible={2}
               />
             ) : (
-              <div className="editorial-card flex h-full flex-col justify-center p-7">
+              <div className="editorial-card flex h-full flex-col justify-center p-6">
                 <p className="label-mono">Recomendaciones</p>
                 <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
                   Cuando el chaleco detecte una desviación, aquí verás los ajustes
@@ -139,20 +152,6 @@ export function DashboardPage() {
                 </p>
               </div>
             )}
-          </motion.div>
-        </div>
-
-        {/* Control de sesión + línea de tiempo */}
-        <div className="mt-4 grid gap-4 lg:grid-cols-[360px_1fr]">
-          <motion.div variants={staggerItem}>
-            <SessionControls />
-          </motion.div>
-          <motion.div variants={staggerItem}>
-            <PostureTimeline
-              readings={recent.data ?? []}
-              isLoading={recent.isLoading}
-              isError={recent.isError}
-            />
           </motion.div>
         </div>
       </motion.div>
@@ -200,7 +199,7 @@ function LiveStatusBanner({ reading, status, isLoading }: LiveStatusProps) {
   }
 
   return (
-    <section className={`rounded-xl border p-7 sm:p-8 ${tone}`}>
+    <section className={`rounded-xl border p-5 sm:p-6 ${tone}`}>
       <div className="flex flex-wrap items-center justify-between gap-6">
         <div className="min-w-0">
           <div className={`flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] ${subTone}`}>
@@ -212,10 +211,10 @@ function LiveStatusBanner({ reading, status, isLoading }: LiveStatusProps) {
             </span>
             {isLive ? 'En vivo · Postura actual' : 'Estado del chaleco'}
           </div>
-          <h2 className="mt-3 text-[34px] font-semibold leading-none tracking-tight sm:text-[40px]">
+          <h2 className="mt-2.5 text-[30px] font-semibold leading-none tracking-tight sm:text-[34px]">
             {isLive ? POSTURE_LABELS[cls] : offlineTitle}
           </h2>
-          <p className={`mt-2.5 text-[14px] leading-relaxed ${subTone}`}>
+          <p className={`mt-2 text-[14px] leading-relaxed ${subTone}`}>
             {isLive
               ? `${POSTURE_HEADLINES[cls]} Última lectura ${timeSince(reading.timestamp)}.`
               : offlineSub}
@@ -223,9 +222,7 @@ function LiveStatusBanner({ reading, status, isLoading }: LiveStatusProps) {
         </div>
 
         {isLive && (
-          <div className="flex items-stretch gap-6 sm:gap-8">
-            <Stat label="Confianza" value={`${Math.round(reading.confidence * 100)}%`} tone={subTone} />
-            <span className="w-px self-stretch bg-cream-bone/20" />
+          <div className="flex items-stretch">
             <Stat label="Batería" value={`${reading.battery_percent}%`} tone={subTone} />
           </div>
         )}
@@ -255,14 +252,14 @@ function SpineCard({ reading, status }: SpineCardProps) {
   const isWarn = isLive && reading ? isDeviation(reading.posture_class) : false
 
   return (
-    <div className="editorial-card h-full bg-cream-deep p-8">
+    <div className="editorial-card flex h-full flex-col bg-cream-deep p-6">
       <p className="label-mono">Visualización vertebral</p>
       <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
         Lectura cervical · dorsal · lumbar
       </h2>
 
-      <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-8">
-        <div className="space-y-7">
+      <div className="mt-6 grid flex-1 grid-cols-[1fr_auto] items-center gap-6">
+        <div className="space-y-3">
           {(['Cervical', 'Dorsal', 'Lumbar'] as const).map((zone, i) => {
             const isAlertZone = isWarn && i === 2
             const boxClass = !isLive
@@ -275,20 +272,27 @@ function SpineCard({ reading, status }: SpineCardProps) {
               : isAlertZone
                 ? 'text-terracotta-deep'
                 : 'text-moss'
+            const dotClass = !isLive ? 'bg-ink-faint' : isAlertZone ? 'bg-terracotta' : 'bg-moss'
             const stateLabel = !isLive ? 'Sin datos' : isAlertZone ? 'Desviada' : 'Adecuada'
             return (
-              <div key={zone} className={`rounded-md border px-4 py-2.5 ${boxClass}`}>
+              <div
+                key={zone}
+                className={`flex items-center justify-between rounded-md border px-4 py-2.5 ${boxClass}`}
+              >
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
-                  {zone} · {['C-zone', 'D-zone', 'L-zone'][i]}
+                  {zone}
                 </p>
-                <p className={`text-base font-medium ${textClass}`}>{stateLabel}</p>
+                <p className={`flex items-center gap-2 text-[15px] font-medium ${textClass}`}>
+                  <span className={`h-2 w-2 rounded-full ${dotClass}`} />
+                  {stateLabel}
+                </p>
               </div>
             )
           })}
         </div>
 
         <div className="grid place-items-center">
-          <svg viewBox="0 0 240 420" width="170" height="300">
+          <svg viewBox="0 0 240 420" width="102" height="179">
             <path
               d="M70 30 Q50 60 60 120 Q72 200 60 290 Q48 370 80 400 L160 400 Q192 370 180 290 Q168 200 180 120 Q190 60 170 30 Q120 5 70 30 Z"
               fill="rgba(45,74,54,0.04)"
@@ -347,39 +351,6 @@ function SpineCard({ reading, status }: SpineCardProps) {
             })}
           </svg>
         </div>
-
-        <div className="space-y-7 text-right">
-          {[
-            { zone: 'Sensor cervical', mount: 'C7' },
-            { zone: 'Sensor dorsal', mount: 'D7' },
-            { zone: 'Sensor lumbar', mount: 'L7' },
-          ].map((s) => (
-            <div key={s.mount} className="rounded-md border border-sand bg-cream-bone px-4 py-2.5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
-                {s.zone} · {s.mount}
-              </p>
-              <p className={`text-base font-medium ${isLive ? 'text-moss' : 'text-ink-faint'}`}>
-                {isLive ? 'En línea' : 'Sin señal'}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-8 flex items-center gap-5 border-t border-sand pt-5 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-soft">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-moss" />
-          Adecuada
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-terracotta" />
-          Desviada
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-ink-faint" />
-          Sin datos
-        </span>
-        <span className="ml-auto text-ink-faint">3× MPU-6050 · I²C</span>
       </div>
     </div>
   )

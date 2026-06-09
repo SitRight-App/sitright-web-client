@@ -69,15 +69,15 @@ export function RecommendationsCard({ recommendations, postureClass, maxVisible 
   }
 
   return (
-    <div className="editorial-card p-7">
+    <div className="editorial-card flex h-full flex-col p-6">
       <p className="label-mono">
         {isGood ? 'Mantén el ritmo' : 'Recomendaciones ergonómicas'}
       </p>
-      <h3 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
+      <h3 className="mt-2 text-xl font-semibold tracking-tight text-ink">
         {isGood ? 'Tu postura ha sido adecuada hoy.' : 'Pequeños ajustes ahora.'}
       </h3>
 
-      <div className="mt-5 space-y-4">
+      <div className="mt-4 space-y-3.5">
         {visible.map((rec, i) => (
           <div
             key={rec.id}
@@ -118,7 +118,7 @@ export function RecommendationsCard({ recommendations, postureClass, maxVisible 
       {hiddenCount > 0 && (
         <Link
           to="/recommendations"
-          className="mt-5 inline-flex items-center gap-1.5 border-t border-sand pt-4 text-[14px] font-medium text-moss hover:text-moss-deep"
+          className="mt-4 inline-flex items-center gap-1.5 border-t border-sand pt-3 text-[14px] font-medium text-moss hover:text-moss-deep"
         >
           Ver las {allVisible.length} recomendaciones →
         </Link>

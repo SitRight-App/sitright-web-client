@@ -118,7 +118,7 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
 
       {readings.length > 0 && (
         <>
-          <div className="mt-6" style={{ height: 56, width: '100%' }}>
+          <div className="mt-4" style={{ height: 56, width: '100%' }}>
             <ResponsiveContainer width="100%" height={56}>
               <BarChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} barCategoryGap={0}>
                 <XAxis dataKey="time" hide />
@@ -137,9 +137,9 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
             </div>
           )}
 
-          <div className="mt-7 border-t border-dashed border-sand pt-5">
+          <div className="mt-4 border-t border-dashed border-sand pt-3">
             <p className="label-mono mb-3">Distribución del intervalo</p>
-            <ul className="space-y-2.5">
+            <ul className="space-y-1.5">
               {distribution.map((d) => (
                 <li key={d.posture}>
                   <div className="flex items-center justify-between text-xs">

@@ -36,9 +36,9 @@ export function SessionControls() {
   }
 
   return (
-    <div className="editorial-card p-7">
+    <div className="editorial-card flex h-full flex-col p-5">
       <p className="label-mono">Control de sesión</p>
-      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
+      <h2 className="mt-2 text-xl font-semibold tracking-tight text-ink">
         {isStale ? (
           <>
             Tu jornada quedó <span className="text-terracotta-deep">sin cerrar.</span>
@@ -119,7 +119,7 @@ function NoActiveSessionState({ onStart, isPending }: NoActiveProps) {
         type="button"
         onClick={onStart}
         disabled={isPending}
-        className="mt-5 inline-flex items-center gap-3 bg-moss-deep px-6 py-3.5 font-mono text-[11px] uppercase tracking-[0.16em] text-cream transition-colors hover:bg-ink disabled:opacity-60"
+        className="mt-5 inline-flex items-center gap-3 bg-moss-deep px-6 py-3.5 font-mono text-[11px] uppercase tracking-[0.16em] text-cream transition-colors hover:bg-ink active:scale-[0.98] disabled:opacity-60"
       >
         <span>{isPending ? 'Iniciando…' : 'Iniciar sesión'}</span>
         <span aria-hidden>→</span>
@@ -150,13 +150,13 @@ function ActiveSessionState({
     minute: '2-digit',
   })
   return (
-    <div className="mt-5">
-      <div className="grid grid-cols-2 gap-4 border-t border-sand pt-5">
+    <div className="mt-4">
+      <div className="grid grid-cols-2 gap-4 border-t border-sand pt-4">
         <div>
           <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
             {isStale ? 'Abierta hace' : 'Duración'}
           </p>
-          <p className="text-[40px] font-semibold leading-none tracking-tight text-ink">
+          <p className="text-[28px] font-semibold leading-none tracking-tight tabular-nums text-ink">
             {formatDuration(liveMs)}
           </p>
           <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.10em] text-ink-soft">
@@ -167,7 +167,7 @@ function ActiveSessionState({
           <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
             Lecturas
           </p>
-          <p className="text-[40px] font-semibold leading-none tracking-tight text-ink">
+          <p className="text-[28px] font-semibold leading-none tracking-tight tabular-nums text-ink">
             {readingCount.toLocaleString('es-PE')}
           </p>
         </div>
@@ -184,7 +184,7 @@ function ActiveSessionState({
         type="button"
         onClick={onClose}
         disabled={isPending}
-        className="mt-6 inline-flex items-center gap-3 border border-terracotta bg-transparent px-6 py-3.5 font-mono text-[11px] uppercase tracking-[0.16em] text-terracotta-deep transition-colors hover:bg-terracotta hover:text-cream disabled:opacity-60"
+        className="mt-5 inline-flex items-center gap-3 border border-terracotta bg-transparent px-6 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-terracotta-deep transition-colors hover:bg-terracotta hover:text-cream active:scale-[0.98] disabled:opacity-60"
       >
         <span>{isPending ? 'Cerrando…' : 'Cerrar sesión'}</span>
         <span aria-hidden>→</span>
