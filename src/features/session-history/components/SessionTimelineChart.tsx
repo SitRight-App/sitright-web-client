@@ -108,7 +108,7 @@ export function SessionTimelineChart({ readings, isLoading, isError, durationMin
       )}
 
       <div style={{ height: 280, width: '100%' }}>
-        <ResponsiveContainer>
+        <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={data} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="confidenceFill" x1="0" y1="0" x2="0" y2="1">

@@ -119,7 +119,7 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
       {readings.length > 0 && (
         <>
           <div className="mt-6" style={{ height: 56, width: '100%' }}>
-            <ResponsiveContainer>
+            <ResponsiveContainer width="100%" height={56}>
               <BarChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} barCategoryGap={0}>
                 <XAxis dataKey="time" hide />
                 <YAxis hide domain={[0, 1]} />
