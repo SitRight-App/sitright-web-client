@@ -110,7 +110,7 @@ interface NoActiveProps {
 
 function NoActiveSessionState({ onStart, isPending }: NoActiveProps) {
   return (
-    <div className="mt-4">
+    <div className="mt-4 flex flex-1 flex-col">
       <p className="text-sm leading-relaxed text-ink-soft">
         Tu chaleco está vinculado y listo. Iniciá una sesión para que las lecturas queden
         agrupadas en tu historial.
@@ -119,7 +119,7 @@ function NoActiveSessionState({ onStart, isPending }: NoActiveProps) {
         type="button"
         onClick={onStart}
         disabled={isPending}
-        className="mt-5 inline-flex items-center gap-3 bg-moss-deep px-6 py-3.5 font-mono text-[11px] uppercase tracking-[0.16em] text-cream transition-colors hover:bg-ink active:scale-[0.98] disabled:opacity-60"
+        className="mt-auto inline-flex items-center gap-3 self-start bg-moss-deep px-6 py-3.5 font-mono text-[11px] uppercase tracking-[0.16em] text-cream transition-colors hover:bg-ink active:scale-[0.98] disabled:opacity-60"
       >
         <span>{isPending ? 'Iniciando…' : 'Iniciar sesión'}</span>
         <span aria-hidden>→</span>
@@ -150,7 +150,7 @@ function ActiveSessionState({
     minute: '2-digit',
   })
   return (
-    <div className="mt-4">
+    <div className="mt-4 flex flex-1 flex-col">
       <div className="grid grid-cols-2 gap-4 border-t border-sand pt-4">
         <div>
           <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
@@ -184,7 +184,7 @@ function ActiveSessionState({
         type="button"
         onClick={onClose}
         disabled={isPending}
-        className="mt-5 inline-flex items-center gap-3 border border-terracotta bg-transparent px-6 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-terracotta-deep transition-colors hover:bg-terracotta hover:text-cream active:scale-[0.98] disabled:opacity-60"
+        className="mt-auto inline-flex items-center gap-3 self-start border border-terracotta bg-transparent px-6 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-terracotta-deep transition-colors hover:bg-terracotta hover:text-cream active:scale-[0.98] disabled:opacity-60"
       >
         <span>{isPending ? 'Cerrando…' : 'Cerrar sesión'}</span>
         <span aria-hidden>→</span>

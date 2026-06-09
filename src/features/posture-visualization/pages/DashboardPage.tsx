@@ -9,7 +9,6 @@ import { staggerContainer, staggerItem } from '@/shared/ui/motion'
 import { BreakReminder } from '../components/BreakReminder'
 import { PostureAlert } from '../components/PostureAlert'
 import { PostureTimeline } from '../components/PostureTimeline'
-import { VestStatusBadge } from '../components/VestStatusBadge'
 import { useBreakReminder } from '../hooks/useBreakReminder'
 import { useCurrentPosture } from '../hooks/useCurrentPosture'
 import { useProlongedBadPosture } from '../hooks/useProlongedBadPosture'
@@ -74,20 +73,17 @@ export function DashboardPage() {
 
   return (
     <div>
-      {/* Encabezado delgado */}
+      {/* Encabezado delgado — el estado del chaleco lo lleva la tarjeta protagonista */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-3">
         <div>
           <p className="text-[14px] text-ink-soft">Buen día,</p>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">{firstName}</h1>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="hidden text-right text-[13px] leading-tight text-ink-soft sm:block">
-            {capitalize(dateFmt.format(now))}
-            <br />
-            <span className="text-ink-faint">{timeFmt.format(now)}</span>
-          </span>
-          <VestStatusBadge status={vestStatus} batteryPercent={reading?.battery_percent} />
-        </div>
+        <span className="hidden text-right text-[13px] leading-tight text-ink-soft sm:block">
+          {capitalize(dateFmt.format(now))}
+          <br />
+          <span className="text-ink-faint">{timeFmt.format(now)}</span>
+        </span>
       </div>
 
       {isError && (
@@ -108,27 +104,15 @@ export function DashboardPage() {
       )}
 
       <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-        {/* Protagonista: estado de postura en vivo, reactivo al color */}
-        <motion.div variants={staggerItem}>
-          <LiveStatusBanner
-            reading={reading ?? null}
-            status={vestStatus}
-            isLoading={isLoading}
-          />
-        </motion.div>
-
-        {/* Riel principal (columna vertebral) + riel de acción (control de sesión) */}
-        <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_340px]">
+        {/* Fila 1 — Protagonista (postura en vivo + columna) · Línea de tiempo (más ancha) */}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
           <motion.div variants={staggerItem}>
-            <SpineCard reading={reading ?? null} status={vestStatus} />
+            <PostureCard
+              reading={reading ?? null}
+              status={vestStatus}
+              isLoading={isLoading}
+            />
           </motion.div>
-          <motion.div variants={staggerItem}>
-            <SessionControls />
-          </motion.div>
-        </div>
-
-        {/* Jornada (línea de tiempo) + recomendaciones (secundarias) */}
-        <div className="mt-3 grid gap-4 lg:grid-cols-[1fr_340px]">
           <motion.div variants={staggerItem}>
             <PostureTimeline
               readings={recent.data ?? []}
@@ -136,12 +120,16 @@ export function DashboardPage() {
               isError={recent.isError}
             />
           </motion.div>
+        </div>
+
+        {/* Fila 2 — Recomendaciones (amplias) · Control de sesión (cuadrado) */}
+        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
           <motion.div variants={staggerItem}>
             {recommendations && recommendations.length > 0 ? (
               <RecommendationsCard
                 recommendations={recommendations}
                 postureClass={reading?.posture_class ?? 'indeterminate'}
-                maxVisible={2}
+                maxVisible={3}
               />
             ) : (
               <div className="editorial-card flex h-full flex-col justify-center p-6">
@@ -153,56 +141,61 @@ export function DashboardPage() {
               </div>
             )}
           </motion.div>
+          <motion.div variants={staggerItem}>
+            <SessionControls />
+          </motion.div>
         </div>
       </motion.div>
     </div>
   )
 }
 
-interface LiveStatusProps {
+interface PostureCardProps {
   reading: LatestReading | null
   status: VestStatus
   isLoading: boolean
 }
 
 /**
- * Banda protagonista del dashboard. Sólo presenta la postura como "en vivo"
- * cuando el chaleco está realmente conectado (última lectura ≤ 30 s). Si la
- * última lectura es vieja, el chaleco está desconectado y la banda pasa a un
- * estado neutro — no tendría sentido mostrar una postura de hace horas como si
- * fuera la actual.
+ * Tarjeta protagonista del dashboard: fusiona el estado en vivo (título grande,
+ * batería, conexión) con la visualización de la columna por zona. Antes eran dos
+ * tarjetas separadas que decían lo mismo ("¿cómo está mi postura ahora?"); al
+ * unirlas se elimina la redundancia y el hueco muerto de la columna.
+ *
+ * Sólo presenta la postura como "en vivo" cuando el chaleco está realmente
+ * conectado (última lectura ≤ 30 s). Si la lectura es vieja, pasa a estado
+ * neutro: no tiene sentido mostrar una postura de hace horas como si fuera la
+ * actual.
  */
-function LiveStatusBanner({ reading, status, isLoading }: LiveStatusProps) {
+function PostureCard({ reading, status, isLoading }: PostureCardProps) {
   const cls: PostureClass = reading?.posture_class ?? 'indeterminate'
   const isWarn = isDeviation(cls)
-  // "En vivo" sólo si hay conexión real (connected o battery_low).
   const isLive = (status === 'connected' || status === 'battery_low') && reading !== null
 
-  const tone = !isLive
-    ? 'border-sand bg-cream-bone text-ink'
-    : isWarn
-      ? 'border-terracotta-deep bg-terracotta text-cream-bone'
-      : 'border-moss-deep bg-moss text-cream-bone'
+  // El color lo llevan los acentos (título, nodos, chips), no un bloque de color
+  // completo: es más coherente con la paleta clínica y mantiene legible el diagrama.
+  const headlineTone = !isLive ? 'text-ink' : isWarn ? 'text-terracotta-deep' : 'text-moss'
+  const dotTone = isLive ? 'bg-moss' : 'bg-ink-faint'
 
-  const dotTone = !isLive ? 'bg-ink-faint' : 'bg-cream-bone'
-  const subTone = !isLive ? 'text-ink-soft' : 'text-cream-bone/80'
-
-  // Título y subtítulo del estado neutro (sin conexión / sin lecturas / cargando).
-  let offlineTitle = 'Sin lecturas'
-  let offlineSub = 'Aún no llegan lecturas del chaleco.'
-  if (isLoading && reading === null) {
-    offlineSub = 'Conectando con el chaleco…'
+  // Estado neutro (sin conexión / sin lecturas / cargando).
+  let title = 'Sin lecturas'
+  let sub = 'Aún no llegan lecturas del chaleco.'
+  if (isLive && reading) {
+    title = POSTURE_LABELS[cls]
+    sub = `${POSTURE_HEADLINES[cls]} Última lectura ${timeSince(reading.timestamp)}.`
+  } else if (isLoading && reading === null) {
+    sub = 'Conectando con el chaleco…'
   } else if (reading !== null) {
-    // Hay una lectura, pero antigua → desconectado.
-    offlineTitle = 'Chaleco sin conexión'
-    offlineSub = `El chaleco no está enviando lecturas. Última ${timeSince(reading.timestamp)}.`
+    title = 'Chaleco sin conexión'
+    sub = `El chaleco no está enviando lecturas. Última ${timeSince(reading.timestamp)}.`
   }
 
   return (
-    <section className={`rounded-xl border p-5 sm:p-6 ${tone}`}>
-      <div className="flex flex-wrap items-center justify-between gap-6">
+    <section className="editorial-card flex h-full flex-col bg-cream-deep p-6 sm:p-7">
+      {/* Encabezado: estado en vivo */}
+      <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className={`flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] ${subTone}`}>
+          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft">
             <span className="relative flex h-2 w-2">
               {isLive && (
                 <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${dotTone} opacity-60`} />
@@ -211,62 +204,38 @@ function LiveStatusBanner({ reading, status, isLoading }: LiveStatusProps) {
             </span>
             {isLive ? 'En vivo · Postura actual' : 'Estado del chaleco'}
           </div>
-          <h2 className="mt-2.5 text-[30px] font-semibold leading-none tracking-tight sm:text-[34px]">
-            {isLive ? POSTURE_LABELS[cls] : offlineTitle}
+          <h2 className={`mt-2.5 text-[28px] font-semibold leading-none tracking-tight sm:text-[32px] ${headlineTone}`}>
+            {title}
           </h2>
-          <p className={`mt-2 text-[14px] leading-relaxed ${subTone}`}>
-            {isLive
-              ? `${POSTURE_HEADLINES[cls]} Última lectura ${timeSince(reading.timestamp)}.`
-              : offlineSub}
-          </p>
+          <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">{sub}</p>
         </div>
 
-        {isLive && (
-          <div className="flex items-stretch">
-            <Stat label="Batería" value={`${reading.battery_percent}%`} tone={subTone} />
+        {isLive && reading && (
+          <div className="shrink-0 text-right">
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">Batería</p>
+            <p className="mt-1 text-[26px] font-semibold leading-none tracking-tight tabular-nums text-ink">
+              {reading.battery_percent}%
+            </p>
           </div>
         )}
       </div>
-    </section>
-  )
-}
 
-function Stat({ label, value, tone }: { label: string; value: string; tone: string }) {
-  return (
-    <div>
-      <p className={`font-mono text-[11px] uppercase tracking-[0.12em] ${tone}`}>{label}</p>
-      <p className="mt-1 text-[32px] font-semibold leading-none tracking-tight">{value}</p>
-    </div>
-  )
-}
+      {/* Cuerpo: diagrama (más grande) + zonas alineadas con cada nodo.
+          El bloque interno se fija a la altura del diagrama y se centra en el
+          espacio disponible, de modo que las zonas se reparten a la par de los
+          nodos (no se sobre-espacian cuando la tarjeta crece). */}
+      <div className="mt-5 flex flex-1 items-center border-t border-sand pt-5">
+        <div className="flex w-full items-stretch gap-6" style={{ height: 256 }}>
+          <div className="grid shrink-0 place-items-center">
+            <SpineDiagram isLive={isLive} isWarn={isWarn} />
+          </div>
 
-interface SpineCardProps {
-  reading: LatestReading | null
-  status: VestStatus
-}
-
-/** Visualización de la columna por zona (cervical · dorsal · lumbar). */
-function SpineCard({ reading, status }: SpineCardProps) {
-  // Sólo refleja postura si hay conexión real; si no, todas las zonas "Sin datos".
-  const isLive = (status === 'connected' || status === 'battery_low') && reading !== null
-  const isWarn = isLive && reading ? isDeviation(reading.posture_class) : false
-
-  return (
-    <div className="editorial-card flex h-full flex-col bg-cream-deep p-6">
-      <p className="label-mono">Visualización vertebral</p>
-      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
-        Lectura cervical · dorsal · lumbar
-      </h2>
-
-      <div className="mt-6 grid flex-1 grid-cols-[1fr_auto] items-center gap-6">
-        <div className="space-y-3">
-          {(['Cervical', 'Dorsal', 'Lumbar'] as const).map((zone, i) => {
+          <div className="flex flex-1 flex-col justify-between">
+            {(['Cervical', 'Dorsal', 'Lumbar'] as const).map((zone, i) => {
             const isAlertZone = isWarn && i === 2
-            const boxClass = !isLive
-              ? 'border-sand bg-cream-bone'
-              : isAlertZone
-                ? 'border-terracotta/40 bg-terracotta/10'
-                : 'border-sand bg-cream-bone'
+            const boxClass = isAlertZone
+              ? 'border-terracotta/40 bg-terracotta/10'
+              : 'border-sand bg-cream-bone'
             const textClass = !isLive
               ? 'text-ink-faint'
               : isAlertZone
@@ -277,7 +246,7 @@ function SpineCard({ reading, status }: SpineCardProps) {
             return (
               <div
                 key={zone}
-                className={`flex items-center justify-between rounded-md border px-4 py-2.5 ${boxClass}`}
+                className={`flex items-center justify-between rounded-md border px-4 py-3 ${boxClass}`}
               >
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
                   {zone}
@@ -289,70 +258,74 @@ function SpineCard({ reading, status }: SpineCardProps) {
               </div>
             )
           })}
-        </div>
-
-        <div className="grid place-items-center">
-          <svg viewBox="0 0 240 420" width="102" height="179">
-            <path
-              d="M70 30 Q50 60 60 120 Q72 200 60 290 Q48 370 80 400 L160 400 Q192 370 180 290 Q168 200 180 120 Q190 60 170 30 Q120 5 70 30 Z"
-              fill="rgba(45,74,54,0.04)"
-              stroke="rgba(45,74,54,0.18)"
-              strokeWidth="0.6"
-              strokeDasharray="2 3"
-            />
-            <line
-              x1="120"
-              y1="70"
-              x2="120"
-              y2="380"
-              stroke="#5C645B"
-              strokeWidth="1"
-              strokeDasharray="3 4"
-            />
-            {[
-              { y: 90, label: 'C', warn: false },
-              { y: 210, label: 'D', warn: false },
-              { y: 340, label: 'L', warn: isWarn },
-            ].map(({ y, label, warn }) => {
-              // Sin conexión → nodo gris neutro; con conexión → verde o terracota.
-              const halo = !isLive
-                ? 'rgba(92,100,91,0.10)'
-                : warn
-                  ? 'rgba(200,98,60,0.14)'
-                  : 'rgba(45,74,54,0.10)'
-              const haloStroke = !isLive ? '#5C645B' : warn ? '#C8623C' : '#2D4A36'
-              const coreFill = !isLive ? '#5C645B' : warn ? '#C8623C' : '#2D4A36'
-              const coreStroke = !isLive ? '#8A9088' : warn ? '#E8A685' : '#4D6B55'
-              return (
-                <g key={label}>
-                  <circle
-                    cx="120"
-                    cy={y}
-                    r={warn ? 38 : 32}
-                    fill={halo}
-                    stroke={haloStroke}
-                    strokeWidth="0.8"
-                    strokeDasharray="2 3"
-                  />
-                  <circle cx="120" cy={y} r="22" fill={coreFill} stroke={coreStroke} strokeWidth="1" />
-                  <text
-                    x="120"
-                    y={y + 5}
-                    textAnchor="middle"
-                    fill="#FFFFFF"
-                    fontFamily="JetBrains Mono, monospace"
-                    fontSize="13"
-                    fontWeight="500"
-                  >
-                    {label}
-                  </text>
-                </g>
-              )
-            })}
-          </svg>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
+  )
+}
+
+/** Silueta de columna con tres nodos (cervical · dorsal · lumbar). */
+function SpineDiagram({ isLive, isWarn }: { isLive: boolean; isWarn: boolean }) {
+  return (
+    <svg viewBox="0 0 240 420" width="146" height="256" aria-hidden>
+      <path
+        d="M70 30 Q50 60 60 120 Q72 200 60 290 Q48 370 80 400 L160 400 Q192 370 180 290 Q168 200 180 120 Q190 60 170 30 Q120 5 70 30 Z"
+        fill="rgba(45,74,54,0.04)"
+        stroke="rgba(45,74,54,0.18)"
+        strokeWidth="0.6"
+        strokeDasharray="2 3"
+      />
+      <line
+        x1="120"
+        y1="70"
+        x2="120"
+        y2="380"
+        stroke="#5C645B"
+        strokeWidth="1"
+        strokeDasharray="3 4"
+      />
+      {[
+        { y: 90, label: 'C', warn: false },
+        { y: 210, label: 'D', warn: false },
+        { y: 340, label: 'L', warn: isWarn },
+      ].map(({ y, label, warn }) => {
+        // Sin conexión → nodo gris neutro; con conexión → verde o terracota.
+        const halo = !isLive
+          ? 'rgba(92,100,91,0.10)'
+          : warn
+            ? 'rgba(200,98,60,0.14)'
+            : 'rgba(45,74,54,0.10)'
+        const haloStroke = !isLive ? '#5C645B' : warn ? '#C8623C' : '#2D4A36'
+        const coreFill = !isLive ? '#5C645B' : warn ? '#C8623C' : '#2D4A36'
+        const coreStroke = !isLive ? '#8A9088' : warn ? '#E8A685' : '#4D6B55'
+        return (
+          <g key={label}>
+            <circle
+              cx="120"
+              cy={y}
+              r={warn ? 38 : 32}
+              fill={halo}
+              stroke={haloStroke}
+              strokeWidth="0.8"
+              strokeDasharray="2 3"
+            />
+            <circle cx="120" cy={y} r="22" fill={coreFill} stroke={coreStroke} strokeWidth="1" />
+            <text
+              x="120"
+              y={y + 5}
+              textAnchor="middle"
+              fill="#FFFFFF"
+              fontFamily="JetBrains Mono, monospace"
+              fontSize="13"
+              fontWeight="500"
+            >
+              {label}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
   )
 }
 
