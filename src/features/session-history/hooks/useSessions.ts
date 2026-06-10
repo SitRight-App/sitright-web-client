@@ -4,6 +4,7 @@ import {
   closeSession,
   getActiveSession,
   getSession,
+  getZoneAnalysis,
   listSessions,
   startSession,
 } from '../services/sessionService'
@@ -24,6 +25,15 @@ export function useSession(sessionId: string | undefined) {
     queryKey: ['sessions', sessionId],
     queryFn: () => getSession(sessionId!),
     enabled: !!sessionId,
+  })
+}
+
+export function useZoneAnalysis(sessionId: string | undefined) {
+  return useQuery({
+    queryKey: ['sessions', sessionId, 'zone-analysis'],
+    queryFn: () => getZoneAnalysis(sessionId!),
+    enabled: !!sessionId,
+    staleTime: 60_000,
   })
 }
 

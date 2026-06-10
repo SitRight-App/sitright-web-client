@@ -22,6 +22,26 @@ export interface PostureSession {
   summary: SessionSummary | null
 }
 
+export type SpineZone = 'cervical' | 'dorsal' | 'lumbar'
+
+/** Desviación de una zona durante la sesión (ADR-006), medida por ángulo. */
+export interface ZoneDeviation {
+  deviated_pct: number
+  minutes_in_deviation: number
+  avg_angle_deg: number
+  peak_angle_deg: number
+  longest_streak_min: number
+  episodes: number
+}
+
+export interface ZoneAnalysis {
+  /** false si el chaleco no está calibrado: no hay neutro para medir ángulo. */
+  calibrated: boolean
+  threshold_degrees: number
+  total_readings: number
+  zones: Record<SpineZone, ZoneDeviation>
+}
+
 export interface StartSessionRequest {
   vest_device_id: string
   note?: string

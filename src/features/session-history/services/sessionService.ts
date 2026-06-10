@@ -4,6 +4,7 @@ import type {
   ListSessionsParams,
   PostureSession,
   StartSessionRequest,
+  ZoneAnalysis,
 } from '../types/session'
 
 export async function listSessions(params: ListSessionsParams = {}): Promise<PostureSession[]> {
@@ -19,6 +20,15 @@ export async function listSessions(params: ListSessionsParams = {}): Promise<Pos
 export async function getSession(sessionId: string): Promise<PostureSession | null> {
   try {
     return await apiFetch<PostureSession>(`/sessions/${sessionId}`)
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('API 404')) return null
+    throw err
+  }
+}
+
+export async function getZoneAnalysis(sessionId: string): Promise<ZoneAnalysis | null> {
+  try {
+    return await apiFetch<ZoneAnalysis>(`/sessions/${sessionId}/zone-analysis`)
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('API 404')) return null
     throw err

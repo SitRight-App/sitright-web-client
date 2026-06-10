@@ -2,16 +2,19 @@ import { useMemo } from 'react'
 import { ArrowRight, Download } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { useRecommendations } from '@/features/recommendations/hooks/useRecommendations'
-import type {
-  PostureClass,
-  TimelineReading,
-} from '@/features/posture-visualization/types/posture'
+import type { TimelineReading } from '@/features/posture-visualization/types/posture'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
-import { SessionSpineSnapshot } from '../components/SessionSpineSnapshot'
+import { SessionBodyMap } from '../components/SessionBodyMap'
 import { SessionTimelineChart } from '../components/SessionTimelineChart'
-import { useSession } from '../hooks/useSessions'
+import { useSession, useZoneAnalysis } from '../hooks/useSessions'
 import { useSessionReadings } from '../hooks/useSessionReadings'
-import type { PostureSession, SessionSummary } from '../types/session'
+import type {
+  PostureSession,
+  SessionSummary,
+  SpineZone,
+  ZoneAnalysis,
+  ZoneDeviation,
+} from '../types/session'
 
 const dateLongFmt = new Intl.DateTimeFormat('es-PE', {
   day: '2-digit',
@@ -41,17 +44,6 @@ const POSTURE_COLORS: Record<string, string> = {
   forward_slouch: 'bg-terracotta-soft',
   excessive_recline: 'bg-terracotta',
   indeterminate: 'bg-ink-faint/40',
-}
-
-function sensorFromPosture(cls: PostureClass | string): 'cervical' | 'dorsal' | 'lumbar' | null {
-  switch (cls) {
-    case 'forward_slouch':
-      return 'cervical'
-    case 'excessive_recline':
-      return 'lumbar'
-    default:
-      return null
-  }
 }
 
 interface DerivedStats {
@@ -228,6 +220,11 @@ export function SessionDetailPage() {
     <div className="session-detail-printable">
       <Crumbs session={session} />
       <Hero session={session} effective={effective} />
+      <ZoneReport
+        sessionId={session.id}
+        durationMinutes={session.duration_minutes}
+        adequatePct={effective.summary?.adequate_percentage ?? null}
+      />
       <StatsRow stats={stats} effective={effective} />
       <DetailGrid session={session} readingsQuery={readingsQuery} effective={effective} />
       <SecondRow recommendations={recs.data ?? []} effective={effective} />
@@ -471,6 +468,202 @@ function Hero({ session, effective }: HeroProps) {
   )
 }
 
+const ZONE_LABELS: Record<SpineZone, string> = {
+  cervical: 'Cervical',
+  dorsal: 'Dorsal',
+  lumbar: 'Lumbar',
+}
+const ZONE_ORDER: SpineZone[] = ['cervical', 'dorsal', 'lumbar']
+
+type Severity = 'ok' | 'leve' | 'marcada'
+function severityOf(pct: number): Severity {
+  if (pct < 5) return 'ok'
+  if (pct < 25) return 'leve'
+  return 'marcada'
+}
+
+const SEV_LABEL: Record<Severity, string> = {
+  ok: 'En rango',
+  leve: 'Desviación leve',
+  marcada: 'Desviación marcada',
+}
+
+function fmtMin(m: number): string {
+  if (m <= 0) return '0 min'
+  if (m < 1) return '<1 min'
+  return `${Math.round(m)} min`
+}
+
+function clinicalSummary(
+  a: ZoneAnalysis,
+  durationMinutes: number | null,
+  adequatePct: number | null,
+): string {
+  const head = [
+    durationMinutes != null ? `Jornada de ${formatHoursMinutes(durationMinutes)}.` : null,
+    adequatePct != null ? `Postura adecuada ${Math.round(adequatePct)}%.` : null,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  const dev = ZONE_ORDER.map((z) => ({ z, d: a.zones[z] }))
+    .filter(({ d }) => d.deviated_pct >= 5)
+    .sort((x, y) => y.d.deviated_pct - x.d.deviated_pct)
+
+  if (dev.length === 0) {
+    return `${head} Ninguna zona superó el umbral de ${a.threshold_degrees}° de forma sostenida; la columna se mantuvo en rango durante la sesión.`
+  }
+
+  const parts = dev.map(({ z, d }, i) => {
+    const name = ZONE_LABELS[z].toLowerCase()
+    if (i === 0) {
+      return `La zona ${name} concentró la mayor carga: ${Math.round(d.deviated_pct)}% del tiempo en desviación (${fmtMin(d.minutes_in_deviation)} acumulados), con un episodio sostenido de hasta ${fmtMin(d.longest_streak_min)} y ${Math.round(d.avg_angle_deg)}° de inclinación promedio.`
+    }
+    return `La ${name} registró ${Math.round(d.deviated_pct)}% (${fmtMin(d.minutes_in_deviation)}).`
+  })
+  return `${head} ${parts.join(' ')}`
+}
+
+interface ZoneReportProps {
+  sessionId: string
+  durationMinutes: number | null
+  adequatePct: number | null
+}
+
+/**
+ * Mapa corporal + detalle clínico por zona (ADR-006). Consume el análisis
+ * geométrico del backend (ángulo de cada sensor vs. su neutro de calibración),
+ * no la clase del modelo.
+ */
+function ZoneReport({ sessionId, durationMinutes, adequatePct }: ZoneReportProps) {
+  const { data, isLoading, isError } = useZoneAnalysis(sessionId)
+
+  if (isLoading) {
+    return (
+      <section className="mb-7 grid gap-4 lg:grid-cols-[300px_1fr]">
+        <SkeletonCard className="bg-cream-deep">
+          <SkeletonTextLine width="40%" />
+          <Skeleton width="100%" height={280} className="mt-4" />
+        </SkeletonCard>
+        <SkeletonCard>
+          <SkeletonTextLine width="40%" />
+          <Skeleton width="90%" height={20} className="mt-3" />
+          <div className="mt-5 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} width="100%" height={72} />
+            ))}
+          </div>
+        </SkeletonCard>
+      </section>
+    )
+  }
+
+  // Endpoint nuevo: sesiones viejas o backend sin desplegar → no romper la página.
+  if (isError || !data) {
+    return null
+  }
+
+  const note = !data.calibrated
+    ? 'El chaleco no estaba calibrado en esta sesión, así que no se puede medir el ángulo por zona. Calíbralo para habilitar este análisis.'
+    : data.total_readings === 0
+      ? 'No hay lecturas suficientes en esta sesión para el análisis por zona.'
+      : null
+
+  if (note) {
+    return (
+      <section className="editorial-card mb-7 bg-cream-deep p-6">
+        <p className="label-mono">Mapa postural por zona</p>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">{note}</p>
+      </section>
+    )
+  }
+
+  return (
+    <section className="mb-7 grid gap-4 lg:grid-cols-[300px_1fr]">
+      <div className="editorial-card flex flex-col bg-cream-deep p-6">
+        <p className="label-mono">Mapa postural</p>
+        <h2 className="mt-1.5 text-xl font-semibold leading-tight tracking-tight text-ink">
+          Zonas con desviación
+        </h2>
+        <div className="mt-3 flex-1">
+          <SessionBodyMap zones={data.zones} thresholdDeg={data.threshold_degrees} />
+        </div>
+        <p className="mt-4 border-t border-sand pt-3 text-[11px] leading-relaxed text-ink-faint">
+          Ángulo de cada zona respecto a tu calibración neutra. Umbral {data.threshold_degrees}°
+          (ISO 11226 / RULA); el color crece con el % de tiempo desviado.
+        </p>
+      </div>
+
+      <div className="editorial-card p-6">
+        <p className="label-mono">Carga por zona</p>
+        <h2 className="mt-1.5 text-2xl font-semibold tracking-tight text-ink">
+          Detalle para seguimiento
+        </h2>
+        <p className="mt-3 max-w-[680px] text-[15px] leading-relaxed text-ink-soft">
+          {clinicalSummary(data, durationMinutes, adequatePct)}
+        </p>
+
+        <ul className="mt-5 space-y-3">
+          {ZONE_ORDER.map((zone) => (
+            <ZoneRow key={zone} zone={zone} d={data.zones[zone]} />
+          ))}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+function ZoneRow({ zone, d }: { zone: SpineZone; d: ZoneDeviation }) {
+  const sev = severityOf(d.deviated_pct)
+  const card =
+    sev === 'ok'
+      ? 'border-sand bg-cream/60'
+      : sev === 'leve'
+        ? 'border-terracotta/30 bg-terracotta/[0.06]'
+        : 'border-terracotta-deep/40 bg-terracotta/10'
+  const chip =
+    sev === 'ok'
+      ? 'bg-moss/12 text-moss'
+      : 'bg-terracotta/15 text-terracotta-deep'
+  const pctTone = sev === 'ok' ? 'text-ink' : 'text-terracotta-deep'
+
+  return (
+    <li className={`rounded-lg border p-4 ${card}`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
+            {ZONE_LABELS[zone]}
+          </span>
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${chip}`}>
+            {SEV_LABEL[sev]}
+          </span>
+        </div>
+        <span className={`font-mono text-lg font-semibold tabular-nums ${pctTone}`}>
+          {Math.round(d.deviated_pct)}%
+        </span>
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
+        <ZoneMetric label="Tiempo desviado" value={fmtMin(d.minutes_in_deviation)} />
+        <ZoneMetric label="Racha máx." value={fmtMin(d.longest_streak_min)} />
+        <ZoneMetric label="Episodios" value={String(d.episodes)} />
+        <ZoneMetric
+          label="Ángulo prom/pico"
+          value={`${Math.round(d.avg_angle_deg)}° / ${Math.round(d.peak_angle_deg)}°`}
+        />
+      </dl>
+    </li>
+  )
+}
+
+function ZoneMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">{label}</dt>
+      <dd className="mt-0.5 text-[14px] font-medium tabular-nums text-ink">{value}</dd>
+    </div>
+  )
+}
+
 interface StatsRowProps {
   stats: DerivedStats
   effective: EffectiveSession
@@ -651,31 +844,10 @@ interface SecondRowProps {
 }
 
 function SecondRow({ recommendations, effective }: SecondRowProps) {
-  const { summary, dominant } = effective
-  const dominantSensor = dominant ? sensorFromPosture(dominant) : null
-  const dominantPct =
-    dominant && summary?.counts_by_class[dominant] && summary.valid_readings
-      ? Math.round((summary.counts_by_class[dominant] / summary.valid_readings) * 100)
-      : null
+  const { dominant } = effective
 
   return (
-    <div className="mt-4 grid gap-4 lg:grid-cols-[360px_1fr]">
-      <section className="rounded-xl border border-sand bg-cream-deep p-6">
-        <p className="label-mono">Posición promedio</p>
-        <h3 className="mb-3 mt-2 text-xl font-semibold leading-tight tracking-tight text-ink">
-          Promedio de la sesión.
-        </h3>
-        <SessionSpineSnapshot
-          warningSensor={dominantSensor}
-          deviationPercentage={dominantPct}
-        />
-        <div className="mt-3 border-t border-sand pt-3 text-[13px] text-ink-soft">
-          {dominantSensor
-            ? `Desviación en ${dominantSensor}`
-            : 'Sin desviación dominante registrada'}
-        </div>
-      </section>
-
+    <div className="mt-4">
       <section className="rounded-xl border border-sand bg-cream-bone p-6">
         <div className="mb-4">
           <p className="label-mono">Recomendaciones disparadas en esta sesión</p>
