@@ -157,6 +157,19 @@ interface PostureCardProps {
 }
 
 /**
+ * Zona de la columna que enciende cada desviación (índice en el orden
+ * Cervical=0 · Dorsal=1 · Lumbar=2). Coincide con AFFECTED_ZONE de
+ * recomendaciones: inclinación frontal → cervical, reclinación excesiva →
+ * lumbar. Antes el dashboard marcaba siempre la lumbar para cualquier
+ * desviación, así que forward_slouch (clase cervical) encendía la zona
+ * equivocada.
+ */
+const ALERT_INDEX: Partial<Record<PostureClass, number>> = {
+  forward_slouch: 0,
+  excessive_recline: 2,
+}
+
+/**
  * Tarjeta protagonista del dashboard: fusiona el estado en vivo (título grande,
  * batería, conexión) con la visualización de la columna por zona. Antes eran dos
  * tarjetas separadas que decían lo mismo ("¿cómo está mi postura ahora?"); al
@@ -171,6 +184,8 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
   const cls: PostureClass = reading?.posture_class ?? 'indeterminate'
   const isWarn = isDeviation(cls)
   const isLive = (status === 'connected' || status === 'battery_low') && reading !== null
+  // Índice de la zona desviada según la clase (cervical=0 · dorsal=1 · lumbar=2).
+  const alertIdx = isLive ? ALERT_INDEX[cls] ?? -1 : -1
 
   // El color lo llevan los acentos (título, nodos, chips), no un bloque de color
   // completo: es más coherente con la paleta clínica y mantiene legible el diagrama.
@@ -227,12 +242,12 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
       <div className="mt-5 flex flex-1 items-center border-t border-sand pt-5">
         <div className="flex w-full items-stretch gap-6" style={{ height: 256 }}>
           <div className="grid shrink-0 place-items-center">
-            <SpineDiagram isLive={isLive} isWarn={isWarn} />
+            <SpineDiagram isLive={isLive} alertIdx={alertIdx} />
           </div>
 
           <div className="flex flex-1 flex-col justify-between">
             {(['Cervical', 'Dorsal', 'Lumbar'] as const).map((zone, i) => {
-            const isAlertZone = isWarn && i === 2
+            const isAlertZone = i === alertIdx
             const boxClass = isAlertZone
               ? 'border-terracotta/40 bg-terracotta/10'
               : 'border-sand bg-cream-bone'
@@ -265,8 +280,9 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
   )
 }
 
-/** Silueta de columna con tres nodos (cervical · dorsal · lumbar). */
-function SpineDiagram({ isLive, isWarn }: { isLive: boolean; isWarn: boolean }) {
+/** Silueta de columna con tres nodos (cervical · dorsal · lumbar). El nodo
+ *  resaltado es la zona desviada (alertIdx); -1 = ninguna. */
+function SpineDiagram({ isLive, alertIdx }: { isLive: boolean; alertIdx: number }) {
   return (
     <svg viewBox="0 0 240 420" width="146" height="256" aria-hidden>
       <path
@@ -286,10 +302,11 @@ function SpineDiagram({ isLive, isWarn }: { isLive: boolean; isWarn: boolean }) 
         strokeDasharray="3 4"
       />
       {[
-        { y: 90, label: 'C', warn: false },
-        { y: 210, label: 'D', warn: false },
-        { y: 340, label: 'L', warn: isWarn },
-      ].map(({ y, label, warn }) => {
+        { y: 90, label: 'C' },
+        { y: 210, label: 'D' },
+        { y: 340, label: 'L' },
+      ].map(({ y, label }, idx) => {
+        const warn = idx === alertIdx
         // Sin conexión → nodo gris neutro; con conexión → verde o terracota.
         const halo = !isLive
           ? 'rgba(92,100,91,0.10)'
