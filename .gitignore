@@ -39,3 +39,7 @@ CLAUDE.md
 
 # ─── Logs ─────────────────────────────────────────────────────────────────────
 *.log
+
+# ─── Artefactos temporales de validación (scripts/capturas locales) ───────────
+_*.mjs
+_*.png
