@@ -15,7 +15,13 @@ import { useProlongedBadPosture } from '../hooks/useProlongedBadPosture'
 import { useRecentReadings } from '../hooks/useRecentReadings'
 import { useVestStatus, type VestStatus } from '../hooks/useVestStatus'
 import type { LatestReading, PostureClass } from '../types/posture'
-import { POSTURE_HEADLINES, POSTURE_LABELS, isDeviation } from '../types/posture'
+import {
+  POSTURE_CORRECTION,
+  POSTURE_HEADLINES,
+  POSTURE_LABELS,
+  isDeviation,
+} from '../types/posture'
+import { SeatedFigure, type SeatedFigureZone } from '@/shared/ui/SeatedFigure'
 
 const dateFmt = new Intl.DateTimeFormat('es-PE', {
   weekday: 'long',
@@ -169,6 +175,12 @@ const ALERT_INDEX: Partial<Record<PostureClass, number>> = {
   excessive_recline: 2,
 }
 
+/** Tono del nodo de una zona en la figura del dashboard (estado en vivo). */
+function liveZone(idx: number, isLive: boolean, alertIdx: number): SeatedFigureZone {
+  if (!isLive) return { tone: 'neutral' }
+  return { tone: idx === alertIdx ? 'marcada' : 'ok' }
+}
+
 /**
  * Tarjeta protagonista del dashboard: fusiona el estado en vivo (título grande,
  * batería, conexión) con la visualización de la columna por zona. Antes eran dos
@@ -241,8 +253,13 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
           nodos (no se sobre-espacian cuando la tarjeta crece). */}
       <div className="mt-5 flex flex-1 items-center border-t border-sand pt-5">
         <div className="flex w-full items-stretch gap-6" style={{ height: 256 }}>
-          <div className="grid shrink-0 place-items-center">
-            <SpineDiagram isLive={isLive} alertIdx={alertIdx} />
+          <div className="grid shrink-0 place-items-center" style={{ width: 150 }}>
+            <SeatedFigure
+              cervical={liveZone(0, isLive, alertIdx)}
+              dorsal={liveZone(1, isLive, alertIdx)}
+              lumbar={liveZone(2, isLive, alertIdx)}
+              headTilt={isLive && alertIdx === 0 ? 22 : 0}
+            />
           </div>
 
           <div className="flex flex-1 flex-col justify-between">
@@ -276,73 +293,22 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
           </div>
         </div>
       </div>
-    </section>
-  )
-}
 
-/** Silueta de columna con tres nodos (cervical · dorsal · lumbar). El nodo
- *  resaltado es la zona desviada (alertIdx); -1 = ninguna. */
-function SpineDiagram({ isLive, alertIdx }: { isLive: boolean; alertIdx: number }) {
-  return (
-    <svg viewBox="0 0 240 420" width="146" height="256" aria-hidden>
-      <path
-        d="M70 30 Q50 60 60 120 Q72 200 60 290 Q48 370 80 400 L160 400 Q192 370 180 290 Q168 200 180 120 Q190 60 170 30 Q120 5 70 30 Z"
-        fill="rgba(45,74,54,0.04)"
-        stroke="rgba(45,74,54,0.18)"
-        strokeWidth="0.6"
-        strokeDasharray="2 3"
-      />
-      <line
-        x1="120"
-        y1="70"
-        x2="120"
-        y2="380"
-        stroke="#5C645B"
-        strokeWidth="1"
-        strokeDasharray="3 4"
-      />
-      {[
-        { y: 90, label: 'C' },
-        { y: 210, label: 'D' },
-        { y: 340, label: 'L' },
-      ].map(({ y, label }, idx) => {
-        const warn = idx === alertIdx
-        // Sin conexión → nodo gris neutro; con conexión → verde o terracota.
-        const halo = !isLive
-          ? 'rgba(92,100,91,0.10)'
-          : warn
-            ? 'rgba(200,98,60,0.14)'
-            : 'rgba(45,74,54,0.10)'
-        const haloStroke = !isLive ? '#5C645B' : warn ? '#C8623C' : '#2D4A36'
-        const coreFill = !isLive ? '#5C645B' : warn ? '#C8623C' : '#2D4A36'
-        const coreStroke = !isLive ? '#8A9088' : warn ? '#E8A685' : '#4D6B55'
-        return (
-          <g key={label}>
-            <circle
-              cx="120"
-              cy={y}
-              r={warn ? 38 : 32}
-              fill={halo}
-              stroke={haloStroke}
-              strokeWidth="0.8"
-              strokeDasharray="2 3"
-            />
-            <circle cx="120" cy={y} r="22" fill={coreFill} stroke={coreStroke} strokeWidth="1" />
-            <text
-              x="120"
-              y={y + 5}
-              textAnchor="middle"
-              fill="#FFFFFF"
-              fontFamily="JetBrains Mono, monospace"
-              fontSize="13"
-              fontWeight="500"
-            >
-              {label}
-            </text>
-          </g>
-        )
-      })}
-    </svg>
+      {/* Qué hacer ahora — micro-guía accionable en vivo (no es la recomendación
+          oficial, solo el gesto correctivo inmediato según la postura actual). */}
+      {isLive && POSTURE_CORRECTION[cls] && (
+        <div className="mt-5 flex items-start gap-2.5 border-t border-sand pt-4">
+          <span
+            className={`mt-px shrink-0 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] ${
+              isWarn ? 'text-terracotta-deep' : 'text-moss'
+            }`}
+          >
+            Ahora
+          </span>
+          <p className="text-[13.5px] leading-relaxed text-ink-soft">{POSTURE_CORRECTION[cls]}</p>
+        </div>
+      )}
+    </section>
   )
 }
 

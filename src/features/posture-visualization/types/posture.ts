@@ -36,6 +36,18 @@ export const POSTURE_HEADLINES: Record<PostureClass, string> = {
 }
 
 /**
+ * Micro-guía accionable para el dashboard: el gesto correctivo inmediato según
+ * la postura actual. Es una ayuda de UX en vivo, no la recomendación oficial
+ * (esa viene del backend y vive en la sección de recomendaciones).
+ */
+export const POSTURE_CORRECTION: Record<PostureClass, string> = {
+  adequate: 'Mantén esta alineación. Vas bien.',
+  forward_slouch: 'Lleva el mentón hacia atrás y alinea las orejas con los hombros.',
+  excessive_recline: 'Apoya la espalda en el respaldo y acerca la cadera al asiento.',
+  indeterminate: '',
+}
+
+/**
  * Frases editoriales para el dashboard ("Buen día, X. {lead} {emphasis}").
  * Separan el sujeto del énfasis para que la cursiva del cierre quede natural,
  * sin construir oraciones como "Tu columna está reclinación excesiva".
