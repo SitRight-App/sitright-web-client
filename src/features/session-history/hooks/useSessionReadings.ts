@@ -1,30 +1,20 @@
 import { useQuery } from '@tanstack/react-query'
-import { getRecentReadings } from '@/features/posture-visualization/services/postureService'
-
-interface Args {
-  startedAt: string | null | undefined
-  endedAt: string | null | undefined
-}
+import { getSessionReadings } from '../services/sessionService'
 
 /**
- * Recupera todas las lecturas dentro del rango temporal de una sesión.
+ * Recupera las lecturas de una sesión por su `session_id` (clave estable).
  *
- * Si la sesión sigue activa (`endedAt` null), usa "ahora" como límite superior.
- * El límite duro de 2000 lecturas alcanza para una jornada laboral completa de
- * ~9 h a una frecuencia de 5 segundos (≈ 6,500 lecturas teóricas, suficientes
- * para visualización de tendencias generales).
+ * Antes se pedían por rango horario (`/readings/recent?since&until`), lo que
+ * fallaba por desajustes de formato/zona horaria entre `started_at` de la
+ * sesión y el `timestamp` de las lecturas. Ahora el backend las agrupa por
+ * `session_id` (ADR-006), así que la timeline y las estadísticas del reporte
+ * siempre cuadran con el resumen.
  */
-export function useSessionReadings({ startedAt, endedAt }: Args) {
-  const enabled = Boolean(startedAt)
+export function useSessionReadings(sessionId: string | undefined) {
   return useQuery({
-    queryKey: ['readings', 'session-range', startedAt, endedAt],
-    queryFn: () =>
-      getRecentReadings({
-        limit: 2000,
-        since: startedAt!,
-        until: endedAt ?? new Date().toISOString(),
-      }),
-    enabled,
+    queryKey: ['sessions', sessionId, 'readings'],
+    queryFn: () => getSessionReadings(sessionId!),
+    enabled: Boolean(sessionId),
     staleTime: 60_000,
   })
 }

@@ -1,4 +1,5 @@
 import { apiFetch } from '@/shared/api/client'
+import type { TimelineReading } from '@/features/posture-visualization/types/posture'
 import type {
   CloseSessionRequest,
   ListSessionsParams,
@@ -33,6 +34,12 @@ export async function getZoneAnalysis(sessionId: string): Promise<ZoneAnalysis |
     if (err instanceof Error && err.message.startsWith('API 404')) return null
     throw err
   }
+}
+
+// Lecturas de la sesión por session_id (clave estable; reemplaza el filtro
+// frágil por rango horario sobre /readings/recent). Ver ADR-006.
+export async function getSessionReadings(sessionId: string): Promise<TimelineReading[]> {
+  return apiFetch<TimelineReading[]>(`/sessions/${sessionId}/readings`)
 }
 
 export async function getActiveSession(): Promise<PostureSession | null> {

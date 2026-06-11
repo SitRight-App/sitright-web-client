@@ -185,10 +185,7 @@ export function SessionDetailPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const { data: session, isLoading, isError } = useSession(sessionId)
 
-  const readingsQuery = useSessionReadings({
-    startedAt: session?.started_at,
-    endedAt: session?.ended_at,
-  })
+  const readingsQuery = useSessionReadings(sessionId)
 
   const readings = readingsQuery.data ?? []
   const effective = useMemo(
