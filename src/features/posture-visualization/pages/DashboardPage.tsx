@@ -253,7 +253,7 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
           nodos (no se sobre-espacian cuando la tarjeta crece). */}
       <div className="mt-5 flex flex-1 items-center border-t border-sand pt-5">
         <div className="flex w-full items-stretch gap-6" style={{ height: 256 }}>
-          <div className="grid shrink-0 place-items-center" style={{ width: 150 }}>
+          <div className="grid shrink-0 place-items-center" style={{ width: 200 }}>
             <SeatedFigure
               cervical={liveZone(0, isLive, alertIdx)}
               dorsal={liveZone(1, isLive, alertIdx)}

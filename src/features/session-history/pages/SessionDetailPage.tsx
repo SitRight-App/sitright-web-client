@@ -508,15 +508,15 @@ function clinicalSummary(
     .sort((x, y) => y.d.deviated_pct - x.d.deviated_pct)
 
   if (dev.length === 0) {
-    return `${head} Ninguna zona superó el umbral de ${a.threshold_degrees}° de forma sostenida; la columna se mantuvo en rango durante la sesión.`
+    return `${head} Ninguna zona se desvió de forma sostenida: tu columna se mantuvo cerca de tu postura calibrada durante la sesión.`
   }
 
   const parts = dev.map(({ z, d }, i) => {
     const name = ZONE_LABELS[z].toLowerCase()
     if (i === 0) {
-      return `La zona ${name} concentró la mayor carga: ${Math.round(d.deviated_pct)}% del tiempo en desviación (${fmtMin(d.minutes_in_deviation)} acumulados), con un episodio sostenido de hasta ${fmtMin(d.longest_streak_min)} y ${Math.round(d.avg_angle_deg)}° de inclinación promedio.`
+      return `La zona ${name} fue la de mayor carga: estuvo desviada el ${Math.round(d.deviated_pct)}% del tiempo (${fmtMin(d.minutes_in_deviation)} en total), con tramos de hasta ${fmtMin(d.longest_streak_min)} seguidos y una inclinación promedio de ${Math.round(d.avg_angle_deg)}° respecto a tu postura neutra.`
     }
-    return `La ${name} registró ${Math.round(d.deviated_pct)}% (${fmtMin(d.minutes_in_deviation)}).`
+    return `La ${name} estuvo desviada el ${Math.round(d.deviated_pct)}% (${fmtMin(d.minutes_in_deviation)}).`
   })
   return `${head} ${parts.join(' ')}`
 }
@@ -537,7 +537,7 @@ function ZoneReport({ sessionId, durationMinutes, adequatePct }: ZoneReportProps
 
   if (isLoading) {
     return (
-      <section className="mb-7 grid gap-4 lg:grid-cols-[300px_1fr]">
+      <section className="mb-7 grid gap-4 lg:grid-cols-[minmax(0,380px)_1fr]">
         <SkeletonCard className="bg-cream-deep">
           <SkeletonTextLine width="40%" />
           <Skeleton width="100%" height={280} className="mt-4" />
@@ -576,7 +576,7 @@ function ZoneReport({ sessionId, durationMinutes, adequatePct }: ZoneReportProps
   }
 
   return (
-    <section className="mb-7 grid gap-4 lg:grid-cols-[300px_1fr]">
+    <section className="mb-7 grid gap-4 lg:grid-cols-[minmax(0,380px)_1fr]">
       <div className="editorial-card flex flex-col bg-cream-deep p-6">
         <p className="label-mono">Mapa postural</p>
         <h2 className="mt-1.5 text-xl font-semibold leading-tight tracking-tight text-ink">
@@ -585,9 +585,9 @@ function ZoneReport({ sessionId, durationMinutes, adequatePct }: ZoneReportProps
         <div className="mt-3 flex-1">
           <SessionBodyMap zones={data.zones} thresholdDeg={data.threshold_degrees} />
         </div>
-        <p className="mt-4 border-t border-sand pt-3 text-[11px] leading-relaxed text-ink-faint">
-          Ángulo de cada zona respecto a tu calibración neutra. Umbral {data.threshold_degrees}°
-          (ISO 11226 / RULA); el color crece con el % de tiempo desviado.
+        <p className="mt-4 border-t border-sand pt-3 text-[12px] leading-relaxed text-ink-soft">
+          El número de cada zona es el <span className="font-medium text-ink">% de la sesión</span>{' '}
+          que estuvo desviada de tu postura calibrada. A más tiempo desviada, más intenso el color.
         </p>
       </div>
 
@@ -605,6 +605,32 @@ function ZoneReport({ sessionId, durationMinutes, adequatePct }: ZoneReportProps
             <ZoneRow key={zone} zone={zone} d={data.zones[zone]} />
           ))}
         </ul>
+
+        <div className="mt-5 border-t border-sand pt-4 text-[12.5px] leading-relaxed text-ink-soft">
+          <p className="mb-2 font-medium text-ink">¿Qué significan estos números?</p>
+          <ul className="space-y-1.5">
+            <li>
+              <span className="font-medium text-ink">Tiempo desviada</span> · cuánto de la sesión
+              pasaste con esa zona fuera de tu postura calibrada.
+            </li>
+            <li>
+              <span className="font-medium text-ink">Inclinación</span> · cuántos grados te alejaste
+              de tu postura neutra (0° = tu neutra), en promedio y en el punto máximo.
+            </li>
+            <li>
+              <span className="font-medium text-ink">Rato más largo</span> · el tramo seguido más
+              largo que mantuviste la desviación.
+            </li>
+            <li>
+              <span className="font-medium text-ink">Veces sostenida</span> · cuántas veces te
+              quedaste desviado un buen rato (no un movimiento puntual).
+            </li>
+          </ul>
+          <p className="mt-2 text-[11px] text-ink-faint">
+            Marcamos una zona como desviada cuando supera ~{data.threshold_degrees}° de tu neutra
+            (referencia ergonómica ISO 11226 / RULA).
+          </p>
+        </div>
       </div>
     </section>
   )
@@ -640,12 +666,12 @@ function ZoneRow({ zone, d }: { zone: SpineZone; d: ZoneDeviation }) {
         </span>
       </div>
       <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
-        <ZoneMetric label="Tiempo desviado" value={fmtMin(d.minutes_in_deviation)} />
-        <ZoneMetric label="Racha máx." value={fmtMin(d.longest_streak_min)} />
-        <ZoneMetric label="Episodios" value={String(d.episodes)} />
+        <ZoneMetric label="Tiempo desviada" value={fmtMin(d.minutes_in_deviation)} />
+        <ZoneMetric label="Rato más largo" value={fmtMin(d.longest_streak_min)} />
+        <ZoneMetric label="Veces sostenida" value={String(d.episodes)} />
         <ZoneMetric
-          label="Ángulo prom/pico"
-          value={`${Math.round(d.avg_angle_deg)}° / ${Math.round(d.peak_angle_deg)}°`}
+          label="Inclinación prom · máx"
+          value={`${Math.round(d.avg_angle_deg)}° · ${Math.round(d.peak_angle_deg)}°`}
         />
       </dl>
     </li>

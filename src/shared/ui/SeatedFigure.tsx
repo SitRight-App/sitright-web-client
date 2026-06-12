@@ -58,7 +58,7 @@ export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className
 
   return (
     <svg
-      viewBox="0 0 270 300"
+      viewBox="0 40 270 252"
       width="100%"
       height="auto"
       className={className}

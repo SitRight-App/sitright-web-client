@@ -15,25 +15,30 @@ function toneFor(pct: number): FigureTone {
 
 function zoneProp(d: ZoneDeviation): SeatedFigureZone {
   const tone = toneFor(d.deviated_pct)
+  // En la figura mostramos solo el % (lo intuitivo: cuánto tiempo estuvo
+  // desviada). El ángulo y su explicación van en las tarjetas de detalle.
   return {
     tone,
-    callout:
-      tone === 'ok'
-        ? undefined
-        : [`${Math.round(d.deviated_pct)}%`, `${Math.round(d.avg_angle_deg)}°`],
+    callout: tone === 'ok' ? undefined : [`${Math.round(d.deviated_pct)}%`],
   }
 }
 
 /**
  * Mapa corporal del reporte de sesión: figura humana sentada con la carga
- * agregada de cada zona (% de tiempo desviado → color; % y ángulo → callout).
- * La cabeza se inclina según la desviación cervical promedio. (ADR-006)
+ * agregada de cada zona (% de tiempo desviado → color e indicador).
+ * La cabeza se inclina solo si la cervical estuvo realmente desviada. (ADR-006)
  */
 export function SessionBodyMap({ zones }: Props) {
+  // Inclina la cabeza solo cuando la cervical está desviada (si está "en rango",
+  // una cabeza torcida contradiría el estado).
+  const headTilt =
+    toneFor(zones.cervical.deviated_pct) === 'ok'
+      ? 0
+      : Math.min(zones.cervical.avg_angle_deg, 32)
   return (
     <SeatedFigure
-      className="mx-auto max-w-[300px]"
-      headTilt={Math.min(zones.cervical.avg_angle_deg, 32)}
+      className="mx-auto w-full max-w-[360px]"
+      headTilt={headTilt}
       cervical={zoneProp(zones.cervical)}
       dorsal={zoneProp(zones.dorsal)}
       lumbar={zoneProp(zones.lumbar)}
