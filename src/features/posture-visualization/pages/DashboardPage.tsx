@@ -109,9 +109,14 @@ export function DashboardPage() {
         </div>
       )}
 
-      <motion.div initial="hidden" animate="visible" variants={staggerContainer}>
-        {/* Fila 1 — Protagonista (postura en vivo + columna) · Línea de tiempo (más ancha) */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)]">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
+        className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]"
+      >
+        {/* Riel principal: postura en vivo + columna, y debajo la línea de tiempo */}
+        <div className="flex flex-col gap-4">
           <motion.div variants={staggerItem}>
             <PostureCard
               reading={reading ?? null}
@@ -128,8 +133,11 @@ export function DashboardPage() {
           </motion.div>
         </div>
 
-        {/* Fila 2 — Recomendaciones (amplias) · Control de sesión (cuadrado) */}
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        {/* Riel de acción: control de sesión arriba (visible al instante) + recomendaciones */}
+        <div className="flex flex-col gap-4">
+          <motion.div variants={staggerItem}>
+            <SessionControls />
+          </motion.div>
           <motion.div variants={staggerItem}>
             {recommendations && recommendations.length > 0 ? (
               <RecommendationsCard
@@ -138,7 +146,7 @@ export function DashboardPage() {
                 maxVisible={3}
               />
             ) : (
-              <div className="editorial-card flex h-full flex-col justify-center p-6">
+              <div className="editorial-card flex flex-col justify-center p-6">
                 <p className="label-mono">Recomendaciones</p>
                 <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
                   Cuando el chaleco detecte una desviación, aquí verás los ajustes
@@ -146,9 +154,6 @@ export function DashboardPage() {
                 </p>
               </div>
             )}
-          </motion.div>
-          <motion.div variants={staggerItem}>
-            <SessionControls />
           </motion.div>
         </div>
       </motion.div>
