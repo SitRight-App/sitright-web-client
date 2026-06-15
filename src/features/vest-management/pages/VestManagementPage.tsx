@@ -19,18 +19,6 @@ function secondsSince(iso: string): number {
   return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))
 }
 
-/** Tiempo transcurrido en formato humano (s / min / h / días), no segundos crudos. */
-function humaneSince(iso: string): string {
-  const sec = secondsSince(iso)
-  if (sec < 60) return `hace ${sec} s`
-  const min = Math.floor(sec / 60)
-  if (min < 60) return `hace ${min} min`
-  const h = Math.floor(min / 60)
-  if (h < 24) return `hace ${h} h`
-  const d = Math.floor(h / 24)
-  return `hace ${d} día${d === 1 ? '' : 's'}`
-}
-
 function batteryHoursRemaining(percent: number): number {
   // Suposición: autonomía ~8 h al 100 %, lineal.
   return Math.max(0, Math.round((percent / 100) * 8))
@@ -159,18 +147,18 @@ function LinkedState({ vest }: PropsWithVest) {
   const { data: latest } = useCurrentPosture()
   // Ignoramos lecturas que no son de este chaleco (ver nota en VestStatusHeadPill).
   const ours = latest?.vest_id === vest.id ? latest : null
-  const warningSensor = ours?.posture_class
-    ? sensorFromPosture(ours.posture_class)
-    : null
+  // "Conectado" = hay una lectura nuestra reciente. Solo entonces conocemos el
+  // estado actual de la batería, así que solo entonces la mostramos.
+  const isConnected = ours?.timestamp ? secondsSince(ours.timestamp) <= 30 : false
+  const warningSensor = ours?.posture_class ? sensorFromPosture(ours.posture_class) : null
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <ProductSheet vest={vest} warningSensor={warningSensor} />
       <div className="flex flex-col gap-4">
-        <BatteryPanel vest={vest} />
-        <SensorsPanel warningSensor={warningSensor} latestTimestamp={ours?.timestamp ?? null} />
+        {isConnected && ours && <BatteryPanel percent={ours.battery_percent} />}
         <CalibrationCard vest={vest} />
-        <DeviceMetaPanel vest={vest} />
+        <UnlinkCard vest={vest} />
       </div>
     </div>
   )
@@ -193,12 +181,12 @@ interface ProductSheetProps extends PropsWithVest {
 
 function ProductSheet({ vest, warningSensor }: ProductSheetProps) {
   return (
-    <section className="editorial-card bg-cream-deep p-8">
+    <section className="editorial-card flex flex-col bg-cream-deep p-8">
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
           <p className="label-mono">Chaleco vinculado</p>
           <h2 className="mt-2 text-2xl font-semibold leading-tight tracking-tight text-ink">
-            SitRight Vest · A1
+            SitRight Vest
           </h2>
         </div>
         <div className="text-right">
@@ -209,114 +197,21 @@ function ProductSheet({ vest, warningSensor }: ProductSheetProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_280px_1fr] items-center gap-4">
-        <div className="flex flex-col gap-5">
-          <Annotation
-            label="Sensor 1 · cervical"
-            name="I²C 0x68"
-            value="conectado · ID 7A"
-            warn={warningSensor === 'cervical'}
-          />
-          <Annotation
-            label="Sensor 2 · dorsal"
-            name="I²C 0x69"
-            value="conectado · ID 7B"
-            warn={warningSensor === 'dorsal'}
-          />
-          <Annotation
-            label="Sensor 3 · lumbar"
-            name="I²C 0x6A"
-            value="conectado · ID 7C"
-            warn={warningSensor === 'lumbar'}
-          />
-        </div>
-
+      <div className="grid flex-1 place-items-center">
         <VestIllustration warningSensor={warningSensor} />
-
-        <div className="flex flex-col items-end gap-5 text-right">
-          <Annotation
-            label="Microcontrolador"
-            name="ESP32 DevKit V1"
-            value="WiFi · I2C · 240 MHz"
-            align="right"
-          />
-          <Annotation
-            label="Bus de datos"
-            name="I²C · 400 kHz"
-            value="3 esclavos · pull-up 4.7 kΩ"
-            align="right"
-          />
-          <Annotation
-            label="Batería"
-            name="LiPo 1000 mAh"
-            value="TP4056 · USB-C"
-            align="right"
-          />
-        </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-4 gap-6 border-t border-sand pt-5">
-        <Spec k="Frec. envío" v="5" suffix="s" />
-        <Spec k="Lecturas / hora" v="720" />
-        <Spec k="Rango IMU" v="±16" suffix="g" />
-        <Spec k="Autonomía" v="~ 8" suffix="h" />
-      </div>
+      <p className="mt-6 border-t border-sand pt-5 text-center text-[14px] leading-relaxed text-ink-soft">
+        Tres sensores en la espalda (cervical, dorsal y lumbar) miden tu postura
+        mientras trabajas y te avisan cuando te desvías.
+      </p>
     </section>
   )
 }
 
-interface AnnotationProps {
-  label: string
-  name: string
-  value: string
-  warn?: boolean
-  align?: 'left' | 'right'
-}
-
-function Annotation({ label, name, value, warn = false, align = 'left' }: AnnotationProps) {
-  // Resaltamos la desviación con borde completo + tinte de fondo (sin borde lateral de adorno).
-  const tone = warn
-    ? 'border-terracotta/40 bg-terracotta/10'
-    : 'border-sand bg-cream-bone'
-  return (
-    <div className={`max-w-[200px] rounded-lg border px-3.5 py-2.5 ${tone}`}>
-      <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">{label}</p>
-      <p className={`mb-1 text-[15px] font-medium leading-tight ${align === 'right' ? 'text-right' : ''} ${warn ? 'text-terracotta-deep' : 'text-ink'}`}>
-        {name}
-      </p>
-      <p className={`font-mono text-[10px] tracking-[0.04em] text-ink-soft ${align === 'right' ? 'text-right' : ''}`}>
-        {value}
-      </p>
-    </div>
-  )
-}
-
-interface SpecProps {
-  k: string
-  v: string
-  suffix?: string
-}
-
-function Spec({ k, v, suffix }: SpecProps) {
-  return (
-    <div>
-      <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">{k}</p>
-      <p className="text-[18px] font-semibold tracking-tight text-ink">
-        {v}
-        {suffix && <small className="ml-1 text-[12px] font-medium text-ink-soft">{suffix}</small>}
-      </p>
-    </div>
-  )
-}
-
-function BatteryPanel({ vest }: PropsWithVest) {
-  // Fuente única de batería: el porcentaje de la última lectura en vivo (igual
-  // que el dashboard). `vest.battery_level` queda como respaldo cuando aún no
-  // llegó ninguna lectura de este chaleco — el backend no lo mantiene al día.
-  const { data: latest } = useCurrentPosture()
-  const livePercent =
-    latest?.vest_id === vest.id ? latest?.battery_percent : undefined
-  const percent = livePercent ?? vest.battery_level ?? 0
+function BatteryPanel({ percent }: { percent: number }) {
+  // Solo se renderiza cuando hay lectura en vivo (ver LinkedState), así que el
+  // % es el estado real y actual de la batería del chaleco.
   const hoursLeft = batteryHoursRemaining(percent)
   const headline =
     percent >= 50 ? `Resistirá ${hoursLeft} h más` : percent >= 20 ? 'Carga moderada' : 'Carga baja'
@@ -349,77 +244,6 @@ function BatteryPanel({ vest }: PropsWithVest) {
   )
 }
 
-interface SensorsPanelProps {
-  warningSensor: 'cervical' | 'dorsal' | 'lumbar' | null
-  latestTimestamp: string | null
-}
-
-function SensorsPanel({ warningSensor, latestTimestamp }: SensorsPanelProps) {
-  const lastDelta = latestTimestamp ? humaneSince(latestTimestamp) : 'sin lectura'
-  const sensors: Array<{
-    pin: 'C' | 'D' | 'L'
-    title: string
-    meta: string
-    isWarning: boolean
-  }> = [
-    {
-      pin: 'C',
-      title: 'Cervical',
-      meta: 'i²c 0x68 · ID 7A · vértebra C7',
-      isWarning: warningSensor === 'cervical',
-    },
-    {
-      pin: 'D',
-      title: 'Dorsal',
-      meta: 'i²c 0x69 · ID 7B · vértebra T6',
-      isWarning: warningSensor === 'dorsal',
-    },
-    {
-      pin: 'L',
-      title: 'Lumbar',
-      meta: 'i²c 0x6A · ID 7C · vértebra L5',
-      isWarning: warningSensor === 'lumbar',
-    },
-  ]
-  return (
-    <section className="editorial-card p-7">
-      <p className="label-mono">Estado de los 3 sensores</p>
-      <h3 className="mt-2 text-2xl font-semibold tracking-tight text-ink">Salud del bus I²C</h3>
-      <p className="mt-1 text-[13px] text-ink-soft">3 × MPU-6050 · bus I²C a 400 kHz</p>
-      <ul className="mt-4">
-        {sensors.map((s, i) => (
-          <li
-            key={s.pin}
-            className={`grid grid-cols-[36px_1fr_auto] items-center gap-3.5 py-3.5 ${
-              i < sensors.length - 1 ? 'border-b border-sand' : ''
-            }`}
-          >
-            <span
-              className={`grid h-9 w-9 place-items-center rounded-full font-mono text-[14px] font-medium text-cream-bone ${
-                s.isWarning ? 'bg-terracotta' : 'bg-moss-deep'
-              }`}
-            >
-              {s.pin}
-            </span>
-            <div>
-              <p className="text-[15px] font-medium text-ink">{s.title}</p>
-              <p className="mt-0.5 font-mono text-[10px] tracking-[0.06em] text-ink-faint">
-                {s.meta}
-              </p>
-            </div>
-            <div className="text-right font-mono text-[11px] text-ink-soft">
-              <p className={s.isWarning ? 'font-medium text-terracotta-deep' : 'font-medium text-moss'}>
-                {s.isWarning ? 'desviación' : 'OK · 100%'}
-              </p>
-              <p>{lastDelta}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
 function CalibrationCard({ vest }: PropsWithVest) {
   const stepsTotal = 3
   const stepsDone = vest.is_calibrated ? stepsTotal : 0
@@ -432,8 +256,9 @@ function CalibrationCard({ vest }: PropsWithVest) {
         {vest.is_calibrated ? 'Postura neutra capturada' : 'Recalibrar postura neutra'}
       </h3>
       <p className="mt-2 max-w-md text-[15px] leading-relaxed text-ink-soft">
-        La calibración guarda los valores IMU en posición erguida como referencia. Recomendamos
-        repetirla una vez al mes o si cambias de silla.
+        La calibración guarda tu postura erguida como tu referencia personal: con
+        ella el chaleco sabe cuándo te desvías. Conviene repetirla una vez al mes
+        o si cambias de silla.
       </p>
 
       <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-moss/15">
@@ -500,7 +325,7 @@ function CalibStep({ n, title, meta, done }: CalibStepProps) {
   )
 }
 
-function DeviceMetaPanel({ vest }: PropsWithVest) {
+function UnlinkCard({ vest }: PropsWithVest) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const unlink = useUnlinkVest(vest.id)
   const toast = useToast()
@@ -522,39 +347,25 @@ function DeviceMetaPanel({ vest }: PropsWithVest) {
 
   return (
     <section className="editorial-card p-7">
-      <p className="label-mono">Información del chaleco</p>
-      <h3 className="mt-2 mb-4 text-2xl font-semibold tracking-tight text-ink">
-        Especificaciones técnicas
-      </h3>
+      <p className="label-mono">Zona de riesgo</p>
+      <h3 className="mt-2 text-2xl font-semibold tracking-tight text-ink">Desvincular el chaleco</h3>
+      <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+        Desvincular detiene las lecturas y tendrás que registrarlo de nuevo para
+        usarlo. Tus sesiones guardadas se mantienen intactas.
+      </p>
+      {vest.linked_at && (
+        <p className="mt-3 text-[12px] text-ink-faint">
+          Vinculado el {longDateFmt.format(new Date(vest.linked_at))}
+        </p>
+      )}
 
-      <div className="grid grid-cols-2 gap-x-7 gap-y-3.5">
-        <MetaRow k="Firmware" v={vest.firmware_version ?? '—'} />
-        <MetaRow k="Hardware" v="ESP32 DevKit V1" />
-        <MetaRow k="Vinculado a" v={vest.user_id ? vest.user_id.slice(0, 8) + '…' : '—'} />
-        <MetaRow
-          k="Fecha de vínculo"
-          v={vest.linked_at ? longDateFmt.format(new Date(vest.linked_at)) : '—'}
-        />
-        <MetaRow k="Estado" v={vest.is_active ? 'Activo' : 'Pausado'} />
-        <MetaRow
-          k="Calibrado"
-          v={vest.is_calibrated ? 'Sí' : 'Pendiente'}
-        />
-      </div>
-
-      <div className="mt-5 flex items-center justify-between gap-4 rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3">
-        <div>
-          <p className="text-[13px] font-medium text-terracotta-deep">Zona de riesgo</p>
-          <p className="mt-0.5 text-[12px] text-ink-soft">Desvincular detiene las lecturas</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setConfirmOpen(true)}
-          className="rounded-xl border border-terracotta/50 bg-cream-bone px-4 py-2 text-[13px] font-medium text-terracotta-deep transition-colors hover:border-terracotta hover:text-terracotta"
-        >
-          Desvincular chaleco
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => setConfirmOpen(true)}
+        className="mt-5 rounded-xl border border-terracotta/50 bg-cream-bone px-4 py-2.5 text-[14px] font-medium text-terracotta-deep transition-colors hover:border-terracotta hover:text-terracotta"
+      >
+        Desvincular chaleco
+      </button>
 
       {confirmOpen && (
         <UnlinkConfirmDialog
@@ -633,16 +444,3 @@ function UnlinkConfirmDialog({ mac, isPending, onCancel, onConfirm }: UnlinkConf
   )
 }
 
-interface MetaRowProps {
-  k: string
-  v: string
-}
-
-function MetaRow({ k, v }: MetaRowProps) {
-  return (
-    <div>
-      <p className="mb-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">{k}</p>
-      <p className="font-mono text-[13px] tracking-[0.04em] text-ink">{v}</p>
-    </div>
-  )
-}
