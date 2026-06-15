@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowRight, Check } from 'lucide-react'
+import { ArrowRight, Check, ChevronDown } from 'lucide-react'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import {
   useAllRecommendations,
@@ -76,6 +76,7 @@ export function RecommendationsPage() {
 
   const [category, setCategory] = useState<CategoryFilter>('all')
   const [status, setStatus] = useState<StatusFilter>('all')
+  const [appliedOpen, setAppliedOpen] = useState(false)
 
   const allEntries = useMemo<DecoratedRecommendation[]>(() => {
     const appliedIds = new Set((applied.data ?? []).map((a) => a.recommendation_id))
@@ -101,14 +102,27 @@ export function RecommendationsPage() {
     gridEntries,
   ])
 
-  const filtered = useMemo(() => {
-    return gridEntries.filter((entry) => {
-      if (category !== 'all' && entry.category !== category) return false
-      if (status === 'applied' && !entry.applied) return false
-      if (status === 'pending' && entry.applied) return false
-      return true
-    })
-  }, [gridEntries, category, status])
+  const categoryFiltered = useMemo(
+    () => gridEntries.filter((e) => category === 'all' || e.category === category),
+    [gridEntries, category],
+  )
+  const pendingList = useMemo(
+    () => categoryFiltered.filter((e) => !e.applied),
+    [categoryFiltered],
+  )
+  const appliedList = useMemo(
+    () => categoryFiltered.filter((e) => e.applied),
+    [categoryFiltered],
+  )
+
+  // Las pendientes se muestran abiertas; las aplicadas viven en un bloque
+  // colapsable (cerrado por defecto). El filtro de estado fuerza la vista:
+  // "Pendientes" oculta el bloque, "Aplicadas" lo despliega.
+  const showPending = status !== 'applied'
+  const showApplied = status !== 'pending'
+  const appliedExpanded = appliedOpen || status === 'applied'
+  const visibleCount =
+    (showPending ? pendingList.length : 0) + (showApplied ? appliedList.length : 0)
 
   const handleToggle = (entry: DecoratedRecommendation) => {
     if (mark.isPending || unmark.isPending) return
@@ -230,27 +244,64 @@ export function RecommendationsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtered.map((entry) => (
-          <RecommendationCard
-            key={entry.id}
-            entry={entry}
-            onToggle={() => handleToggle(entry)}
-            disabled={mark.isPending || unmark.isPending}
-          />
-        ))}
-        {!isLoading && filtered.length === 0 && !isError && (
-          <div className="editorial-card col-span-full p-10 text-center sm:p-14">
-            <p className="label-mono">Sin resultados</p>
-            <p className="mt-3 text-2xl font-semibold tracking-tight text-ink">
-              No hay recomendaciones en este filtro.
-            </p>
-            <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
-              Ajusta los filtros de categoría o estado.
-            </p>
-          </div>
-        )}
-      </div>
+      {showPending && pendingList.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {pendingList.map((entry) => (
+            <RecommendationCard
+              key={entry.id}
+              entry={entry}
+              onToggle={() => handleToggle(entry)}
+              disabled={mark.isPending || unmark.isPending}
+            />
+          ))}
+        </div>
+      )}
+
+      {showApplied && appliedList.length > 0 && (
+        <div className={showPending && pendingList.length > 0 ? 'mt-5' : ''}>
+          <button
+            type="button"
+            onClick={() => setAppliedOpen((v) => !v)}
+            aria-expanded={appliedExpanded}
+            className="flex w-full items-center justify-between rounded-xl border border-moss/30 bg-moss/[0.05] px-5 py-3.5 text-left transition-colors hover:bg-moss/[0.08]"
+          >
+            <span className="flex items-center gap-2.5 text-[14px] font-semibold text-ink">
+              <Check className="h-4 w-4 text-moss" strokeWidth={1.5} />
+              Aplicadas · {appliedList.length}
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 text-ink-soft transition-transform ${
+                appliedExpanded ? 'rotate-180' : ''
+              }`}
+              strokeWidth={1.5}
+            />
+          </button>
+          {appliedExpanded && (
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {appliedList.map((entry) => (
+                <RecommendationCard
+                  key={entry.id}
+                  entry={entry}
+                  onToggle={() => handleToggle(entry)}
+                  disabled={mark.isPending || unmark.isPending}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isLoading && !isError && visibleCount === 0 && (
+        <div className="editorial-card col-span-full p-10 text-center sm:p-14">
+          <p className="label-mono">Sin resultados</p>
+          <p className="mt-3 text-2xl font-semibold tracking-tight text-ink">
+            No hay recomendaciones en este filtro.
+          </p>
+          <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+            Ajusta los filtros de categoría o estado.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
