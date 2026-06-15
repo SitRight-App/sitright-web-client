@@ -22,6 +22,9 @@ interface Props {
   lumbar: SeatedFigureZone
   headTilt?: number
   className?: string
+  /** Recorta el margen vacío (la zona de callouts) para que la persona se vea
+   *  más grande cuando no se muestran callouts (p. ej. en el dashboard). */
+  tight?: boolean
 }
 
 const TONE: Record<FigureTone, { core: string; halo: string; ring: string }> = {
@@ -53,12 +56,14 @@ function radiusFor(tone: FigureTone): number {
   return 11
 }
 
-export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className }: Props) {
+export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className, tight = false }: Props) {
   const zones = { cervical, dorsal, lumbar }
+  // tight: encuadra a la persona+silla sin el margen de callouts (la izquierda).
+  const viewBox = tight ? '54 56 150 230' : '0 40 270 252'
 
   return (
     <svg
-      viewBox="0 40 270 252"
+      viewBox={viewBox}
       width="100%"
       height="auto"
       className={className}

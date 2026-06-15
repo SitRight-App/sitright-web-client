@@ -113,9 +113,9 @@ export function DashboardPage() {
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
-        className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]"
+        className="grid items-start gap-4 lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
       >
-        {/* Riel principal: postura en vivo + columna, y debajo la línea de tiempo */}
+        {/* Columna "yo": postura en vivo (cuadrada) + control de sesión */}
         <div className="flex flex-col gap-4">
           <motion.div variants={staggerItem}>
             <PostureCard
@@ -125,18 +125,18 @@ export function DashboardPage() {
             />
           </motion.div>
           <motion.div variants={staggerItem}>
+            <SessionControls />
+          </motion.div>
+        </div>
+
+        {/* Columna "datos": línea de tiempo (ancha) + recomendaciones */}
+        <div className="flex flex-col gap-4">
+          <motion.div variants={staggerItem}>
             <PostureTimeline
               readings={recent.data ?? []}
               isLoading={recent.isLoading}
               isError={recent.isError}
             />
-          </motion.div>
-        </div>
-
-        {/* Riel de acción: control de sesión arriba (visible al instante) + recomendaciones */}
-        <div className="flex flex-col gap-4">
-          <motion.div variants={staggerItem}>
-            <SessionControls />
           </motion.div>
           <motion.div variants={staggerItem}>
             {recommendations && recommendations.length > 0 ? (
@@ -252,22 +252,20 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
         )}
       </div>
 
-      {/* Cuerpo: diagrama (más grande) + zonas alineadas con cada nodo.
-          El bloque interno se fija a la altura del diagrama y se centra en el
-          espacio disponible, de modo que las zonas se reparten a la par de los
-          nodos (no se sobre-espacian cuando la tarjeta crece). */}
-      <div className="mt-5 flex flex-1 items-center border-t border-sand pt-5">
-        <div className="flex w-full items-stretch gap-6" style={{ height: 256 }}>
-          <div className="grid shrink-0 place-items-center" style={{ width: 200 }}>
-            <SeatedFigure
-              cervical={liveZone(0, isLive, alertIdx)}
-              dorsal={liveZone(1, isLive, alertIdx)}
-              lumbar={liveZone(2, isLive, alertIdx)}
-              headTilt={isLive && alertIdx === 0 ? 22 : 0}
-            />
-          </div>
+      {/* Cuerpo: figura humana grande (encuadre compacto) + zonas en una columna
+          ajustada (sin estirarse a todo el ancho ni espaciarse de más). */}
+      <div className="mt-5 flex flex-1 items-center gap-5 border-t border-sand pt-5">
+        <div className="grid shrink-0 place-items-center" style={{ width: 280 }}>
+          <SeatedFigure
+            tight
+            cervical={liveZone(0, isLive, alertIdx)}
+            dorsal={liveZone(1, isLive, alertIdx)}
+            lumbar={liveZone(2, isLive, alertIdx)}
+            headTilt={isLive && alertIdx === 0 ? 22 : 0}
+          />
+        </div>
 
-          <div className="flex flex-1 flex-col justify-between">
+        <div className="flex flex-1 flex-col gap-2.5">
             {(['Cervical', 'Dorsal', 'Lumbar'] as const).map((zone, i) => {
             const isAlertZone = i === alertIdx
             const boxClass = isAlertZone
@@ -295,7 +293,6 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
               </div>
             )
           })}
-          </div>
         </div>
       </div>
 
