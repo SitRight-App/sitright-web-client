@@ -115,17 +115,18 @@ export function DashboardPage() {
         variants={staggerContainer}
         className="grid items-start gap-4 lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)]"
       >
-        {/* Columna "yo": postura en vivo (cuadrada) + control de sesión */}
+        {/* Columna "yo": control de sesión arriba (acción visible al toque) +
+            postura en vivo (cuadrada, figura grande) debajo */}
         <div className="flex flex-col gap-4">
+          <motion.div variants={staggerItem}>
+            <SessionControls />
+          </motion.div>
           <motion.div variants={staggerItem}>
             <PostureCard
               reading={reading ?? null}
               status={vestStatus}
               isLoading={isLoading}
             />
-          </motion.div>
-          <motion.div variants={staggerItem}>
-            <SessionControls />
           </motion.div>
         </div>
 

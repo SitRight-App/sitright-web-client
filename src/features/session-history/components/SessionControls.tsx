@@ -89,7 +89,7 @@ function NoVestState() {
   return (
     <div className="mt-4">
       <p className="text-sm leading-relaxed text-ink-soft">
-        Aún no vinculaste un chaleco a tu cuenta. Vinculá uno desde el panel de Chaleco para
+        Aún no has vinculado un chaleco a tu cuenta. Vincula uno desde el panel de Chaleco para
         habilitar el control de sesión.
       </p>
       <Link
@@ -112,7 +112,7 @@ function NoActiveSessionState({ onStart, isPending }: NoActiveProps) {
   return (
     <div className="mt-4">
       <p className="text-sm leading-relaxed text-ink-soft">
-        Tu chaleco está vinculado y listo. Iniciá una sesión para que las lecturas queden
+        Tu chaleco está vinculado y listo. Inicia una sesión para que las lecturas queden
         agrupadas en tu historial.
       </p>
       <button

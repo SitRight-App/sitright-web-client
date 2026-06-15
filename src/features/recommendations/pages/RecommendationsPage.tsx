@@ -246,7 +246,7 @@ export function RecommendationsPage() {
               No hay recomendaciones en este filtro.
             </p>
             <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
-              Ajustá los filtros de categoría o estado.
+              Ajusta los filtros de categoría o estado.
             </p>
           </div>
         )}
