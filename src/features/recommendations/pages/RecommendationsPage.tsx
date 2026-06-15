@@ -125,10 +125,10 @@ export function RecommendationsPage() {
   return (
     <div>
       {/* Encabezado de sección: un único título display en font-semibold */}
-      <div className="flex flex-wrap items-end justify-between gap-6 pb-8">
+      <div className="flex flex-wrap items-end justify-between gap-6 pb-5">
         <div>
           <p className="label-mono">Recomendaciones</p>
-          <h1 className="mt-2 text-[34px] font-semibold leading-tight tracking-tight text-ink sm:text-[40px]">
+          <h1 className="mt-1.5 text-[26px] font-semibold leading-tight tracking-tight text-ink sm:text-[30px]">
             Pequeños gestos, columnas más sanas.
           </h1>
         </div>
@@ -194,14 +194,14 @@ export function RecommendationsPage() {
       )}
 
       {gridEntries.length > 0 && (
-        <div className="mb-6 flex flex-wrap items-center gap-2.5">
+        <div className="mb-5 flex flex-wrap items-center gap-2.5">
           <span className="mr-1 label-mono">Categoría</span>
           {(Object.keys(CATEGORY_LABELS) as CategoryFilter[]).map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setCategory(cat)}
-              className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+              className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
                 category === cat
                   ? 'border-moss bg-moss text-cream-bone'
                   : 'border-sand bg-cream-bone text-ink-soft hover:border-moss hover:text-ink'
@@ -216,7 +216,7 @@ export function RecommendationsPage() {
               key={s}
               type="button"
               onClick={() => setStatus(status === s ? 'all' : s)}
-              className={`rounded-full border px-4 py-2 text-[13px] font-medium transition-colors ${
+              className={`rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
                 status === s
                   ? 'border-moss bg-moss text-cream-bone'
                   : 'border-sand bg-cream-bone text-ink-soft hover:border-moss hover:text-ink'
@@ -230,7 +230,7 @@ export function RecommendationsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((entry) => (
           <RecommendationCard
             key={entry.id}
@@ -267,15 +267,15 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
   const titleMain = featured.title.replace(titleEmphasis, '').trim()
 
   return (
-    <section className="mb-9 grid grid-cols-1 overflow-hidden rounded-xl border border-sand bg-cream-bone lg:grid-cols-[1.3fr_1fr]">
+    <section className="mb-6 grid grid-cols-1 overflow-hidden rounded-xl border border-sand bg-cream-bone lg:grid-cols-[1.3fr_1fr]">
       {/* Panel de marca: verde plano sin blobs decorativos */}
-      <div className="bg-moss-deep p-8 text-cream-bone lg:p-10">
+      <div className="bg-moss-deep p-6 text-cream-bone lg:p-8">
         {featured.featured_tagline && (
-          <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.16em] text-cream-bone/60">
+          <p className="mb-3.5 font-mono text-[11px] uppercase tracking-[0.16em] text-cream-bone/60">
             {featured.featured_tagline}
           </p>
         )}
-        <h2 className="mb-5 text-[34px] font-semibold leading-tight tracking-tight sm:text-[44px]">
+        <h2 className="mb-3.5 text-[26px] font-semibold leading-tight tracking-tight sm:text-[34px]">
           {titleMain || featured.title}
           {titleEmphasis && (
             <>
@@ -285,7 +285,7 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
           )}
         </h2>
         {featured.featured_body && (
-          <p className="mb-8 max-w-[460px] text-[15px] leading-relaxed text-cream-bone/75">
+          <p className="mb-6 max-w-[460px] text-[14px] leading-relaxed text-cream-bone/75">
             {featured.featured_body}
           </p>
         )}
@@ -318,15 +318,15 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
         </div>
       </div>
 
-      <div className="bg-cream-deep p-8 lg:p-10">
-        <p className="mb-5 label-mono">
+      <div className="bg-cream-deep p-6 lg:p-7">
+        <p className="mb-3 label-mono">
           Pasos · ≈ {featured.steps.length * 22} segundos
         </p>
         <ol className="space-y-0">
           {featured.steps.map((step, i) => (
             <li
               key={i}
-              className={`grid grid-cols-[32px_1fr] gap-4 py-4 ${
+              className={`grid grid-cols-[32px_1fr] gap-4 py-3 ${
                 i < featured.steps.length - 1 ? 'border-b border-sand' : ''
               }`}
             >
@@ -361,40 +361,39 @@ function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
       type="button"
       onClick={onToggle}
       disabled={disabled}
-      className={`group relative flex min-h-[360px] flex-col rounded-xl border p-7 text-left transition hover:-translate-y-0.5 hover:border-moss disabled:opacity-60 ${
+      className={`group relative flex min-h-[230px] flex-col rounded-xl border p-5 text-left transition hover:-translate-y-0.5 hover:border-moss disabled:opacity-60 ${
         isApplied
           ? 'border-moss/30 bg-moss/[0.05]'
           : 'border-sand bg-cream-bone'
       }`}
     >
-      <div className="mb-6 flex items-start justify-end">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div
+          className={`grid h-11 w-11 place-items-center rounded-lg border ${
+            isApplied
+              ? 'border-moss/25 bg-moss/[0.08] text-moss'
+              : 'border-sand bg-cream text-moss'
+          }`}
+        >
+          <RecommendationIcon icon={entry.icon} />
+        </div>
         <span
-          className={`rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] ${
+          className={`rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] ${
             isApplied
               ? 'border border-moss/30 bg-moss/15 text-moss'
               : TAG_STYLES[category] ?? TAG_STYLES.general
           }`}
         >
-          {isApplied ? 'Aplicada hoy' : CATEGORY_LABELS[category] ?? 'General'}
+          {isApplied ? 'Aplicada' : CATEGORY_LABELS[category] ?? 'General'}
         </span>
       </div>
 
-      <div
-        className={`mb-5 grid h-16 w-16 place-items-center rounded-xl border ${
-          isApplied
-            ? 'border-moss/25 bg-moss/[0.08] text-moss'
-            : 'border-sand bg-cream text-moss'
-        }`}
-      >
-        <RecommendationIcon icon={entry.icon} />
-      </div>
-
-      <h3 className="mb-2.5 text-[22px] font-semibold leading-tight tracking-tight text-ink">
+      <h3 className="mb-1.5 text-[18px] font-semibold leading-tight tracking-tight text-ink">
         {entry.title}
       </h3>
-      <p className="mb-auto text-[14px] leading-relaxed text-ink-soft">{entry.description}</p>
+      <p className="mb-auto text-[13.5px] leading-relaxed text-ink-soft">{entry.description}</p>
 
-      <div className="mt-5 flex items-center justify-between border-t border-sand pt-4 font-mono text-[11px] text-ink-soft">
+      <div className="mt-4 flex items-center justify-between border-t border-sand pt-3 font-mono text-[11px] text-ink-soft">
         <span>
           {isApplied && entry.appliedAt
             ? `Aplicada · ${timeFmt.format(new Date(entry.appliedAt))}`

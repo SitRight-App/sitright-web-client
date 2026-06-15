@@ -80,15 +80,12 @@ export function SettingsPage() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-6 border-b border-sand pb-6">
+      <div className="flex flex-wrap items-center justify-between gap-6 border-b border-sand pb-4">
         <div>
           <p className="label-mono">Configuración</p>
-          <h1 className="mt-2 text-[32px] font-semibold leading-tight tracking-tight text-ink sm:text-[40px]">
+          <h1 className="mt-1.5 text-[26px] font-semibold leading-tight tracking-tight text-ink sm:text-[30px]">
             Tu <span className="text-moss">perfil</span>
           </h1>
-          <p className="mt-2 max-w-md text-[15px] leading-relaxed text-ink-soft">
-            Datos personales, antropometría y preferencias de notificación.
-          </p>
         </div>
 
         <button
@@ -101,13 +98,13 @@ export function SettingsPage() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-8 grid gap-4 lg:grid-cols-[1fr_1fr_1fr]">
-        <section className="rounded-xl border border-sand bg-cream-bone p-7">
-          <h2 className="mb-5 text-xl font-semibold tracking-tight text-ink">
+      <form onSubmit={handleSubmit} className="mt-5 grid gap-4 lg:grid-cols-[1fr_1fr_1fr]">
+        <section className="rounded-xl border border-sand bg-cream-bone p-5">
+          <h2 className="mb-4 text-lg font-semibold tracking-tight text-ink">
             Datos básicos
           </h2>
 
-          <div className="space-y-5">
+          <div className="space-y-4">
             <FormField num="01" label="Nombre">
               <input
                 value={name}
@@ -132,12 +129,12 @@ export function SettingsPage() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-sand bg-cream-bone p-7">
-          <h2 className="mb-5 text-xl font-semibold tracking-tight text-ink">
+        <section className="rounded-xl border border-sand bg-cream-bone p-5">
+          <h2 className="mb-4 text-lg font-semibold tracking-tight text-ink">
             Antropometría
           </h2>
 
-          <div className="space-y-5">
+          <div className="space-y-4">
             <FormField num="01" label="Peso (kg)">
               <input
                 type="number"
@@ -163,12 +160,12 @@ export function SettingsPage() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-sand bg-cream-bone p-7">
-          <h2 className="mb-5 text-xl font-semibold tracking-tight text-ink">
+        <section className="rounded-xl border border-sand bg-cream-bone p-5">
+          <h2 className="mb-4 text-lg font-semibold tracking-tight text-ink">
             Cómo te avisamos
           </h2>
 
-          <div className="space-y-5">
+          <div className="space-y-4">
             <label className="flex items-start gap-3 rounded-xl border border-sand bg-cream px-4 py-3 text-sm text-ink">
               <input
                 type="checkbox"
@@ -279,9 +276,9 @@ function ChangePasswordPanel() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <section className="mt-4 rounded-xl border border-sand bg-cream-bone p-7">
-        <div className="mb-5 border-b border-sand pb-4">
-          <h2 className="text-xl font-semibold tracking-tight text-ink">
+      <section className="mt-4 rounded-xl border border-sand bg-cream-bone p-5">
+        <div className="mb-4 border-b border-sand pb-3">
+          <h2 className="text-lg font-semibold tracking-tight text-ink">
             Cambiar contraseña
           </h2>
         <p className="mt-1 text-[14px] text-ink-soft">
@@ -289,7 +286,7 @@ function ChangePasswordPanel() {
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <FormField num="01" label="Contraseña actual">
           <input
             type="password"
