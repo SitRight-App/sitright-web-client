@@ -36,6 +36,16 @@ const DOMINANT_ZONE: Record<string, string> = {
 
 const dayFmt = new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short' })
 
+function isToday(iso: string): boolean {
+  const d = new Date(iso)
+  const now = new Date()
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  )
+}
+
 interface Point {
   id: string
   at: string
@@ -156,6 +166,7 @@ export function SessionTrend({
         <div className="mt-2 flex gap-2">
           {series.map((p, i) => {
             const isCurrent = i === curIdx
+            const dateLabel = isToday(p.at) ? 'hoy' : dayFmt.format(new Date(p.at)).replace('.', '')
             return (
               <div key={p.id} className="flex flex-1 flex-col items-center">
                 <span
@@ -163,10 +174,14 @@ export function SessionTrend({
                     isCurrent ? 'font-semibold text-moss-deep' : 'text-ink-faint'
                   }`}
                 >
-                  {Math.round(p.pct)}
+                  {Math.round(p.pct)}%
                 </span>
-                <span className="text-[9px] uppercase tracking-[0.08em] text-ink-faint">
-                  {isCurrent ? 'hoy' : dayFmt.format(new Date(p.at)).replace('.', '')}
+                <span
+                  className={`text-[9px] uppercase tracking-[0.08em] ${
+                    isCurrent ? 'font-semibold text-moss-deep' : 'text-ink-faint'
+                  }`}
+                >
+                  {dateLabel}
                 </span>
               </div>
             )
