@@ -6,6 +6,7 @@ import type { TimelineReading } from '@/features/posture-visualization/types/pos
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { SessionBodyMap } from '../components/SessionBodyMap'
 import { SessionTimelineChart } from '../components/SessionTimelineChart'
+import { SessionTrend } from '../components/SessionTrend'
 import { useSession, useZoneAnalysis } from '../hooks/useSessions'
 import { useSessionReadings } from '../hooks/useSessionReadings'
 import type {
@@ -216,13 +217,18 @@ export function SessionDetailPage() {
   return (
     <div className="session-detail-printable">
       <Crumbs session={session} />
-      <Hero session={session} effective={effective} />
+      <Hero session={session} effective={effective} stats={stats} />
       <ZoneReport
         sessionId={session.id}
         durationMinutes={session.duration_minutes}
         adequatePct={effective.summary?.adequate_percentage ?? null}
       />
-      <StatsRow stats={stats} effective={effective} />
+      <SessionTrend
+        currentSessionId={session.id}
+        currentStartedAt={session.started_at}
+        currentAdequatePct={effective.summary?.adequate_percentage ?? null}
+        currentDominant={effective.dominant}
+      />
       <DetailGrid session={session} readingsQuery={readingsQuery} effective={effective} />
       <SecondRow recommendations={recs.data ?? []} effective={effective} />
     </div>
@@ -366,14 +372,36 @@ function Crumbs({ session }: { session: PostureSession }) {
 interface HeroProps {
   session: PostureSession
   effective: EffectiveSession
+  stats: DerivedStats
 }
 
-function Hero({ session, effective }: HeroProps) {
+function Hero({ session, effective, stats }: HeroProps) {
   const { dominant, readingCount, provisional, summary } = effective
   const started = new Date(session.started_at)
   const ended = session.ended_at ? new Date(session.ended_at) : null
   const adequatePct =
     summary?.adequate_percentage != null ? Math.round(summary.adequate_percentage) : null
+
+  // Cifras clave que antes vivían en su propia fila de tarjetas. Se funden en el
+  // encabezado (el audit marcó "Confianza ML media" como ruido: se elimina).
+  const figures: Array<{ label: string; value: string; meta?: string; tone?: 'moss' | 'alert' }> = [
+    {
+      label: 'Postura adecuada',
+      value: adequatePct !== null ? `${adequatePct}%` : '—',
+      meta: summary ? `${summary.valid_readings.toLocaleString('es-PE')} lecturas válidas` : undefined,
+      tone: adequatePct !== null && adequatePct >= 70 ? 'moss' : undefined,
+    },
+    {
+      label: 'Desviación dominante',
+      value: dominant ? (POSTURE_LABELS[dominant] ?? dominant) : 'Ninguna',
+      tone: dominant ? 'alert' : undefined,
+    },
+    {
+      label: 'Pausas detectadas',
+      value: stats.pauseEstimate.toString(),
+      meta: stats.pauseAvgMinutes !== null ? `prom. ${stats.pauseAvgMinutes} min` : undefined,
+    },
+  ]
 
   const lede =
     adequatePct !== null
@@ -429,6 +457,26 @@ function Hero({ session, effective }: HeroProps) {
             Datos provisionales · la sesión sigue abierta
           </p>
         )}
+
+        <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-4 border-t border-sand pt-5">
+          {figures.map((f) => (
+            <div key={f.label}>
+              <dt className="text-[12px] font-medium text-ink-faint">{f.label}</dt>
+              <dd
+                className={`mt-0.5 text-[22px] font-semibold leading-none tracking-tight ${
+                  f.tone === 'moss'
+                    ? 'text-moss'
+                    : f.tone === 'alert'
+                      ? 'text-terracotta-deep'
+                      : 'text-ink'
+                }`}
+              >
+                {f.value}
+              </dd>
+              {f.meta && <p className="mt-1 text-[12px] text-ink-soft">{f.meta}</p>}
+            </div>
+          ))}
+        </dl>
       </div>
 
       <aside className="rounded-xl bg-moss-deep p-7 text-cream-bone">
@@ -683,104 +731,6 @@ function ZoneMetric({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">{label}</dt>
       <dd className="mt-0.5 text-[14px] font-medium tabular-nums text-ink">{value}</dd>
-    </div>
-  )
-}
-
-interface StatsRowProps {
-  stats: DerivedStats
-  effective: EffectiveSession
-}
-
-function StatsRow({ stats, effective }: StatsRowProps) {
-  const { summary, dominant } = effective
-  const dominantCount = dominant && summary?.counts_by_class[dominant] ? summary.counts_by_class[dominant] : null
-  const dominantPct =
-    dominantCount !== null && summary?.valid_readings
-      ? Math.round((dominantCount / summary.valid_readings) * 100)
-      : null
-
-  return (
-    <div className="mb-7 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-      <StatCard
-        title="Postura adecuada"
-        value={summary ? `${Math.round(summary.adequate_percentage)}%` : '—'}
-        meta={summary ? `${summary.valid_readings.toLocaleString('es-PE')} lecturas válidas` : ''}
-        variant="dark"
-      />
-      <StatCard
-        title="Desviación dominante"
-        value={
-          dominant
-            ? (POSTURE_LABELS[dominant] ?? dominant)
-            : '—'
-        }
-        valueSize="md"
-        meta={
-          dominantCount !== null && dominantPct !== null
-            ? `${dominantCount} lecturas · ${dominantPct}% del tiempo`
-            : 'Sin desviaciones dominantes'
-        }
-        variant={dominant ? 'alert' : 'default'}
-      />
-      <StatCard
-        title="Pausas detectadas"
-        value={stats.pauseEstimate.toString()}
-        meta={
-          stats.pauseAvgMinutes !== null
-            ? `prom. ${stats.pauseAvgMinutes} min`
-            : 'sin pausas detectadas'
-        }
-      />
-      <StatCard
-        title="Confianza ML media"
-        value={`${stats.avgConfidencePercent}%`}
-        meta={
-          stats.outlierCount > 0
-            ? `${stats.outlierCount} outliers (<70 %)`
-            : 'sin outliers detectados'
-        }
-      />
-    </div>
-  )
-}
-
-interface StatCardProps {
-  title: string
-  value: string
-  meta: string
-  variant?: 'default' | 'dark' | 'alert'
-  valueSize?: 'lg' | 'md'
-}
-
-function StatCard({ title, value, meta, variant = 'default', valueSize = 'lg' }: StatCardProps) {
-  const styles: Record<NonNullable<StatCardProps['variant']>, string> = {
-    default: 'border-sand bg-cream-bone text-ink',
-    dark: 'border-moss-deep bg-moss text-cream-bone',
-    alert: 'border-terracotta-deep bg-terracotta text-cream-bone',
-  }
-  const metaStyle: Record<NonNullable<StatCardProps['variant']>, string> = {
-    default: 'text-ink-soft',
-    dark: 'text-cream-bone/70',
-    alert: 'text-cream-bone/70',
-  }
-  const titleStyle: Record<NonNullable<StatCardProps['variant']>, string> = {
-    default: 'text-ink-soft',
-    dark: 'text-cream-bone/80',
-    alert: 'text-cream-bone/80',
-  }
-
-  return (
-    <div className={`rounded-xl border p-5 ${styles[variant]}`}>
-      <p className={`mb-3 text-[12px] font-medium ${titleStyle[variant]}`}>{title}</p>
-      <p
-        className={`font-semibold leading-none tracking-tight ${
-          valueSize === 'lg' ? 'font-mono tabular-nums text-[40px]' : 'text-[24px]'
-        }`}
-      >
-        {value}
-      </p>
-      <p className={`mt-3 text-[13px] ${metaStyle[variant]}`}>{meta}</p>
     </div>
   )
 }
