@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type {
   PostureClass,
   TimelineReading,
@@ -9,16 +9,14 @@ interface Props {
   readings: TimelineReading[]
   isLoading: boolean
   isError: boolean
-  /**
-   * Duración total de la sesión en minutos. Si es < 30, se muestra el aviso
-   * de "sesión corta" exigido por HU-10 AC2.
-   */
+  /** Duración de la sesión en minutos (se conserva por compatibilidad de API). */
   durationMinutes?: number | null
 }
 
-// Hueco sin lecturas a partir del cual asumimos que el chaleco estuvo en pausa
-// (apagado o sin uso): no sabemos la postura en ese tramo, así que lo marcamos.
-const PAUSE_GAP_MS = 2 * 60 * 1000
+const MINUTE = 60_000
+// Hueco sin lecturas a partir del cual el minuto se marca como pausa.
+const PAUSE_GAP_MS = 2 * MINUTE
+const SHORT_SESSION_MIN = 30
 
 const POSTURE_COLOR: Record<PostureClass, string> = {
   adequate: 'rgb(45 74 54)',
@@ -41,120 +39,113 @@ const timeFmt = new Intl.DateTimeFormat('es-PE', {
   minute: '2-digit',
   hour12: false,
 })
+const fmtT = (ms: number) => timeFmt.format(new Date(ms))
 
-type SegKind = PostureClass | 'pausa'
+type Kind = PostureClass | 'pausa'
 
-interface Segment {
-  kind: SegKind
+interface Minute {
+  t: number
+  kind: Kind
+}
+
+interface Block {
+  kind: Kind
+  count: number
+}
+
+interface BadPeriod {
   startMs: number
-  durMs: number
+  endMs: number
+  durMin: number
+  type: PostureClass
 }
 
-function median(xs: number[]): number {
-  if (xs.length === 0) return 0
-  const s = [...xs].sort((a, b) => a - b)
-  const mid = Math.floor(s.length / 2)
-  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2
+function dominant(counts: Record<string, number>): PostureClass {
+  let best: PostureClass = 'indeterminate'
+  let max = -1
+  for (const [k, v] of Object.entries(counts)) {
+    if (v > max) {
+      max = v
+      best = k as PostureClass
+    }
+  }
+  return best
 }
 
-interface Built {
-  segments: Segment[]
-  total: number
-  t0: number
-  ticks: number[]
-  transitions: number
-  longestDeviationMs: number
-  longestDeviationAt: number | null
-  pauses: number
-}
-
-/**
- * Convierte las lecturas en una cinta temporal: cada lectura ocupa el intervalo
- * hasta la siguiente, coloreado por su postura. Los huecos largos (sin lecturas)
- * se marcan como "pausa" en vez de extender la última postura conocida.
- */
-function build(readings: TimelineReading[]): Built | null {
-  if (readings.length < 2) return null
+/** Agrupa las lecturas en minutos (US010: bloques de color por minuto). */
+function buildMinutes(readings: TimelineReading[]): Minute[] {
   const sorted = [...readings].sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
   )
-  const times = sorted.map((r) => new Date(r.timestamp).getTime())
-  const gaps: number[] = []
-  for (let i = 1; i < times.length; i++) gaps.push(times[i] - times[i - 1])
-  const medGap = median(gaps.filter((g) => g > 0 && g <= PAUSE_GAP_MS)) || 5000
+  const byMin = new Map<number, Record<string, number>>()
+  let firstMin = Infinity
+  let lastMin = -Infinity
+  let lastTs = 0
+  for (const r of sorted) {
+    const ts = new Date(r.timestamp).getTime()
+    const m = Math.floor(ts / MINUTE) * MINUTE
+    const rec = byMin.get(m) ?? {}
+    rec[r.posture_class] = (rec[r.posture_class] ?? 0) + 1
+    byMin.set(m, rec)
+    if (m < firstMin) firstMin = m
+    if (m > lastMin) lastMin = m
+    lastTs = ts
+  }
+  if (firstMin === Infinity) return []
+  // Asegura al menos un minuto si la sesión es submínima.
+  if (lastMin === firstMin && lastTs >= firstMin) lastMin = firstMin
 
-  const segments: Segment[] = []
-  let pauses = 0
-  for (let i = 0; i < sorted.length; i++) {
-    const start = times[i]
-    const posture = sorted[i].posture_class
-    if (i < sorted.length - 1) {
-      const g = times[i + 1] - times[i]
-      if (g > PAUSE_GAP_MS) {
-        // último estado conocido por un instante, luego pausa por el resto del hueco.
-        segments.push({ kind: posture, startMs: start, durMs: Math.min(medGap, g) })
-        if (g - medGap > 0) {
-          segments.push({ kind: 'pausa', startMs: start + medGap, durMs: g - medGap })
-          pauses++
-        }
-      } else {
-        segments.push({ kind: posture, startMs: start, durMs: g })
-      }
+  const minutes: Minute[] = []
+  let lastSeen = firstMin
+  for (let m = firstMin; m <= lastMin; m += MINUTE) {
+    const rec = byMin.get(m)
+    if (rec) {
+      minutes.push({ t: m, kind: dominant(rec) })
+      lastSeen = m
     } else {
-      segments.push({ kind: posture, startMs: start, durMs: medGap })
+      // minuto sin lecturas: pausa solo si el hueco supera el umbral.
+      minutes.push({ t: m, kind: m - lastSeen > PAUSE_GAP_MS ? 'pausa' : 'indeterminate' })
     }
   }
-
-  // Fusiona franjas contiguas del mismo tipo: bloques de color limpios en vez de
-  // una rejilla de micro-segmentos (una por lectura).
-  const merged: Segment[] = []
-  for (const s of segments) {
-    const last = merged[merged.length - 1]
-    if (last && last.kind === s.kind) last.durMs += s.durMs
-    else merged.push({ ...s })
-  }
-
-  const t0 = times[0]
-  const total = merged.reduce((acc, s) => acc + s.durMs, 0)
-  const ticks = Array.from({ length: 5 }, (_, i) => t0 + (total * i) / 4)
-
-  let transitions = 0
-  for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i].posture_class !== sorted[i - 1].posture_class) transitions++
-  }
-
-  // tramo desviado contiguo más largo (encorvamiento o reclinación seguidos).
-  let longestDeviationMs = 0
-  let longestDeviationAt: number | null = null
-  let runMs = 0
-  let runStart = 0
-  for (const seg of merged) {
-    if (DEVIATION.includes(seg.kind as PostureClass)) {
-      if (runMs === 0) runStart = seg.startMs
-      runMs += seg.durMs
-      if (runMs > longestDeviationMs) {
-        longestDeviationMs = runMs
-        longestDeviationAt = runStart
-      }
-    } else {
-      runMs = 0
-    }
-  }
-
-  return {
-    segments: merged,
-    total,
-    t0,
-    ticks,
-    transitions,
-    longestDeviationMs,
-    longestDeviationAt,
-    pauses,
-  }
+  return minutes
 }
 
-function fmtDur(ms: number): string {
-  const min = ms / 60000
+function mergeBlocks(minutes: Minute[]): Block[] {
+  const blocks: Block[] = []
+  for (const m of minutes) {
+    const last = blocks[blocks.length - 1]
+    if (last && last.kind === m.kind) last.count++
+    else blocks.push({ kind: m.kind, count: 1 })
+  }
+  return blocks
+}
+
+function badPeriods(minutes: Minute[]): BadPeriod[] {
+  const out: BadPeriod[] = []
+  let i = 0
+  while (i < minutes.length) {
+    if (DEVIATION.includes(minutes[i].kind as PostureClass)) {
+      let j = i
+      const counts: Record<string, number> = {}
+      while (j < minutes.length && DEVIATION.includes(minutes[j].kind as PostureClass)) {
+        counts[minutes[j].kind] = (counts[minutes[j].kind] ?? 0) + 1
+        j++
+      }
+      out.push({
+        startMs: minutes[i].t,
+        endMs: minutes[j - 1].t + MINUTE,
+        durMin: j - i,
+        type: dominant(counts),
+      })
+      i = j
+    } else {
+      i++
+    }
+  }
+  return out
+}
+
+function fmtDur(min: number): string {
   if (min < 1) return '<1 min'
   if (min < 60) return `${Math.round(min)} min`
   const h = Math.floor(min / 60)
@@ -162,8 +153,33 @@ function fmtDur(ms: number): string {
   return `${h} h ${m.toString().padStart(2, '0')} min`
 }
 
-export function SessionTimelineChart({ readings, isLoading, isError, durationMinutes }: Props) {
-  const built = useMemo(() => build(readings), [readings])
+interface Franja {
+  label: string
+  start: number
+  end: number
+}
+
+export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
+  const minutes = useMemo(() => buildMinutes(readings), [readings])
+  const [franjaIdx, setFranjaIdx] = useState<number | null>(null)
+
+  // Franjas para hacer zoom (US010 AC1). Solo cuando la sesión es larga
+  // suficiente como para que el zoom aporte.
+  const franjas = useMemo<Franja[]>(() => {
+    if (minutes.length < 10) return []
+    const n = Math.min(4, Math.ceil(minutes.length / 5))
+    const size = Math.ceil(minutes.length / n)
+    const out: Franja[] = []
+    for (let i = 0; i < minutes.length; i += size) {
+      const end = Math.min(i + size, minutes.length)
+      out.push({
+        label: `${fmtT(minutes[i].t)}–${fmtT(minutes[end - 1].t + MINUTE)}`,
+        start: i,
+        end,
+      })
+    }
+    return out
+  }, [minutes])
 
   if (isError) {
     return (
@@ -175,16 +191,16 @@ export function SessionTimelineChart({ readings, isLoading, isError, durationMin
   if (isLoading) {
     return (
       <div>
-        <Skeleton width="100%" height={48} />
+        <Skeleton width="100%" height={56} />
         <div className="mt-4 flex gap-5">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} width={90} height={10} />
+            <Skeleton key={i} width={120} height={12} />
           ))}
         </div>
       </div>
     )
   }
-  if (!built) {
+  if (minutes.length < 1 || readings.length < 2) {
     return (
       <div className="border border-dashed border-sand p-6 text-center">
         <p className="font-serif text-lg text-ink">Sin lecturas suficientes para graficar.</p>
@@ -195,16 +211,27 @@ export function SessionTimelineChart({ readings, isLoading, isError, durationMin
     )
   }
 
-  const { segments, total, ticks, transitions, longestDeviationMs, longestDeviationAt, pauses } =
-    built
-  const isShortSession =
-    durationMinutes !== null && durationMinutes !== undefined && durationMinutes < 30
-  const hasPause = pauses > 0
-  const usedClasses = new Set(segments.map((s) => s.kind))
+  const sel = franjaIdx !== null && franjas[franjaIdx] ? franjas[franjaIdx] : null
+  const view = sel ? minutes.slice(sel.start, sel.end) : minutes
+  const blocks = mergeBlocks(view)
+  const totalMin = view.length
+  const t0 = view[0].t
+  const tEnd = view[view.length - 1].t + MINUTE
+  const ticks = Array.from({ length: 5 }, (_, i) => t0 + ((tEnd - t0) * i) / 4)
+  const periods = badPeriods(view)
+
+  const usedKinds = new Set(view.map((m) => m.kind))
+  const hasPause = usedKinds.has('pausa')
+  const transitions = blocks.filter((b) => b.kind !== 'pausa').length - 1
+  const longest = periods.reduce((mx, p) => Math.max(mx, p.durMin), 0)
+  const pauseCount = blocks.filter((b) => b.kind === 'pausa').length
+
+  // Sesión corta (US010/US019 AC2): se mide por el tiempo realmente registrado.
+  const isShort = minutes.length < SHORT_SESSION_MIN
 
   return (
     <div>
-      {isShortSession && (
+      {isShort && (
         <div className="mb-4 border-l-2 border-sand bg-sand/15 px-4 py-2.5 text-xs text-ink-soft">
           <strong className="font-serif text-ink">Sesión corta:</strong> los resultados son
           referenciales. Continúa usando el chaleco para ver una línea de tiempo más completa.
@@ -212,40 +239,63 @@ export function SessionTimelineChart({ readings, isLoading, isError, durationMin
       )}
 
       <p className="mb-3 text-[13px] leading-relaxed text-ink-soft">
-        Cada franja es tu postura en ese momento de la sesión. Así puedes ver{' '}
-        <span className="font-medium text-ink">cuándo</span> apareció cada desviación, no solo cuánta
-        hubo.
+        Cada bloque es tu postura predominante en ese minuto. Los tramos de color cálido marcan los{' '}
+        <span className="font-medium text-ink">períodos de postura inadecuada</span>; abajo se
+        detallan con su tipo y horario.
       </p>
 
-      {/* Cinta de estado: legible impresa, sin depender del hover. */}
-      <div className="flex h-12 w-full overflow-hidden rounded-md border border-sand">
-        {segments.map((s, i) => {
-          const isPause = s.kind === 'pausa'
-          const label = isPause ? 'Pausa (sin lecturas)' : POSTURE_SHORT[s.kind as PostureClass]
-          const end = s.startMs + s.durMs
+      {/* Zoom por franjas horarias (US010 AC1). */}
+      {franjas.length > 1 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
+            Zoom
+          </span>
+          <button
+            type="button"
+            onClick={() => setFranjaIdx(null)}
+            className={`rounded-full border px-3 py-1 text-[12px] font-medium transition-colors ${
+              sel === null
+                ? 'border-moss bg-moss text-cream-bone'
+                : 'border-sand bg-cream-bone text-ink-soft hover:border-moss hover:text-ink'
+            }`}
+          >
+            Toda la sesión
+          </button>
+          {franjas.map((f, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setFranjaIdx(i)}
+              className={`rounded-full border px-3 py-1 font-mono text-[12px] tabular-nums transition-colors ${
+                franjaIdx === i
+                  ? 'border-moss bg-moss text-cream-bone'
+                  : 'border-sand bg-cream-bone text-ink-soft hover:border-moss hover:text-ink'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Cinta de bloques por minuto. Legible impresa, sin depender del hover. */}
+      <div className="flex h-14 w-full overflow-hidden rounded-md border border-sand">
+        {blocks.map((b, i) => {
+          const isPause = b.kind === 'pausa'
+          const label = isPause ? 'Pausa (sin lecturas)' : POSTURE_SHORT[b.kind as PostureClass]
           const style: React.CSSProperties = isPause
             ? {
-                width: `${(s.durMs / total) * 100}%`,
+                width: `${(b.count / totalMin) * 100}%`,
                 backgroundColor: 'rgb(237 235 230)',
                 backgroundImage:
                   'repeating-linear-gradient(45deg, transparent 0 4px, rgb(199 195 187) 4px 5px)',
               }
-            : {
-                width: `${(s.durMs / total) * 100}%`,
-                backgroundColor: POSTURE_COLOR[s.kind as PostureClass],
-              }
-          return (
-            <div
-              key={i}
-              style={style}
-              title={`${timeFmt.format(new Date(s.startMs))}–${timeFmt.format(new Date(end))} · ${label}`}
-            />
-          )
+            : { width: `${(b.count / totalMin) * 100}%`, backgroundColor: POSTURE_COLOR[b.kind as PostureClass] }
+          return <div key={i} style={style} title={`${label} · ${fmtDur(b.count)}`} />
         })}
       </div>
 
-      {/* Eje de horas: el ancho es proporcional al tiempo real, así que los
-          ticks equiespaciados en tiempo caen equiespaciados en la cinta. */}
+      {/* Eje de horas: el ancho es proporcional al tiempo (1 bloque = 1 min). */}
       <div className="relative mt-1.5 h-4">
         {ticks.map((t, i) => (
           <span
@@ -257,30 +307,61 @@ export function SessionTimelineChart({ readings, isLoading, isError, durationMin
                 i === 0 ? 'none' : i === ticks.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)',
             }}
           >
-            {timeFmt.format(new Date(t))}
+            {fmtT(t)}
           </span>
         ))}
       </div>
 
-      {/* Métricas que el gráfico aporta de un vistazo (también impreso). */}
+      {/* US019 AC1: resalta los períodos inadecuados con su tipo de desviación. */}
+      <div className="mt-5 border-t border-sand pt-4">
+        <p className="mb-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-soft">
+          Períodos de postura inadecuada
+        </p>
+        {periods.length === 0 ? (
+          <p className="text-[13px] text-ink-soft">
+            No hubo períodos sostenidos de postura inadecuada en {sel ? 'esta franja' : 'la sesión'}.
+          </p>
+        ) : (
+          <ul className="space-y-1.5">
+            {periods
+              .slice()
+              .sort((a, b) => b.durMin - a.durMin)
+              .slice(0, 8)
+              .map((p, i) => (
+                <li key={i} className="flex items-center gap-3 text-[13px]">
+                  <span
+                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
+                    style={{ backgroundColor: POSTURE_COLOR[p.type] }}
+                  />
+                  <span className="font-medium text-ink">{POSTURE_SHORT[p.type]}</span>
+                  <span className="font-mono text-[12px] tabular-nums text-ink-soft">
+                    {fmtT(p.startMs)}–{fmtT(p.endMs)}
+                  </span>
+                  <span className="ml-auto font-mono text-[12px] tabular-nums text-terracotta-deep">
+                    {fmtDur(p.durMin)}
+                  </span>
+                </li>
+              ))}
+            {periods.length > 8 && (
+              <li className="text-[12px] text-ink-faint">
+                y {periods.length - 8} períodos más cortos.
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
+
+      {/* Métricas de lectura rápida (también impresas). */}
       <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-sand pt-4 sm:grid-cols-4">
-        <Metric label="Duración" value={fmtDur(total)} />
-        <Metric
-          label="Tramo desviado más largo"
-          value={longestDeviationMs > 0 ? fmtDur(longestDeviationMs) : '—'}
-          meta={
-            longestDeviationAt !== null
-              ? `desde ${timeFmt.format(new Date(longestDeviationAt))}`
-              : 'sin desviaciones seguidas'
-          }
-        />
-        <Metric label="Cambios de postura" value={String(transitions)} />
-        <Metric label="Pausas" value={String(pauses)} meta={pauses === 0 ? 'sin pausas' : undefined} />
+        <Metric label="Tiempo registrado" value={fmtDur(totalMin)} />
+        <Metric label="Tramo inadecuado más largo" value={longest > 0 ? fmtDur(longest) : '—'} />
+        <Metric label="Cambios de postura" value={String(Math.max(0, transitions))} />
+        <Metric label="Pausas" value={String(pauseCount)} />
       </dl>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-[0.10em] text-ink-soft">
         {(['adequate', 'forward_slouch', 'excessive_recline', 'indeterminate'] as PostureClass[])
-          .filter((cls) => usedClasses.has(cls))
+          .filter((cls) => usedKinds.has(cls))
           .map((cls) => (
             <span key={cls} className="inline-flex items-center gap-1.5">
               <span
@@ -309,12 +390,11 @@ export function SessionTimelineChart({ readings, isLoading, isError, durationMin
   )
 }
 
-function Metric({ label, value, meta }: { label: string; value: string; meta?: string }) {
+function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <dt className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">{label}</dt>
       <dd className="mt-0.5 text-[15px] font-semibold tabular-nums text-ink">{value}</dd>
-      {meta && <p className="mt-0.5 text-[11px] text-ink-soft">{meta}</p>}
     </div>
   )
 }
