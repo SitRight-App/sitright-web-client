@@ -330,7 +330,7 @@ function UnlinkCard({ vest }: PropsWithVest) {
   const handleConfirm = () => {
     unlink.mutate(undefined, {
       onSuccess: () => {
-        toast.success('Chaleco desvinculado', 'Ya no recibirás lecturas de este dispositivo')
+        toast.success('Chaleco desvinculado', 'Ya no recibirás datos de este chaleco.')
         setConfirmOpen(false)
       },
       onError: (err) => {

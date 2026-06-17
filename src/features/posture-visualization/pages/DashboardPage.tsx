@@ -92,8 +92,8 @@ export function DashboardPage() {
       </div>
 
       {isError && (
-        <div className="mb-4 rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-sm text-terracotta-deep">
-          No se pudo conectar con el backend. Verifica que el servicio esté disponible.
+        <div className="mb-4 rounded-lg border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-[14px] text-terracotta-deep">
+          No pudimos conectar. Revisa tu conexión a internet e inténtalo de nuevo.
         </div>
       )}
 
@@ -218,8 +218,8 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
   const dotTone = isLive ? 'bg-moss' : 'bg-ink-faint'
 
   // Estado neutro (sin conexión / sin lecturas / cargando).
-  let title = 'Sin lecturas'
-  let sub = 'Aún no llegan lecturas del chaleco.'
+  let title = 'Sin datos'
+  let sub = 'Todavía no llegan datos del chaleco.'
   if (isLive && reading) {
     title = LIVE_TITLE[cls]
     sub = `${POSTURE_HEADLINES[cls]} Última lectura ${timeSince(reading.timestamp)}.`
@@ -227,7 +227,7 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
     sub = 'Conectando con el chaleco…'
   } else if (reading !== null) {
     title = 'Chaleco sin conexión'
-    sub = `El chaleco no está enviando lecturas. Última ${timeSince(reading.timestamp)}.`
+    sub = `El chaleco no está enviando datos. Hace ${timeSince(reading.timestamp)}.`
   }
 
   return (
@@ -345,7 +345,7 @@ function UnlinkedDashboard({ firstName, now }: UnlinkedDashboardProps) {
       </div>
 
       <div className="editorial-card p-10 text-center sm:p-14">
-        <p className="label-mono">Sin lecturas</p>
+        <p className="label-mono">Sin datos</p>
         <h2 className="mx-auto mt-3 max-w-lg text-3xl font-semibold leading-tight tracking-tight text-ink">
           Vincula tu chaleco para empezar a leer tu postura en vivo.
         </h2>

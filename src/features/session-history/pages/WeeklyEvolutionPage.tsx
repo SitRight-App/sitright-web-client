@@ -125,14 +125,11 @@ function WeeklyTooltip({ active, payload }: TooltipProps) {
   const p = payload[0].payload
   if (!p) return null
   return (
-    <div className="rounded-lg border border-sand bg-cream-bone p-2.5 font-mono text-[10px] shadow-sm">
+    <div className="rounded-lg border border-sand bg-cream-bone p-3 text-[12px] shadow-sm">
       <p className="text-ink">{p.label}</p>
-      <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-moss">
-        {p.percent !== null ? `${p.percent}% postura adecuada` : 'sin uso registrado'}
+      <p className="mt-0.5 text-[14px] font-semibold tabular-nums text-moss">
+        {p.percent !== null ? `${p.percent}% bien sentado` : 'sin uso ese día'}
       </p>
-      {p.validReadings > 0 && (
-        <p className="text-ink-soft">{p.validReadings} lecturas válidas</p>
-      )}
     </div>
   )
 }
@@ -180,7 +177,7 @@ export function WeeklyEvolutionPage() {
 
         {weeklyAvg !== null && (
           <div className="rounded-xl border border-sand bg-cream-bone px-5 py-3.5 text-right">
-            <p className="label-mono text-ink-faint">Promedio adecuada</p>
+            <p className="label-mono text-ink-faint">Bien sentado · promedio</p>
             <p className="mt-1.5 font-mono text-[32px] font-semibold leading-none tabular-nums tracking-tight text-ink">
               {weeklyAvg}
               <small className="ml-0.5 text-xl text-ink-soft">%</small>
@@ -213,7 +210,7 @@ export function WeeklyEvolutionPage() {
           )}
 
           <div className="editorial-card rounded-xl p-7">
-            <p className="label-mono">Postura adecuada por día</p>
+            <p className="label-mono">Bien sentado por día</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
               Últimos 7 días
             </h2>
@@ -274,20 +271,20 @@ export function WeeklyEvolutionPage() {
               </ResponsiveContainer>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-4 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-soft">
+            <div className="mt-4 flex flex-wrap gap-4 text-[12px] text-ink-soft">
               <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block h-2 w-2 rounded-sm bg-moss" />
-                Postura adecuada por día
+                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-moss" />
+                Bien sentado por día
               </span>
               {daysWithData >= 2 && (
                 <span className="inline-flex items-center gap-1.5">
                   <span className="inline-block h-px w-5 bg-terracotta" />
-                  Tendencia
+                  Cómo vienes
                 </span>
               )}
               <span className="inline-flex items-center gap-1.5">
                 <span className="inline-block h-px w-5 bg-terracotta-soft" />
-                Umbral 70 %
+                Meta: 70%
               </span>
             </div>
           </div>

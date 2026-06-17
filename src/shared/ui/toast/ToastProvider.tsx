@@ -146,11 +146,9 @@ function ToastCard({ toast, onDismiss }: CardProps) {
       <div className="grid grid-cols-[24px_1fr_24px] items-start gap-3">
         <span className={`font-mono text-base leading-none ${accent}`}>{icon}</span>
         <div>
-          <p className="font-serif text-[15px] leading-snug text-ink">{toast.message}</p>
+          <p className="text-[15px] font-semibold leading-snug text-ink">{toast.message}</p>
           {toast.description && (
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-soft">
-              {toast.description}
-            </p>
+            <p className="mt-1 text-[13px] leading-snug text-ink-soft">{toast.description}</p>
           )}
         </div>
         <button

@@ -104,8 +104,8 @@ export function CalibrationPanel({ vestId, isCalibrated }: Props) {
 
     if (samples.length === 0) {
       toast.error(
-        'Sin lecturas del chaleco.',
-        'Verifica que esté encendido y enviando datos antes de calibrar.',
+        'No llegan datos del chaleco.',
+        'Revisa que esté encendido antes de calibrar.',
       )
       setPhase('idle')
       return

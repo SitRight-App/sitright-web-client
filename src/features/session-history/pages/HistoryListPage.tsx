@@ -28,7 +28,7 @@ function StatusPill({ status }: { status: PostureSession['status'] }) {
   const isActive = status === 'active'
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium ${
         isActive
           ? 'bg-moss/10 text-moss'
           : 'bg-sand/30 text-ink-soft'
@@ -76,7 +76,7 @@ export function HistoryListPage() {
           <div className="flex items-stretch gap-5">
             <StatBlock label="Sesiones" value={String(sessions.length)} />
             {avgAdequate !== null && (
-              <StatBlock label="Adecuada prom." value={`${avgAdequate}%`} />
+              <StatBlock label="Bien sentado" value={`${avgAdequate}%`} />
             )}
             <StatBlock label="Tiempo total" value={`${Math.round(totalMinutes / 60)} h`} />
           </div>
@@ -100,11 +100,10 @@ export function HistoryListPage() {
 
         {isLoading && (
           <div className="overflow-hidden rounded-xl border border-sand bg-cream-bone">
-            <div className="grid grid-cols-[1fr_120px_120px_120px_120px_24px] gap-5 border-b border-sand bg-cream-deep px-6 py-3.5 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-              <span>Inicio</span>
+            <div className="grid grid-cols-[1fr_120px_120px_120px_24px] gap-5 border-b border-sand bg-cream-deep px-6 py-3.5 text-[13px] font-medium text-ink-faint">
+              <span>Cuándo</span>
               <span className="text-right">Duración</span>
-              <span className="text-right">Lecturas</span>
-              <span className="text-right">Adecuada</span>
+              <span className="text-right">Bien sentado</span>
               <span>Estado</span>
               <span />
             </div>
@@ -112,11 +111,10 @@ export function HistoryListPage() {
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="grid grid-cols-[1fr_120px_120px_120px_120px_24px] items-center gap-5 border-b border-sand-light px-6 py-4 last:border-b-0"
+                  className="grid grid-cols-[1fr_120px_120px_120px_24px] items-center gap-5 border-b border-sand-light px-6 py-4 last:border-b-0"
                 >
                   <SkeletonTextLine width="60%" />
                   <SkeletonTextLine width="50%" />
-                  <SkeletonTextLine width="40%" />
                   <SkeletonTextLine width="40%" />
                   <Skeleton width={72} height={20} pill />
                   <SkeletonTextLine width={12} />
@@ -139,11 +137,10 @@ export function HistoryListPage() {
 
         {sessions && sessions.length > 0 && (
           <div className="overflow-hidden rounded-xl border border-sand bg-cream-bone">
-            <div className="grid grid-cols-[1fr_120px_120px_120px_120px_24px] gap-5 border-b border-sand bg-cream-deep px-6 py-3.5 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-              <span>Inicio</span>
+            <div className="grid grid-cols-[1fr_120px_120px_120px_24px] gap-5 border-b border-sand bg-cream-deep px-6 py-3.5 text-[13px] font-medium text-ink-faint">
+              <span>Cuándo</span>
               <span className="text-right">Duración</span>
-              <span className="text-right">Lecturas</span>
-              <span className="text-right">Adecuada</span>
+              <span className="text-right">Bien sentado</span>
               <span>Estado</span>
               <span />
             </div>
@@ -152,20 +149,17 @@ export function HistoryListPage() {
                 <Link
                   key={s.id}
                   to={`/history/${s.id}`}
-                  className="group grid grid-cols-[1fr_120px_120px_120px_120px_24px] items-center gap-5 border-b border-sand-light px-6 py-4 transition-colors last:border-b-0 hover:bg-cream-deep"
+                  className="group grid grid-cols-[1fr_120px_120px_120px_24px] items-center gap-5 border-b border-sand-light px-6 py-4 transition-colors last:border-b-0 hover:bg-cream-deep"
                 >
                   <span className="text-[15px] font-medium text-ink">
                     {dateFmt.format(new Date(s.started_at))}
                   </span>
-                  <span className="text-right font-mono text-[13px] tabular-nums text-ink-soft">
+                  <span className="text-right text-[14px] tabular-nums text-ink-soft">
                     {s.duration_minutes !== null
                       ? `${Math.round(s.duration_minutes)} min`
                       : '—'}
                   </span>
-                  <span className="text-right font-mono text-[13px] tabular-nums text-ink-soft">
-                    {s.reading_count}
-                  </span>
-                  <span className="text-right font-mono text-[15px] font-semibold tabular-nums text-ink">
+                  <span className="text-right text-[16px] font-semibold tabular-nums text-ink">
                     {s.summary ? `${Math.round(s.summary.adequate_percentage)}%` : '—'}
                   </span>
                   <span>

@@ -10,9 +10,9 @@ interface LocationState {
 }
 
 const VALUE_POINTS = [
-  { Icon: Activity, text: 'Lee tu postura en tiempo real desde el chaleco.' },
-  { Icon: Sparkles, text: 'Te avisa con ajustes ergonómicos cuando te desvías.' },
-  { Icon: History, text: 'Guarda el historial y la evolución de cada jornada.' },
+  { Icon: Activity, text: 'Te dice cómo estás sentado, al instante.' },
+  { Icon: Sparkles, text: 'Te avisa y te dice cómo acomodarte cuando te sientas mal.' },
+  { Icon: History, text: 'Guarda tu historial para que veas si vas mejorando.' },
 ]
 
 // Textura de ruido sutil para dar materialidad al panel de marca (sin esto la

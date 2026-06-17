@@ -203,7 +203,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
   if (minutes.length < 1 || readings.length < 2) {
     return (
       <div className="border border-dashed border-sand p-6 text-center">
-        <p className="font-serif text-lg text-ink">Sin lecturas suficientes para graficar.</p>
+        <p className="text-lg font-semibold text-ink">Aún no hay datos suficientes.</p>
         <p className="mt-1 text-xs text-ink-soft">
           La sesión necesita al menos dos lecturas para mostrar la línea de tiempo.
         </p>
@@ -279,7 +279,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
       <div className="flex h-14 w-full overflow-hidden rounded-md border border-sand">
         {blocks.map((b, i) => {
           const isPause = b.kind === 'pausa'
-          const label = isPause ? 'Pausa (sin lecturas)' : POSTURE_SHORT[b.kind as PostureClass]
+          const label = isPause ? 'Pausa (sin datos)' : POSTURE_SHORT[b.kind as PostureClass]
           const style: React.CSSProperties = isPause
             ? {
                 width: `${(b.count / totalMin) * 100}%`,
