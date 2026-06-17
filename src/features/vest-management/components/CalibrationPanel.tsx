@@ -146,7 +146,7 @@ export function CalibrationPanel({ vestId, isCalibrated }: Props) {
 
   return (
     <div>
-      <div className="mb-4 inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em]">
+      <div className="mb-4 inline-flex items-center gap-2 text-[13px] font-medium">
         <span
           className={`h-1.5 w-1.5 rounded-full ${isCalibrated ? 'bg-moss' : 'bg-terracotta'}`}
         />
@@ -155,14 +155,13 @@ export function CalibrationPanel({ vestId, isCalibrated }: Props) {
         </span>
       </div>
 
-      <p className="max-w-md text-sm leading-relaxed text-ink-soft">
-        Coloca el chaleco sobre el trabajador en posición erguida ideal y mantén la
-        postura durante {CALIBRATION_SECONDS} segundos. El sistema captura el promedio
-        de los 3 sensores como referencia.
+      <p className="max-w-md text-[15px] leading-relaxed text-ink-soft">
+        Siéntate bien erguido y quédate quieto {CALIBRATION_SECONDS} segundos. Guardaremos
+        esa postura como tu referencia.
       </p>
 
       {phase === 'sampling' && (
-        <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-terracotta-deep">
+        <p className="mt-3 text-[14px] font-semibold text-terracotta-deep">
           Mantén la posición… {countdown}s
         </p>
       )}
@@ -171,7 +170,7 @@ export function CalibrationPanel({ vestId, isCalibrated }: Props) {
         type="button"
         onClick={handleCalibrate}
         disabled={phase !== 'idle'}
-        className="mt-6 inline-flex items-center gap-3 bg-moss-deep px-6 py-3.5 text-[13px] font-medium uppercase tracking-[0.05em] text-cream transition-colors hover:bg-ink disabled:opacity-60"
+        className="mt-6 inline-flex items-center gap-3 bg-moss-deep px-6 py-3.5 text-[14px] font-semibold text-cream transition-colors hover:bg-ink disabled:opacity-60"
       >
         <span>
           {phase === 'sampling'

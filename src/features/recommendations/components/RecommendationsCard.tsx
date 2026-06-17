@@ -70,11 +70,9 @@ export function RecommendationsCard({ recommendations, postureClass, maxVisible 
 
   return (
     <div className="editorial-card flex h-full flex-col p-6">
-      <p className="label-mono">
-        {isGood ? 'Mantén el ritmo' : 'Recomendaciones ergonómicas'}
-      </p>
+      <p className="label-mono">{isGood ? 'Sigue así' : 'Consejos para ti'}</p>
       <h3 className="mt-2 text-xl font-semibold tracking-tight text-ink">
-        {isGood ? 'Tu postura ha sido adecuada hoy.' : 'Pequeños ajustes ahora.'}
+        {isGood ? 'Vas muy bien hoy.' : 'Prueba estos ajustes ahora.'}
       </h3>
 
       <div className="mt-4 space-y-3.5">
@@ -120,7 +118,7 @@ export function RecommendationsCard({ recommendations, postureClass, maxVisible 
           to="/recommendations"
           className="mt-4 inline-flex items-center gap-1.5 border-t border-sand pt-3 text-[14px] font-medium text-moss hover:text-moss-deep"
         >
-          Ver las {allVisible.length} recomendaciones →
+          Ver todos los consejos ({allVisible.length}) →
         </Link>
       )}
 

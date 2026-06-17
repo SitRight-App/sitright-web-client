@@ -29,10 +29,10 @@ export const POSTURE_LABELS: Record<PostureClass, string> = {
 }
 
 export const POSTURE_HEADLINES: Record<PostureClass, string> = {
-  adequate: 'Columna en línea.',
-  forward_slouch: 'Inclinación frontal leve.',
-  excessive_recline: 'Reclinación excesiva.',
-  indeterminate: 'Aún sin lectura.',
+  adequate: '¡Vas muy bien!',
+  forward_slouch: 'Endereza un poco la espalda.',
+  excessive_recline: 'Vuelve a apoyarte bien.',
+  indeterminate: 'Aún sin datos.',
 }
 
 /**

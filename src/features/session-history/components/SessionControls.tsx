@@ -88,15 +88,14 @@ export function SessionControls() {
 function NoVestState() {
   return (
     <div className="mt-4">
-      <p className="text-sm leading-relaxed text-ink-soft">
-        Aún no has vinculado un chaleco a tu cuenta. Vincula uno desde el panel de Chaleco para
-        habilitar el control de sesión.
+      <p className="text-[15px] leading-relaxed text-ink-soft">
+        Todavía no tienes un chaleco. Vincula uno para empezar a cuidar tu postura.
       </p>
       <Link
         to="/vest"
-        className="mt-5 inline-flex items-center gap-3 border border-ink bg-transparent px-5 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-ink transition-colors hover:bg-ink hover:text-cream"
+        className="mt-5 inline-flex items-center gap-3 border border-ink bg-transparent px-5 py-3 text-[14px] font-semibold text-ink transition-colors hover:bg-ink hover:text-cream"
       >
-        Ir al panel de Chaleco
+        Ir a mi chaleco
         <span aria-hidden>→</span>
       </Link>
     </div>
@@ -111,15 +110,14 @@ interface NoActiveProps {
 function NoActiveSessionState({ onStart, isPending }: NoActiveProps) {
   return (
     <div className="mt-4">
-      <p className="text-sm leading-relaxed text-ink-soft">
-        Tu chaleco está vinculado y listo. Inicia una sesión para que las lecturas queden
-        agrupadas en tu historial.
+      <p className="text-[15px] leading-relaxed text-ink-soft">
+        Tu chaleco está listo. Inicia una sesión para empezar a medir cómo te sientas.
       </p>
       <button
         type="button"
         onClick={onStart}
         disabled={isPending}
-        className="mt-5 inline-flex items-center gap-3 self-start bg-moss-deep px-6 py-3.5 font-mono text-[11px] uppercase tracking-[0.16em] text-cream transition-colors hover:bg-ink active:scale-[0.98] disabled:opacity-60"
+        className="mt-5 inline-flex items-center gap-3 self-start bg-moss-deep px-6 py-3.5 text-[14px] font-semibold text-cream transition-colors hover:bg-ink active:scale-[0.98] disabled:opacity-60"
       >
         <span>{isPending ? 'Iniciando…' : 'Iniciar sesión'}</span>
         <span aria-hidden>→</span>
@@ -153,20 +151,16 @@ function ActiveSessionState({
     <div className="mt-4">
       <div className="grid grid-cols-2 gap-4 border-t border-sand pt-4">
         <div>
-          <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
+          <p className="mb-1 text-[12px] font-medium text-ink-faint">
             {isStale ? 'Abierta hace' : 'Duración'}
           </p>
           <p className="text-[28px] font-semibold leading-none tracking-tight tabular-nums text-ink">
             {formatDuration(liveMs)}
           </p>
-          <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.10em] text-ink-soft">
-            Inicio · {startedAtFmt}
-          </p>
+          <p className="mt-1.5 text-[12px] text-ink-soft">Desde las {startedAtFmt}</p>
         </div>
         <div>
-          <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
-            Lecturas
-          </p>
+          <p className="mb-1 text-[12px] font-medium text-ink-faint">Mediciones</p>
           <p className="text-[28px] font-semibold leading-none tracking-tight tabular-nums text-ink">
             {readingCount.toLocaleString('es-PE')}
           </p>
@@ -184,7 +178,7 @@ function ActiveSessionState({
         type="button"
         onClick={onClose}
         disabled={isPending}
-        className="mt-5 inline-flex items-center gap-3 self-start border border-terracotta bg-transparent px-6 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-terracotta-deep transition-colors hover:bg-terracotta hover:text-cream active:scale-[0.98] disabled:opacity-60"
+        className="mt-5 inline-flex items-center gap-3 self-start border border-terracotta bg-transparent px-6 py-3 text-[14px] font-semibold text-terracotta-deep transition-colors hover:bg-terracotta hover:text-cream active:scale-[0.98] disabled:opacity-60"
       >
         <span>{isPending ? 'Cerrando…' : 'Cerrar sesión'}</span>
         <span aria-hidden>→</span>

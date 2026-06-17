@@ -23,7 +23,7 @@ export function ActiveSessionPill() {
 
   if (isLoading) {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full bg-sand/30 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft">
+      <span className="inline-flex items-center gap-2 rounded-full bg-sand/30 px-3.5 py-1.5 text-[12px] font-medium text-ink-soft">
         <span className="h-1.5 w-1.5 rounded-full bg-ink-faint" />
         Sin estado
       </span>
@@ -34,7 +34,7 @@ export function ActiveSessionPill() {
     return (
       <Link
         to="/"
-        className="inline-flex items-center gap-2 rounded-full border border-amber/40 bg-amber/10 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:border-amber"
+        className="inline-flex items-center gap-2 rounded-full border border-amber/40 bg-amber/10 px-3.5 py-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:border-amber"
         title="Esta sesión lleva demasiado tiempo abierta. Ciérrala desde el panel."
       >
         <span className="h-1.5 w-1.5 rounded-full bg-amber" />
@@ -47,7 +47,7 @@ export function ActiveSessionPill() {
     return (
       <Link
         to="/"
-        className="inline-flex items-center gap-2 rounded-full bg-moss-deep px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-cream transition-opacity hover:opacity-90"
+        className="inline-flex items-center gap-2 rounded-full bg-moss-deep px-3.5 py-1.5 text-[12px] font-medium text-cream transition-opacity hover:opacity-90"
         title={`Sesión activa desde ${new Date(active.started_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`}
       >
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-terracotta" />
@@ -59,7 +59,7 @@ export function ActiveSessionPill() {
   return (
     <Link
       to="/"
-      className="inline-flex items-center gap-2 rounded-full border border-sand bg-cream-bone px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+      className="inline-flex items-center gap-2 rounded-full border border-sand bg-cream-bone px-3.5 py-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:border-ink hover:text-ink"
     >
       <span className="h-1.5 w-1.5 rounded-full bg-ink-faint" />
       Sin sesión activa

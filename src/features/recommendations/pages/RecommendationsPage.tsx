@@ -18,8 +18,8 @@ type StatusFilter = 'all' | 'pending' | 'applied'
 
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   all: 'Todas',
-  lumbar: 'Lumbar',
-  cervical: 'Cervical',
+  lumbar: 'Espalda baja',
+  cervical: 'Cuello',
   general: 'Generales',
 }
 
@@ -147,9 +147,7 @@ export function RecommendationsPage() {
           </h1>
         </div>
         <div className="text-right">
-          <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft">
-            Aplicadas hoy
-          </p>
+          <p className="text-[13px] font-medium text-ink-soft">Hechas hoy</p>
           <div className="mt-1.5 text-3xl font-semibold tracking-tight text-ink">
             {appliedCount}{' '}
             <span className="text-ink-faint">/ {gridEntries.length}</span>
@@ -237,8 +235,8 @@ export function RecommendationsPage() {
               }`}
             >
               {s === 'pending'
-                ? `Pendientes · ${gridEntries.length - appliedCount}`
-                : `Aplicadas · ${appliedCount}`}
+                ? `Por hacer · ${gridEntries.length - appliedCount}`
+                : `Hechas · ${appliedCount}`}
             </button>
           ))}
         </div>
@@ -267,7 +265,7 @@ export function RecommendationsPage() {
           >
             <span className="flex items-center gap-2.5 text-[14px] font-semibold text-ink">
               <Check className="h-4 w-4 text-moss" strokeWidth={1.5} />
-              Aplicadas · {appliedList.length}
+              Hechas · {appliedList.length}
             </span>
             <ChevronDown
               className={`h-4 w-4 text-ink-soft transition-transform ${
@@ -322,7 +320,7 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
       {/* Panel de marca: verde plano sin blobs decorativos */}
       <div className="bg-moss-deep p-6 text-cream-bone lg:p-8">
         {featured.featured_tagline && (
-          <p className="mb-3.5 font-mono text-[11px] uppercase tracking-[0.16em] text-cream-bone/60">
+          <p className="mb-3.5 text-[13px] font-medium text-cream-bone/70">
             {featured.featured_tagline}
           </p>
         )}
@@ -344,7 +342,7 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
           {featured.applied ? (
             <>
               <span className="inline-flex items-center gap-2 rounded-xl border border-cream-bone/25 bg-cream-bone/10 px-5 py-3 text-[15px] font-semibold text-cream-bone">
-                ✓ Aplicada{featured.appliedAt && ` · ${timeFmt.format(new Date(featured.appliedAt))}`}
+                ✓ Hecha{featured.appliedAt && ` · ${timeFmt.format(new Date(featured.appliedAt))}`}
               </span>
               <button
                 type="button"
@@ -362,7 +360,7 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
               disabled={isMutating}
               className="inline-flex items-center gap-2 rounded-xl bg-terracotta px-5 py-3 text-[15px] font-semibold text-cream-bone transition hover:bg-terracotta-deep active:scale-[0.97] disabled:opacity-50"
             >
-              {isMutating ? 'Marcando…' : 'Marcar como aplicada'}
+              {isMutating ? 'Marcando…' : 'Marcar como hecha'}
               <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
             </button>
           )}
@@ -385,10 +383,8 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
                 {String(i + 1).padStart(2, '0')}
               </span>
               <div>
-                <p className="text-[14px] leading-relaxed text-ink">{step.body}</p>
-                <span className="mt-1.5 block font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
-                  {step.meta}
-                </span>
+                <p className="text-[15px] leading-relaxed text-ink">{step.body}</p>
+                <span className="mt-1.5 block text-[12px] text-ink-faint">{step.meta}</span>
               </div>
             </li>
           ))}
@@ -429,25 +425,25 @@ function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
           <RecommendationIcon icon={entry.icon} />
         </div>
         <span
-          className={`rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] ${
+          className={`rounded-full px-2.5 py-1 text-[12px] font-medium ${
             isApplied
               ? 'border border-moss/30 bg-moss/15 text-moss'
               : TAG_STYLES[category] ?? TAG_STYLES.general
           }`}
         >
-          {isApplied ? 'Aplicada' : CATEGORY_LABELS[category] ?? 'General'}
+          {isApplied ? 'Hecha' : CATEGORY_LABELS[category] ?? 'General'}
         </span>
       </div>
 
       <h3 className="mb-1.5 text-[18px] font-semibold leading-tight tracking-tight text-ink">
         {entry.title}
       </h3>
-      <p className="mb-auto text-[13.5px] leading-relaxed text-ink-soft">{entry.description}</p>
+      <p className="mb-auto text-[14px] leading-relaxed text-ink-soft">{entry.description}</p>
 
-      <div className="mt-4 flex items-center justify-between border-t border-sand pt-3 font-mono text-[11px] text-ink-soft">
+      <div className="mt-4 flex items-center justify-between border-t border-sand pt-3 text-[12px] text-ink-soft">
         <span>
           {isApplied && entry.appliedAt
-            ? `Aplicada · ${timeFmt.format(new Date(entry.appliedAt))}`
+            ? `Hecha · ${timeFmt.format(new Date(entry.appliedAt))}`
             : entry.frequency_label}
         </span>
         {isApplied ? (

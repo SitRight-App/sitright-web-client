@@ -190,7 +190,7 @@ function ProductSheet({ vest, warningSensor }: ProductSheetProps) {
           </h2>
         </div>
         <div className="text-right">
-          <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">MAC</p>
+          <p className="text-[12px] font-medium text-ink-faint">Código (MAC)</p>
           <div className="mt-1 font-mono text-[14px] font-medium tracking-[0.04em] text-ink">
             {vest.mac_address}
           </div>
@@ -218,9 +218,7 @@ function BatteryPanel({ percent }: { percent: number }) {
 
   return (
     <section className="rounded-xl border border-moss-deep bg-moss-deep p-7 text-cream-bone">
-      <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-cream-bone/70">
-        Batería del chaleco
-      </p>
+      <p className="text-[13px] font-medium text-cream-bone/70">Batería del chaleco</p>
       <h3 className="mt-2 text-2xl font-semibold tracking-tight">{headline}</h3>
 
       <div className="mt-5 grid grid-cols-[auto_1fr] items-center gap-5">
@@ -256,9 +254,8 @@ function CalibrationCard({ vest }: PropsWithVest) {
         {vest.is_calibrated ? 'Postura neutra capturada' : 'Recalibrar postura neutra'}
       </h3>
       <p className="mt-2 max-w-md text-[15px] leading-relaxed text-ink-soft">
-        La calibración guarda tu postura erguida como tu referencia personal: con
-        ella el chaleco sabe cuándo te desvías. Conviene repetirla una vez al mes
-        o si cambias de silla.
+        Guardamos tu postura erguida como referencia. Así el chaleco sabe cuándo te
+        desvías. Repítela si cambias de silla.
       </p>
 
       <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-moss/15">
@@ -311,14 +308,14 @@ function CalibStep({ n, title, meta, done }: CalibStepProps) {
       }`}
     >
       <p
-        className={`mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] ${
+        className={`mb-1.5 text-[12px] font-medium ${
           done ? 'text-cream-bone/70' : 'text-ink-faint'
         }`}
       >
         Paso {n} {done && '· ✓'}
       </p>
       <p className="text-[15px] font-medium leading-tight">{title}</p>
-      <p className={`mt-1 text-[11px] ${done ? 'text-cream-bone/70' : 'text-ink-soft'}`}>
+      <p className={`mt-1 text-[13px] ${done ? 'text-cream-bone/70' : 'text-ink-soft'}`}>
         {meta}
       </p>
     </div>
@@ -350,8 +347,8 @@ function UnlinkCard({ vest }: PropsWithVest) {
       <p className="label-mono">Zona de riesgo</p>
       <h3 className="mt-2 text-2xl font-semibold tracking-tight text-ink">Desvincular el chaleco</h3>
       <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
-        Desvincular detiene las lecturas y tendrás que registrarlo de nuevo para
-        usarlo. Tus sesiones guardadas se mantienen intactas.
+        Si lo desvinculas, dejará de medir y tendrás que registrarlo otra vez. Tus
+        sesiones guardadas no se borran.
       </p>
       {vest.linked_at && (
         <p className="mt-3 text-[12px] text-ink-faint">
@@ -408,7 +405,7 @@ function UnlinkConfirmDialog({ mac, isPending, onCancel, onConfirm }: UnlinkConf
         className="w-full max-w-[460px] overflow-hidden rounded-xl border border-sand bg-cream-bone shadow-xl"
       >
         <div className="border-b border-sand bg-cream px-6 py-5">
-          <p className="label-mono">Zona de riesgo</p>
+          <p className="label-mono">Cuidado</p>
           <h3 id="unlink-title" className="mt-2 text-2xl font-semibold tracking-tight text-ink">
             ¿Desvincular este chaleco?
           </h3>

@@ -18,7 +18,6 @@ import type { LatestReading, PostureClass } from '../types/posture'
 import {
   POSTURE_CORRECTION,
   POSTURE_HEADLINES,
-  POSTURE_LABELS,
   isDeviation,
 } from '../types/posture'
 import { SeatedFigure, type SeatedFigureZone } from '@/shared/ui/SeatedFigure'
@@ -148,10 +147,9 @@ export function DashboardPage() {
               />
             ) : (
               <div className="editorial-card flex flex-col justify-center p-6">
-                <p className="label-mono">Recomendaciones</p>
-                <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
-                  Cuando el chaleco detecte una desviación, aquí verás los ajustes
-                  ergonómicos sugeridos.
+                <p className="label-mono">Consejos</p>
+                <p className="mt-2 text-[16px] leading-relaxed text-ink-soft">
+                  Cuando te sientes mal, aquí te daremos consejos para mejorar tu postura.
                 </p>
               </div>
             )}
@@ -179,6 +177,15 @@ interface PostureCardProps {
 const ALERT_INDEX: Partial<Record<PostureClass, number>> = {
   forward_slouch: 0,
   excessive_recline: 2,
+}
+
+// Título en vivo en lenguaje cotidiano. 'adequate' conserva 'Postura correcta'
+// por requisito del backlog (HU-06 AC1).
+const LIVE_TITLE: Record<PostureClass, string> = {
+  adequate: 'Postura correcta',
+  forward_slouch: 'Estás encorvado',
+  excessive_recline: 'Estás echado hacia atrás',
+  indeterminate: 'Sin datos',
 }
 
 /** Tono del nodo de una zona en la figura del dashboard (estado en vivo). */
@@ -214,7 +221,7 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
   let title = 'Sin lecturas'
   let sub = 'Aún no llegan lecturas del chaleco.'
   if (isLive && reading) {
-    title = POSTURE_LABELS[cls]
+    title = LIVE_TITLE[cls]
     sub = `${POSTURE_HEADLINES[cls]} Última lectura ${timeSince(reading.timestamp)}.`
   } else if (isLoading && reading === null) {
     sub = 'Conectando con el chaleco…'
@@ -228,14 +235,14 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
       {/* Encabezado: estado en vivo */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft">
+          <div className="flex items-center gap-2 text-[13px] font-medium text-ink-soft">
             <span className="relative flex h-2 w-2">
               {isLive && (
                 <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${dotTone} opacity-60`} />
               )}
               <span className={`relative inline-flex h-2 w-2 rounded-full ${dotTone}`} />
             </span>
-            {isLive ? 'En vivo · Postura actual' : 'Estado del chaleco'}
+            {isLive ? 'Cómo estás ahora' : 'Estado del chaleco'}
           </div>
           <h2 className={`mt-2.5 text-[28px] font-semibold leading-none tracking-tight sm:text-[32px] ${headlineTone}`}>
             {title}
@@ -245,7 +252,7 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
 
         {isLive && reading && (
           <div className="shrink-0 text-right">
-            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">Batería</p>
+            <p className="text-[13px] font-medium text-ink-faint">Batería</p>
             <p className="mt-1 text-[26px] font-semibold leading-none tracking-tight tabular-nums text-ink">
               {reading.battery_percent}%
             </p>
@@ -267,7 +274,7 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
         </div>
 
         <div className="flex flex-1 flex-col gap-2.5">
-            {(['Cervical', 'Dorsal', 'Lumbar'] as const).map((zone, i) => {
+            {(['Cuello', 'Espalda media', 'Espalda baja'] as const).map((zone, i) => {
             const isAlertZone = i === alertIdx
             const boxClass = isAlertZone
               ? 'border-terracotta/40 bg-terracotta/10'
@@ -278,15 +285,13 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
                 ? 'text-terracotta-deep'
                 : 'text-moss'
             const dotClass = !isLive ? 'bg-ink-faint' : isAlertZone ? 'bg-terracotta' : 'bg-moss'
-            const stateLabel = !isLive ? 'Sin datos' : isAlertZone ? 'Desviada' : 'Adecuada'
+            const stateLabel = !isLive ? 'Sin datos' : isAlertZone ? 'Fuera de lugar' : 'Bien'
             return (
               <div
                 key={zone}
                 className={`flex items-center justify-between rounded-md border px-4 py-3 ${boxClass}`}
               >
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
-                  {zone}
-                </p>
+                <p className="text-[14px] font-medium text-ink">{zone}</p>
                 <p className={`flex items-center gap-2 text-[15px] font-medium ${textClass}`}>
                   <span className={`h-2 w-2 rounded-full ${dotClass}`} />
                   {stateLabel}
@@ -302,13 +307,13 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
       {isLive && POSTURE_CORRECTION[cls] && (
         <div className="mt-5 flex items-start gap-2.5 border-t border-sand pt-4">
           <span
-            className={`mt-px shrink-0 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] ${
+            className={`mt-px shrink-0 text-[14px] font-semibold ${
               isWarn ? 'text-terracotta-deep' : 'text-moss'
             }`}
           >
-            Ahora
+            Ahora:
           </span>
-          <p className="text-[13.5px] leading-relaxed text-ink-soft">{POSTURE_CORRECTION[cls]}</p>
+          <p className="text-[15px] leading-relaxed text-ink-soft">{POSTURE_CORRECTION[cls]}</p>
         </div>
       )}
     </section>
@@ -344,10 +349,9 @@ function UnlinkedDashboard({ firstName, now }: UnlinkedDashboardProps) {
         <h2 className="mx-auto mt-3 max-w-lg text-3xl font-semibold leading-tight tracking-tight text-ink">
           Vincula tu chaleco para empezar a leer tu postura en vivo.
         </h2>
-        <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-ink-soft">
-          Pídele a tu administrador el código de vinculación y la dirección MAC del chaleco
-          asignado. Mientras tanto, no tiene sentido mostrarte lecturas: podrían ser de otro
-          dispositivo.
+        <p className="mx-auto mt-4 max-w-md text-[16px] leading-relaxed text-ink-soft">
+          Pídele a tu administrador el código de tu chaleco. Apenas lo vincules, verás tu postura en
+          vivo aquí.
         </p>
         <div className="mt-8 inline-flex flex-wrap justify-center gap-3">
           <Link

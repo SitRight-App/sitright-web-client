@@ -117,14 +117,14 @@ function NotificationsDropdown({
         </div>
         {unreadCount > 0 && (
           <div className="flex items-center gap-3">
-            <span className="rounded-full bg-terracotta/15 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-terracotta-deep">
+            <span className="rounded-full bg-terracotta/15 px-2.5 py-1 text-[12px] font-medium text-terracotta-deep">
               {unreadCount} sin leer
             </span>
             <button
               type="button"
               onClick={onMarkAllRead}
               disabled={isMarkingAll}
-              className="font-mono text-[10px] uppercase tracking-[0.14em] text-moss underline-offset-2 hover:underline disabled:opacity-50"
+              className="text-[13px] font-medium text-moss underline-offset-2 hover:underline disabled:opacity-50"
             >
               {isMarkingAll ? 'Marcando…' : 'Marcar todas'}
             </button>
@@ -214,14 +214,11 @@ function NotificationRow({ notification: n, isLast, onMarkRead, disabled }: Noti
           }`}
         />
         <div>
-          <p className={`font-serif text-[14px] leading-snug ${n.is_read ? 'text-ink-soft' : 'text-ink'}`}>
+          <p className={`text-[15px] leading-snug ${n.is_read ? 'text-ink-soft' : 'text-ink'}`}>
             {n.message}
           </p>
-          <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.14em] text-ink-faint">
-            {n.type} · {n.channel}
-          </p>
         </div>
-        <span className="whitespace-nowrap font-mono text-[10px] text-ink-soft">
+        <span className="whitespace-nowrap text-[12px] text-ink-soft">
           {dateTimeFmt.format(new Date(n.sent_at))}
         </span>
       </button>

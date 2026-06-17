@@ -23,10 +23,10 @@ const POSTURE_COLOR: Record<PostureClass, string> = {
 }
 
 const POSTURE_SHORT: Record<PostureClass, string> = {
-  adequate: 'Adecuada',
-  forward_slouch: 'Inclinación frontal',
-  excessive_recline: 'Reclinación',
-  indeterminate: 'Indeterminada',
+  adequate: 'Bien sentado',
+  forward_slouch: 'Encorvado',
+  excessive_recline: 'Echado atrás',
+  indeterminate: 'Sin dato claro',
 }
 
 const timeFmt = new Intl.DateTimeFormat('es-PE', {
@@ -90,9 +90,9 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
 
   return (
     <div className="editorial-card p-7">
-      <p className="label-mono">Línea de tiempo · sesión</p>
+      <p className="label-mono">En vivo</p>
       <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
-        Tu jornada postural <span className="text-moss">en vivo.</span>
+        Cómo vas <span className="text-moss">ahora mismo.</span>
       </h2>
 
       {isError && (
@@ -102,16 +102,14 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
       )}
 
       {isLoading && readings.length === 0 && (
-        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-          Esperando lecturas del chaleco…
-        </p>
+        <p className="mt-4 text-[14px] text-ink-faint">Esperando datos del chaleco…</p>
       )}
 
       {readings.length === 0 && !isLoading && !isError && (
         <div className="mt-6 border border-dashed border-sand p-6 text-center">
-          <p className="font-serif text-lg text-ink">Sin lecturas recientes.</p>
-          <p className="mt-1 text-xs text-ink-soft">
-            Cuando el chaleco empiece a publicar, esta línea de tiempo se actualizará cada 5 segundos.
+          <p className="text-lg font-semibold text-ink">Todavía no hay datos.</p>
+          <p className="mt-1 text-[14px] text-ink-soft">
+            Apenas el chaleco empiece, verás aquí cómo cambia tu postura minuto a minuto.
           </p>
         </div>
       )}
@@ -130,30 +128,28 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
           </div>
 
           {startTime && endTime && (
-            <div className="mt-2 flex justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
+            <div className="mt-2 flex justify-between text-[12px] text-ink-faint">
               <span>{timeFmt.format(startTime)}</span>
-              <span>{readings.length} lecturas · cada 5 s</span>
+              <span>se actualiza cada 5 s</span>
               <span>{timeFmt.format(endTime)}</span>
             </div>
           )}
 
           <div className="mt-4 border-t border-dashed border-sand pt-3">
-            <p className="label-mono mb-3">Distribución del intervalo</p>
+            <p className="label-mono mb-3">En qué has estado</p>
             <ul className="space-y-1.5">
               {distribution.map((d) => (
                 <li key={d.posture}>
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <span
-                        className="inline-block h-2 w-2 rounded-full"
+                        className="inline-block h-2.5 w-2.5 rounded-full"
                         style={{ backgroundColor: POSTURE_COLOR[d.posture] }}
                       />
-                      <span className="font-serif text-sm text-ink">
-                        {POSTURE_SHORT[d.posture]}
-                      </span>
+                      <span className="text-[14px] text-ink">{POSTURE_SHORT[d.posture]}</span>
                     </span>
-                    <span className="font-mono text-[11px] text-ink-soft">
-                      {d.count} · {Math.round(d.percentage)}%
+                    <span className="text-[14px] font-medium tabular-nums text-ink-soft">
+                      {Math.round(d.percentage)}%
                     </span>
                   </div>
                   <div className="mt-1 h-[3px] overflow-hidden bg-sand/40">

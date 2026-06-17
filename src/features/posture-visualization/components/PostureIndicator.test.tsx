@@ -27,7 +27,7 @@ describe('PostureIndicator — HU-06', () => {
   it('muestra "Postura correcta" + headline para la postura adecuada', () => {
     render(<PostureIndicator reading={makeReading()} isLoading={false} />)
     expect(screen.getByText(/postura correcta/i)).toBeInTheDocument()
-    expect(screen.getByText(/en línea/i)).toBeInTheDocument()
+    expect(screen.getByText(/muy bien/i)).toBeInTheDocument()
   })
 
   // Happy: forward_slouch muestra tipo de desviación
