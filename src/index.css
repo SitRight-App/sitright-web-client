@@ -95,11 +95,16 @@
 }
 
 @layer components {
+  /*
+   * Etiquetas de sección legibles. Antes eran mono MAYÚSCULAS con tracking
+   * apretado; en pruebas con usuarios la asesora las marcó como difíciles de
+   * leer, así que ahora son sans, en caja normal y un poco más grandes.
+   */
   .label-mono {
-    @apply font-mono uppercase text-[11px] tracking-[0.14em] text-ink-soft;
+    @apply text-[13px] font-semibold tracking-normal text-ink-soft;
   }
   .num-tag {
-    @apply font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint;
+    @apply text-[13px] font-medium tracking-normal text-ink-faint;
   }
   .editorial-card {
     @apply rounded-lg border border-sand bg-cream-bone;

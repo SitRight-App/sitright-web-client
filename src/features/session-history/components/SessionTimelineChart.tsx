@@ -26,10 +26,10 @@ const POSTURE_COLOR: Record<PostureClass, string> = {
 }
 
 const POSTURE_SHORT: Record<PostureClass, string> = {
-  adequate: 'Adecuada',
-  forward_slouch: 'Inclinación frontal',
-  excessive_recline: 'Reclinación',
-  indeterminate: 'Indeterminada',
+  adequate: 'Bien sentado',
+  forward_slouch: 'Encorvado',
+  excessive_recline: 'Echado atrás',
+  indeterminate: 'Sin dato claro',
 }
 
 const DEVIATION: PostureClass[] = ['forward_slouch', 'excessive_recline']
@@ -238,18 +238,15 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
         </div>
       )}
 
-      <p className="mb-3 text-[13px] leading-relaxed text-ink-soft">
-        Cada bloque es tu postura predominante en ese minuto. Los tramos de color cálido marcan los{' '}
-        <span className="font-medium text-ink">períodos de postura inadecuada</span>; abajo se
-        detallan con su tipo y horario.
+      <p className="mb-3 text-[15px] leading-relaxed text-ink-soft">
+        Cada bloque es cómo estuviste sentado en ese minuto. Los colores cálidos son los ratos en que
+        estuviste mal sentado; abajo te los detallamos.
       </p>
 
       {/* Zoom por franjas horarias (US010 AC1). */}
       {franjas.length > 1 && (
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
-            Zoom
-          </span>
+          <span className="text-[13px] font-medium text-ink-faint">Acercar a:</span>
           <button
             type="button"
             onClick={() => setFranjaIdx(null)}
@@ -314,12 +311,12 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
 
       {/* US019 AC1: resalta los períodos inadecuados con su tipo de desviación. */}
       <div className="mt-5 border-t border-sand pt-4">
-        <p className="mb-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-soft">
-          Períodos de postura inadecuada
+        <p className="mb-2.5 text-[14px] font-semibold text-ink">
+          Ratos en que estuviste mal sentado
         </p>
         {periods.length === 0 ? (
-          <p className="text-[13px] text-ink-soft">
-            No hubo períodos sostenidos de postura inadecuada en {sel ? 'esta franja' : 'la sesión'}.
+          <p className="text-[14px] text-ink-soft">
+            No estuviste mal sentado por mucho rato seguido en {sel ? 'esta franja' : 'toda la sesión'}. ¡Bien ahí!
           </p>
         ) : (
           <ul className="space-y-1.5">
@@ -328,23 +325,23 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
               .sort((a, b) => b.durMin - a.durMin)
               .slice(0, 8)
               .map((p, i) => (
-                <li key={i} className="flex items-center gap-3 text-[13px]">
+                <li key={i} className="flex items-center gap-3 text-[14px]">
                   <span
-                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
+                    className="inline-block h-3 w-3 shrink-0 rounded-sm"
                     style={{ backgroundColor: POSTURE_COLOR[p.type] }}
                   />
                   <span className="font-medium text-ink">{POSTURE_SHORT[p.type]}</span>
-                  <span className="font-mono text-[12px] tabular-nums text-ink-soft">
-                    {fmtT(p.startMs)}–{fmtT(p.endMs)}
+                  <span className="text-[13px] tabular-nums text-ink-soft">
+                    {fmtT(p.startMs)} a {fmtT(p.endMs)}
                   </span>
-                  <span className="ml-auto font-mono text-[12px] tabular-nums text-terracotta-deep">
+                  <span className="ml-auto text-[13px] font-medium tabular-nums text-terracotta-deep">
                     {fmtDur(p.durMin)}
                   </span>
                 </li>
               ))}
             {periods.length > 8 && (
-              <li className="text-[12px] text-ink-faint">
-                y {periods.length - 8} períodos más cortos.
+              <li className="text-[13px] text-ink-faint">
+                y {periods.length - 8} ratos más cortos.
               </li>
             )}
           </ul>
@@ -353,13 +350,13 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
 
       {/* Métricas de lectura rápida (también impresas). */}
       <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-sand pt-4 sm:grid-cols-4">
-        <Metric label="Tiempo registrado" value={fmtDur(totalMin)} />
-        <Metric label="Tramo inadecuado más largo" value={longest > 0 ? fmtDur(longest) : '—'} />
-        <Metric label="Cambios de postura" value={String(Math.max(0, transitions))} />
+        <Metric label="Tiempo medido" value={fmtDur(totalMin)} />
+        <Metric label="Lo más seguido mal sentado" value={longest > 0 ? fmtDur(longest) : '—'} />
+        <Metric label="Veces que te moviste" value={String(Math.max(0, transitions))} />
         <Metric label="Pausas" value={String(pauseCount)} />
       </dl>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-[0.10em] text-ink-soft">
+      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-ink-soft">
         {(['adequate', 'forward_slouch', 'excessive_recline', 'indeterminate'] as PostureClass[])
           .filter((cls) => usedKinds.has(cls))
           .map((cls) => (
@@ -384,7 +381,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
             Pausa
           </span>
         )}
-        <span className="ml-auto normal-case tracking-normal">{readings.length} lecturas</span>
+        <span className="ml-auto">{readings.length} mediciones</span>
       </div>
     </div>
   )
@@ -393,8 +390,8 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">{label}</dt>
-      <dd className="mt-0.5 text-[15px] font-semibold tabular-nums text-ink">{value}</dd>
+      <dt className="text-[12px] font-medium leading-snug text-ink-faint">{label}</dt>
+      <dd className="mt-0.5 text-[17px] font-semibold tabular-nums text-ink">{value}</dd>
     </div>
   )
 }

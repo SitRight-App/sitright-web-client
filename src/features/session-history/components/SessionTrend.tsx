@@ -15,23 +15,22 @@ import { useSessions } from '../hooks/useSessions'
 const MAX_POINTS = 8
 
 const DOMINANT_LABEL: Record<string, string> = {
-  forward_slouch: 'Inclinación frontal',
-  excessive_recline: 'Reclinación excesiva',
-  forward_head: 'Cabeza adelantada',
-  rounded_shoulders: 'Hombros encorvados',
-  slouching: 'Espalda encorvada',
-  lateral_tilt: 'Inclinación lateral',
+  forward_slouch: 'Encorvarte hacia adelante',
+  excessive_recline: 'Echarte hacia atrás',
+  forward_head: 'Sacar la cabeza adelante',
+  rounded_shoulders: 'Encorvar los hombros',
+  slouching: 'Encorvar la espalda',
+  lateral_tilt: 'Inclinarte a un lado',
 }
 
-// Zona de la columna donde se siente principalmente cada patrón dominante.
-// Aproximación legible para el seguimiento (el patrón viene del resumen, no del
-// análisis por zona, que es por sesión).
+// Parte de la espalda donde se siente principalmente cada patrón, en lenguaje
+// cotidiano (el patrón viene del resumen, no del análisis por zona).
 const DOMINANT_ZONE: Record<string, string> = {
-  forward_slouch: 'dorsal',
-  excessive_recline: 'lumbar',
-  forward_head: 'cervical',
-  rounded_shoulders: 'cervical',
-  slouching: 'dorsal',
+  forward_slouch: 'espalda media',
+  excessive_recline: 'espalda baja',
+  forward_head: 'cuello',
+  rounded_shoulders: 'cuello',
+  slouching: 'espalda media',
 }
 
 const dayFmt = new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short' })
@@ -106,13 +105,13 @@ export function SessionTrend({
   if (series.length < 2) {
     return (
       <section className="editorial-card mb-7 bg-cream-deep p-6">
-        <p className="label-mono">Evolución entre sesiones</p>
+        <p className="label-mono">Cómo vienes</p>
         <h2 className="mt-1.5 text-xl font-semibold tracking-tight text-ink">
-          Aún sin historial para comparar
+          Todavía no hay con qué comparar
         </h2>
-        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
-          Cuando tengas al menos dos jornadas registradas, aquí verás cómo evoluciona tu postura de
-          una sesión a otra.
+        <p className="mt-2 max-w-2xl text-[16px] leading-relaxed text-ink-soft">
+          Cuando uses el chaleco en al menos dos sesiones, aquí verás si vas mejorando de una vez a
+          otra.
         </p>
       </section>
     )
@@ -140,9 +139,9 @@ export function SessionTrend({
   return (
     <section className="editorial-card mb-7 grid gap-6 p-6 lg:grid-cols-[1fr_300px]">
       <div>
-        <p className="label-mono">Evolución entre sesiones</p>
+        <p className="label-mono">Cómo vienes</p>
         <h2 className="mt-1.5 text-xl font-semibold tracking-tight text-ink">
-          Postura adecuada, últimas {series.length} sesiones
+          Qué tan bien te sentaste, últimas {series.length} veces
         </h2>
 
         {/* Track de barras con altura fija: el % de cada barra se resuelve contra
@@ -177,7 +176,7 @@ export function SessionTrend({
                   {Math.round(p.pct)}%
                 </span>
                 <span
-                  className={`text-[9px] uppercase tracking-[0.08em] ${
+                  className={`text-[11px] ${
                     isCurrent ? 'font-semibold text-moss-deep' : 'text-ink-faint'
                   }`}
                 >
@@ -188,17 +187,15 @@ export function SessionTrend({
           })}
         </div>
 
-        <p className="mt-4 border-t border-sand pt-3 text-[12px] text-ink-soft">
-          Cada barra es una sesión (% del tiempo en postura adecuada). Promedio del periodo:{' '}
+        <p className="mt-4 border-t border-sand pt-3 text-[13px] text-ink-soft">
+          Cada barra es una sesión: cuánto tiempo estuviste bien sentado. En promedio:{' '}
           <span className="font-semibold text-ink">{avg}%</span>.
         </p>
       </div>
 
       <div className="flex flex-col gap-3 lg:border-l lg:border-sand lg:pl-6">
         <div className="rounded-lg border border-sand bg-cream/60 p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
-            Vs. sesión anterior
-          </p>
+          <p className="text-[12px] font-medium text-ink-faint">Comparado con la vez anterior</p>
           {delta !== null ? (
             <div
               className={`mt-1.5 flex items-center gap-2 ${
@@ -221,36 +218,32 @@ export function SessionTrend({
           ) : (
             <p className="mt-1.5 text-[14px] text-ink-soft">Sin sesión previa.</p>
           )}
-          <p className="mt-1 text-[12px] text-ink-soft">
+          <p className="mt-1 text-[13px] text-ink-soft">
             {delta === null
               ? ''
               : delta > 0
-                ? 'Mejoraste respecto a la jornada anterior.'
+                ? 'Mejoraste respecto a la vez anterior.'
                 : delta < 0
-                  ? 'Bajaste respecto a la jornada anterior.'
-                  : 'Te mantuviste igual que la jornada anterior.'}
+                  ? 'Bajaste un poco respecto a la vez anterior.'
+                  : 'Te mantuviste igual que la vez anterior.'}
           </p>
         </div>
 
         <div className="rounded-lg border border-sand bg-cream/60 p-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
-            Patrón que se repite
-          </p>
+          <p className="text-[12px] font-medium text-ink-faint">Lo que más se repite</p>
           {dominantLabel ? (
             <>
-              <p className="mt-1.5 text-[16px] font-semibold leading-tight text-ink">
+              <p className="mt-1.5 text-[17px] font-semibold leading-tight text-ink">
                 {dominantLabel}
               </p>
-              <p className="mt-1 text-[12px] text-ink-soft">
-                {dominantZone ? `Zona ${dominantZone} · ` : ''}
-                {streak >= 2
-                  ? `${streak} sesiones seguidas`
-                  : 'primera sesión con este patrón'}
+              <p className="mt-1 text-[13px] text-ink-soft">
+                {dominantZone ? `En tu ${dominantZone}. ` : ''}
+                {streak >= 2 ? `Te pasó ${streak} sesiones seguidas.` : 'Primera vez con esto.'}
               </p>
             </>
           ) : (
             <p className="mt-1.5 text-[14px] text-ink-soft">
-              Sin desviación dominante en esta sesión.
+              Nada que se repita en esta sesión. ¡Bien!
             </p>
           )}
         </div>
