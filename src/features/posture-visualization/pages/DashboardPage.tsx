@@ -147,9 +147,9 @@ export function DashboardPage() {
               />
             ) : (
               <div className="editorial-card flex flex-col justify-center p-6">
-                <p className="label-mono">Consejos</p>
+                <p className="label-mono">Recomendaciones</p>
                 <p className="mt-2 text-[16px] leading-relaxed text-ink-soft">
-                  Cuando te sientes mal, aquí te daremos consejos para mejorar tu postura.
+                  Cuando se detecte una desviación, aquí verás recomendaciones para corregirla.
                 </p>
               </div>
             )}
@@ -183,8 +183,8 @@ const ALERT_INDEX: Partial<Record<PostureClass, number>> = {
 // por requisito del backlog (HU-06 AC1).
 const LIVE_TITLE: Record<PostureClass, string> = {
   adequate: 'Postura correcta',
-  forward_slouch: 'Estás encorvado',
-  excessive_recline: 'Estás echado hacia atrás',
+  forward_slouch: 'Inclinación hacia adelante',
+  excessive_recline: 'Reclinación excesiva',
   indeterminate: 'Sin datos',
 }
 
@@ -227,7 +227,7 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
     sub = 'Conectando con el chaleco…'
   } else if (reading !== null) {
     title = 'Chaleco sin conexión'
-    sub = `El chaleco no está enviando datos. Hace ${timeSince(reading.timestamp)}.`
+    sub = `El chaleco no está enviando datos. Última lectura ${timeSince(reading.timestamp)}.`
   }
 
   return (

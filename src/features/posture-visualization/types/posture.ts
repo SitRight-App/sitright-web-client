@@ -29,10 +29,10 @@ export const POSTURE_LABELS: Record<PostureClass, string> = {
 }
 
 export const POSTURE_HEADLINES: Record<PostureClass, string> = {
-  adequate: '¡Vas muy bien!',
-  forward_slouch: 'Endereza un poco la espalda.',
-  excessive_recline: 'Vuelve a apoyarte bien.',
-  indeterminate: 'Aún sin datos.',
+  adequate: 'Mantén la alineación.',
+  forward_slouch: 'Endereza la espalda.',
+  excessive_recline: 'Apoya bien la espalda.',
+  indeterminate: 'Sin datos.',
 }
 
 /**

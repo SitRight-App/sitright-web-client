@@ -23,10 +23,10 @@ const POSTURE_COLOR: Record<PostureClass, string> = {
 }
 
 const POSTURE_SHORT: Record<PostureClass, string> = {
-  adequate: 'Bien sentado',
+  adequate: 'Correcta',
   forward_slouch: 'Encorvado',
-  excessive_recline: 'Echado atrás',
-  indeterminate: 'Sin dato claro',
+  excessive_recline: 'Reclinado',
+  indeterminate: 'Sin dato',
 }
 
 const timeFmt = new Intl.DateTimeFormat('es-PE', {

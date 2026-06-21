@@ -7,9 +7,9 @@ export function BreakReminder({ onDismiss }: Props) {
     <div className="flex items-start gap-4 border-l-2 border-moss bg-moss/10 px-5 py-4">
       <span className="mt-0.5 text-[14px] font-semibold text-moss">Pausa</span>
       <div className="flex-1">
-        <p className="text-lg font-semibold leading-tight text-moss">¡Hora de moverte!</p>
+        <p className="text-lg font-semibold leading-tight text-moss">Tiempo de pausa activa.</p>
         <p className="mt-1 text-[14px] text-ink-soft">
-          Ya llevas un buen rato sentado. Levántate, estírate 5 minutos y vuelve con más energía.
+          Llevas un buen rato sentado. Levántate y estírate unos minutos antes de continuar.
         </p>
       </div>
       <button

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import type {
   PostureClass,
   TimelineReading,
@@ -26,10 +26,10 @@ const POSTURE_COLOR: Record<PostureClass, string> = {
 }
 
 const POSTURE_SHORT: Record<PostureClass, string> = {
-  adequate: 'Bien sentado',
+  adequate: 'Correcta',
   forward_slouch: 'Encorvado',
-  excessive_recline: 'Echado atrás',
-  indeterminate: 'Sin dato claro',
+  excessive_recline: 'Reclinado',
+  indeterminate: 'Sin dato',
 }
 
 const DEVIATION: PostureClass[] = ['forward_slouch', 'excessive_recline']
@@ -153,33 +153,8 @@ function fmtDur(min: number): string {
   return `${h} h ${m.toString().padStart(2, '0')} min`
 }
 
-interface Franja {
-  label: string
-  start: number
-  end: number
-}
-
 export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
   const minutes = useMemo(() => buildMinutes(readings), [readings])
-  const [franjaIdx, setFranjaIdx] = useState<number | null>(null)
-
-  // Franjas para hacer zoom (US010 AC1). Solo cuando la sesión es larga
-  // suficiente como para que el zoom aporte.
-  const franjas = useMemo<Franja[]>(() => {
-    if (minutes.length < 10) return []
-    const n = Math.min(4, Math.ceil(minutes.length / 5))
-    const size = Math.ceil(minutes.length / n)
-    const out: Franja[] = []
-    for (let i = 0; i < minutes.length; i += size) {
-      const end = Math.min(i + size, minutes.length)
-      out.push({
-        label: `${fmtT(minutes[i].t)}–${fmtT(minutes[end - 1].t + MINUTE)}`,
-        start: i,
-        end,
-      })
-    }
-    return out
-  }, [minutes])
 
   if (isError) {
     return (
@@ -211,8 +186,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
     )
   }
 
-  const sel = franjaIdx !== null && franjas[franjaIdx] ? franjas[franjaIdx] : null
-  const view = sel ? minutes.slice(sel.start, sel.end) : minutes
+  const view = minutes
   const blocks = mergeBlocks(view)
   const totalMin = view.length
   const t0 = view[0].t
@@ -239,41 +213,9 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
       )}
 
       <p className="mb-3 text-[15px] leading-relaxed text-ink-soft">
-        Cada bloque es cómo estuviste sentado en ese minuto. Los colores cálidos son los ratos en que
-        estuviste mal sentado; abajo te los detallamos.
+        Cada bloque es tu postura predominante en ese minuto. Los tramos cálidos señalan los
+        periodos de mala postura; abajo se detallan con su horario.
       </p>
-
-      {/* Zoom por franjas horarias (US010 AC1). */}
-      {franjas.length > 1 && (
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="text-[13px] font-medium text-ink-faint">Acercar a:</span>
-          <button
-            type="button"
-            onClick={() => setFranjaIdx(null)}
-            className={`rounded-full border px-3 py-1 text-[12px] font-medium transition-colors ${
-              sel === null
-                ? 'border-moss bg-moss text-cream-bone'
-                : 'border-sand bg-cream-bone text-ink-soft hover:border-moss hover:text-ink'
-            }`}
-          >
-            Toda la sesión
-          </button>
-          {franjas.map((f, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setFranjaIdx(i)}
-              className={`rounded-full border px-3 py-1 font-mono text-[12px] tabular-nums transition-colors ${
-                franjaIdx === i
-                  ? 'border-moss bg-moss text-cream-bone'
-                  : 'border-sand bg-cream-bone text-ink-soft hover:border-moss hover:text-ink'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Cinta de bloques por minuto. Legible impresa, sin depender del hover. */}
       <div className="flex h-14 w-full overflow-hidden rounded-md border border-sand">
@@ -311,12 +253,10 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
 
       {/* US019 AC1: resalta los períodos inadecuados con su tipo de desviación. */}
       <div className="mt-5 border-t border-sand pt-4">
-        <p className="mb-2.5 text-[14px] font-semibold text-ink">
-          Ratos en que estuviste mal sentado
-        </p>
+        <p className="mb-2.5 text-[14px] font-semibold text-ink">Periodos de mala postura</p>
         {periods.length === 0 ? (
           <p className="text-[14px] text-ink-soft">
-            No estuviste mal sentado por mucho rato seguido en {sel ? 'esta franja' : 'toda la sesión'}. ¡Bien ahí!
+            No hubo periodos prolongados de mala postura en esta sesión.
           </p>
         ) : (
           <ul className="space-y-1.5">
@@ -341,7 +281,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
               ))}
             {periods.length > 8 && (
               <li className="text-[13px] text-ink-faint">
-                y {periods.length - 8} ratos más cortos.
+                y {periods.length - 8} periodos más breves.
               </li>
             )}
           </ul>
@@ -350,9 +290,9 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
 
       {/* Métricas de lectura rápida (también impresas). */}
       <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-sand pt-4 sm:grid-cols-4">
-        <Metric label="Tiempo medido" value={fmtDur(totalMin)} />
-        <Metric label="Lo más seguido mal sentado" value={longest > 0 ? fmtDur(longest) : '—'} />
-        <Metric label="Veces que te moviste" value={String(Math.max(0, transitions))} />
+        <Metric label="Tiempo registrado" value={fmtDur(totalMin)} />
+        <Metric label="Tramo continuo más largo" value={longest > 0 ? fmtDur(longest) : '—'} />
+        <Metric label="Cambios de postura" value={String(Math.max(0, transitions))} />
         <Metric label="Pausas" value={String(pauseCount)} />
       </dl>
 

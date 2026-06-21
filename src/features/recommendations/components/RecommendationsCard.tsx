@@ -70,9 +70,9 @@ export function RecommendationsCard({ recommendations, postureClass, maxVisible 
 
   return (
     <div className="editorial-card flex h-full flex-col p-6">
-      <p className="label-mono">{isGood ? 'Sigue así' : 'Consejos para ti'}</p>
+      <p className="label-mono">{isGood ? 'En buena postura' : 'Recomendaciones'}</p>
       <h3 className="mt-2 text-xl font-semibold tracking-tight text-ink">
-        {isGood ? 'Vas muy bien hoy.' : 'Prueba estos ajustes ahora.'}
+        {isGood ? 'Postura correcta hasta ahora.' : 'Ajustes sugeridos ahora.'}
       </h3>
 
       <div className="mt-4 space-y-3.5">

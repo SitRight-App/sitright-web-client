@@ -50,18 +50,18 @@ const POSTURE_COLORS: Record<string, string> = {
 // Versión corta para cifras/etiquetas (2-3 palabras).
 const POSTURE_TAG: Record<string, string> = {
   forward_slouch: 'Encorvado',
-  excessive_recline: 'Echado atrás',
+  excessive_recline: 'Reclinado',
   forward_head: 'Cabeza adelante',
   rounded_shoulders: 'Hombros caídos',
   slouching: 'Espalda encorvada',
   lateral_tilt: 'Ladeado',
 }
 
-// Cómo nombramos cada desviación en lenguaje cotidiano (no clínico).
+// Nombre de cada desviación en lenguaje claro pero no clínico.
 const POSTURE_COLLOQUIAL: Record<string, string> = {
-  forward_slouch: 'encorvarte hacia adelante',
-  excessive_recline: 'echarte demasiado hacia atrás',
-  forward_head: 'sacar la cabeza hacia adelante',
+  forward_slouch: 'inclinarte hacia adelante',
+  excessive_recline: 'reclinarte en exceso',
+  forward_head: 'adelantar la cabeza',
   rounded_shoulders: 'encorvar los hombros',
   slouching: 'encorvar la espalda',
   lateral_tilt: 'inclinarte hacia un lado',
@@ -402,14 +402,14 @@ function Hero({ session, effective, stats }: HeroProps) {
   // encabezado (el audit marcó "Confianza ML media" como ruido: se elimina).
   const figures: Array<{ label: string; value: string; meta?: string; tone?: 'moss' | 'alert' }> = [
     {
-      label: 'Bien sentado',
+      label: 'Postura correcta',
       value: adequatePct !== null ? `${adequatePct}%` : '—',
       meta: 'del tiempo',
       tone: adequatePct !== null && adequatePct >= 70 ? 'moss' : undefined,
     },
     {
-      label: 'Lo que más se repitió',
-      value: dominant ? (POSTURE_TAG[dominant] ?? POSTURE_LABELS[dominant] ?? dominant) : 'Nada',
+      label: 'Desviación más frecuente',
+      value: dominant ? (POSTURE_TAG[dominant] ?? POSTURE_LABELS[dominant] ?? dominant) : 'Ninguna',
       tone: dominant ? 'alert' : undefined,
     },
     {
@@ -422,8 +422,8 @@ function Hero({ session, effective, stats }: HeroProps) {
   const lede =
     adequatePct !== null
       ? dominant
-        ? `Estuviste bien sentado el ${adequatePct}% del tiempo. Lo que más se repitió fue ${POSTURE_COLLOQUIAL[dominant] ?? POSTURE_LABELS[dominant]?.toLowerCase() ?? dominant}.`
-        : `Estuviste bien sentado el ${adequatePct}% del tiempo. ¡Vas muy bien!`
+        ? `Mantuviste una postura correcta el ${adequatePct}% del tiempo. La desviación más frecuente fue ${POSTURE_COLLOQUIAL[dominant] ?? POSTURE_LABELS[dominant]?.toLowerCase() ?? dominant}.`
+        : `Mantuviste una postura correcta el ${adequatePct}% del tiempo, sin una desviación predominante.`
       : 'Esta sesión todavía no tiene un resumen.'
 
   const meta: Array<{ label: string; value: string }> = [
@@ -453,11 +453,11 @@ function Hero({ session, effective, stats }: HeroProps) {
         <h1 className="text-[40px] font-semibold leading-[1.05] tracking-tight text-ink">
           {adequatePct !== null && adequatePct >= 70 ? (
             <>
-              Hoy te sentaste <span className="text-moss">bastante bien.</span>
+              Buena postura <span className="text-moss">en general.</span>
             </>
           ) : (
             <>
-              Hoy hubo <span className="text-moss">cosas para mejorar.</span>
+              Postura con <span className="text-moss">margen de mejora.</span>
             </>
           )}
         </h1>
@@ -491,21 +491,21 @@ function Hero({ session, effective, stats }: HeroProps) {
       </div>
 
       <aside className="rounded-xl bg-moss-deep p-7 text-cream-bone">
-        <p className="mb-2.5 text-[13px] font-medium text-cream-bone/70">Lo que vimos</p>
+        <p className="mb-2.5 text-[13px] font-medium text-cream-bone/70">Resumen</p>
         <h3 className="mb-3 text-2xl font-semibold leading-tight tracking-tight">
-          {dominant ? 'Hay algo para mejorar.' : '¡Buen trabajo!'}
+          {dominant ? 'Hay margen de mejora.' : 'Buen desempeño.'}
         </h3>
         <p className="mb-6 text-[15px] leading-relaxed text-cream-bone/80">
           {dominant
-            ? `Sobre todo, trata de no ${POSTURE_COLLOQUIAL[dominant] ?? 'desviarte'}. Abajo te dejamos consejos para lograrlo.`
-            : 'Te mantuviste bien sentado casi todo el tiempo. Mira los consejos para seguir así.'}
+            ? `Prioriza evitar ${POSTURE_COLLOQUIAL[dominant] ?? 'la desviación'}. Abajo tienes recomendaciones para corregirlo.`
+            : 'Mantuviste una postura correcta la mayor parte del tiempo. Revisa las recomendaciones para conservarla.'}
         </p>
         <div className="flex gap-2.5 print:hidden">
           <Link
             to="/recommendations"
             className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-cream-bone px-3.5 py-3 text-[15px] font-semibold text-moss-deep transition-colors hover:bg-cream"
           >
-            Ver consejos
+            Ver recomendaciones
             <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
           </Link>
           <button
@@ -538,9 +538,9 @@ function severityOf(pct: number): Severity {
 }
 
 const SEV_LABEL: Record<Severity, string> = {
-  ok: 'Bien',
-  leve: 'Un poco fuera',
-  marcada: 'Bastante fuera',
+  ok: 'En rango',
+  leve: 'Leve',
+  marcada: 'Marcada',
 }
 
 function fmtMin(m: number): string {
@@ -555,11 +555,11 @@ function zoneSummary(a: ZoneAnalysis): string {
     .sort((x, y) => y.d.deviated_pct - x.d.deviated_pct)
 
   if (dev.length === 0) {
-    return 'Ninguna parte de tu espalda se salió de lugar por mucho rato. ¡Muy bien!'
+    return 'Ninguna zona presentó una desviación sostenida durante la sesión.'
   }
   const worst = dev[0]
-  let s = `La parte que más trabajó fue tu ${ZONE_LABELS[worst.z].toLowerCase()}: estuvo fuera de lugar el ${Math.round(worst.d.deviated_pct)}% del tiempo.`
-  if (dev.length > 1) s += ` También se notó algo en tu ${ZONE_LABELS[dev[1].z].toLowerCase()}.`
+  let s = `La zona con mayor carga fue la ${ZONE_LABELS[worst.z].toLowerCase()}: estuvo desviada el ${Math.round(worst.d.deviated_pct)}% del tiempo.`
+  if (dev.length > 1) s += ` También hubo desviación en la ${ZONE_LABELS[dev[1].z].toLowerCase()}.`
   return s
 }
 
@@ -618,23 +618,23 @@ function ZoneReport({ sessionId }: ZoneReportProps) {
   return (
     <section className="mb-7 grid gap-4 lg:grid-cols-[minmax(0,380px)_1fr]">
       <div className="editorial-card flex flex-col bg-cream-deep p-6">
-        <p className="label-mono">Tu postura</p>
+        <p className="label-mono">Mapa postural</p>
         <h2 className="mt-1.5 text-xl font-semibold leading-tight tracking-tight text-ink">
-          ¿Cómo estuvo tu espalda?
+          Tu espalda por zonas
         </h2>
         <div className="mt-3 flex-1">
           <SessionBodyMap zones={data.zones} thresholdDeg={data.threshold_degrees} />
         </div>
         <p className="mt-4 border-t border-sand pt-3 text-[14px] leading-relaxed text-ink-soft">
-          El número es el <span className="font-medium text-ink">% del tiempo</span> que esa parte
-          estuvo fuera de lugar. Más color, más rato así.
+          El número es el <span className="font-medium text-ink">% del tiempo</span> que esa zona
+          estuvo desviada. A más color, más tiempo de desviación.
         </p>
       </div>
 
       <div className="editorial-card p-6">
-        <p className="label-mono">Parte por parte</p>
+        <p className="label-mono">Carga por zona</p>
         <h2 className="mt-1.5 text-2xl font-semibold tracking-tight text-ink">
-          ¿Qué parte trabajó de más?
+          Zona con mayor carga
         </h2>
         <p className="mt-3 max-w-[680px] text-[16px] leading-relaxed text-ink-soft">
           {zoneSummary(data)}
@@ -678,8 +678,8 @@ function ZoneRow({ zone, d }: { zone: SpineZone; d: ZoneDeviation }) {
         </span>
       </div>
       <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2">
-        <ZoneMetric label="Tiempo fuera de lugar" value={fmtMin(d.minutes_in_deviation)} />
-        <ZoneMetric label="Rato más largo seguido" value={fmtMin(d.longest_streak_min)} />
+        <ZoneMetric label="Tiempo desviada" value={fmtMin(d.minutes_in_deviation)} />
+        <ZoneMetric label="Tramo más largo" value={fmtMin(d.longest_streak_min)} />
       </dl>
     </li>
   )
@@ -721,9 +721,9 @@ function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
       </section>
 
       <section className="rounded-xl border border-sand bg-cream-deep p-7">
-        <p className="label-mono">En qué estuviste</p>
+        <p className="label-mono">Distribución</p>
         <h3 className="mb-6 mt-1.5 text-xl font-semibold leading-tight tracking-tight text-ink">
-          ¿Cómo pasaste tu tiempo?
+          Cómo se repartió tu postura
         </h3>
         {summary && Object.keys(summary.counts_by_class).length > 0 ? (
           <ul className="space-y-4">
@@ -738,7 +738,7 @@ function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
                     <div className="flex items-baseline justify-between">
                       <span className="text-[15px] font-medium text-ink">
                         {cls === 'adequate'
-                          ? 'Bien sentado'
+                          ? 'Postura correcta'
                           : (POSTURE_TAG[cls] ?? POSTURE_LABELS[cls] ?? cls)}
                       </span>
                       <span
@@ -777,15 +777,15 @@ function SecondRow({ recommendations, effective }: SecondRowProps) {
     <div className="mt-4">
       <section className="rounded-xl border border-sand bg-cream-bone p-6">
         <div className="mb-4">
-          <p className="label-mono">Consejos para ti</p>
+          <p className="label-mono">Recomendaciones</p>
           <h2 className="mt-1.5 text-2xl font-semibold tracking-tight text-ink">
-            ¿Qué puedes mejorar?
+            Qué puedes mejorar
           </h2>
         </div>
 
         {recommendations.length === 0 ? (
           <p className="text-[15px] text-ink-soft">
-            Por ahora no hay consejos especiales para esta sesión. ¡Sigue así!
+            No hay recomendaciones específicas para esta sesión.
           </p>
         ) : (
           <ul className="space-y-3">

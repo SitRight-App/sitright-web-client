@@ -111,7 +111,7 @@ function NoActiveSessionState({ onStart, isPending }: NoActiveProps) {
   return (
     <div className="mt-4">
       <p className="text-[15px] leading-relaxed text-ink-soft">
-        Tu chaleco está listo. Inicia una sesión para empezar a medir cómo te sientas.
+        Tu chaleco está listo. Inicia una sesión para registrar tu postura.
       </p>
       <button
         type="button"
