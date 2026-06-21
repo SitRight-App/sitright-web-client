@@ -24,6 +24,14 @@ const dateFmt = new Intl.DateTimeFormat('es-PE', {
   minute: '2-digit',
 })
 
+/** Tiempo total acumulado: minutos si es menos de 1 h, si no horas (+ minutos). */
+function formatTotalTime(minutes: number): string {
+  if (minutes < 60) return `${Math.round(minutes)} min`
+  const h = Math.floor(minutes / 60)
+  const m = Math.round(minutes - h * 60)
+  return m === 0 ? `${h} h` : `${h} h ${m} min`
+}
+
 function StatusPill({ status }: { status: PostureSession['status'] }) {
   const isActive = status === 'active'
   return (
@@ -78,7 +86,7 @@ export function HistoryListPage() {
             {avgAdequate !== null && (
               <StatBlock label="Bien sentado" value={`${avgAdequate}%`} />
             )}
-            <StatBlock label="Tiempo total" value={`${Math.round(totalMinutes / 60)} h`} />
+            <StatBlock label="Tiempo total" value={formatTotalTime(totalMinutes)} />
           </div>
         )}
       </div>
