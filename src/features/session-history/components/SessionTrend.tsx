@@ -144,52 +144,51 @@ export function SessionTrend({
           Postura correcta, últimas {series.length} sesiones
         </h2>
 
-        {/* Track de barras con altura fija: el % de cada barra se resuelve contra
-            una altura definida (un contenedor flex con flex-1 no la garantiza). */}
-        <div className="mt-6 flex items-end gap-2" style={{ height: 96 }}>
+        {/* Gráfico de barras: el valor (grande) va encima de cada barra y la fecha
+            (pequeña) debajo. Track de altura fija para que la barra resuelva el %. */}
+        <div className="mt-6 flex items-end gap-3" style={{ height: 140 }}>
           {series.map((p, i) => {
             const isCurrent = i === curIdx
-            const h = Math.max(4, Math.round(p.pct))
+            const barPx = Math.max(6, Math.round((Math.max(0, Math.min(100, p.pct)) / 100) * 110))
             return (
-              <div
-                key={p.id}
-                className={`flex-1 rounded-t-md transition-colors ${
-                  isCurrent ? 'bg-moss-deep' : 'bg-ink-soft/20'
-                }`}
-                style={{ height: `${h}%` }}
-                title={`${dayFmt.format(new Date(p.at))} · ${Math.round(p.pct)}% adecuada`}
-              />
-            )
-          })}
-        </div>
-        <div className="mt-2 flex gap-2">
-          {series.map((p, i) => {
-            const isCurrent = i === curIdx
-            const dateLabel = isToday(p.at) ? 'hoy' : dayFmt.format(new Date(p.at)).replace('.', '')
-            return (
-              <div key={p.id} className="flex flex-1 flex-col items-center">
+              <div key={p.id} className="flex flex-1 flex-col items-center justify-end gap-2">
                 <span
-                  className={`font-mono text-[11px] tabular-nums ${
-                    isCurrent ? 'font-semibold text-moss-deep' : 'text-ink-faint'
+                  className={`text-[16px] font-semibold leading-none tabular-nums ${
+                    isCurrent ? 'text-moss-deep' : 'text-ink-soft'
                   }`}
                 >
                   {Math.round(p.pct)}%
                 </span>
-                <span
-                  className={`text-[11px] ${
-                    isCurrent ? 'font-semibold text-moss-deep' : 'text-ink-faint'
+                <div
+                  className={`w-full rounded-t-md transition-colors ${
+                    isCurrent ? 'bg-moss-deep' : 'bg-ink-soft/25'
                   }`}
-                >
-                  {dateLabel}
-                </span>
+                  style={{ height: barPx }}
+                  title={`${dayFmt.format(new Date(p.at))} · ${Math.round(p.pct)}% de postura correcta`}
+                />
               </div>
             )
           })}
         </div>
+        <div className="mt-2 flex gap-3">
+          {series.map((p, i) => {
+            const isCurrent = i === curIdx
+            const dateLabel = isToday(p.at) ? 'hoy' : dayFmt.format(new Date(p.at)).replace('.', '')
+            return (
+              <span
+                key={p.id}
+                className={`flex-1 text-center text-[13px] ${
+                  isCurrent ? 'font-semibold text-moss-deep' : 'text-ink-faint'
+                }`}
+              >
+                {dateLabel}
+              </span>
+            )
+          })}
+        </div>
 
-        <p className="mt-4 border-t border-sand pt-3 text-[13px] text-ink-soft">
-          Cada barra es el % de postura correcta de una sesión. Promedio:{' '}
-          <span className="font-semibold text-ink">{avg}%</span>.
+        <p className="mt-4 border-t border-sand pt-3 text-[14px] text-ink-soft">
+          Promedio del periodo: <span className="font-semibold text-ink">{avg}%</span>.
         </p>
       </div>
 

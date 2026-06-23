@@ -239,7 +239,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
         {ticks.map((t, i) => (
           <span
             key={i}
-            className="absolute font-mono text-[10px] tabular-nums text-ink-faint"
+            className="absolute font-mono text-[12px] tabular-nums text-ink-faint"
             style={{
               left: `${(i / (ticks.length - 1)) * 100}%`,
               transform:

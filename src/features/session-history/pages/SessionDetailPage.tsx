@@ -516,10 +516,10 @@ function Hero({ session, effective, stats }: HeroProps) {
             ? `Prioriza evitar ${POSTURE_COLLOQUIAL[dominant] ?? 'la desviación'}. Abajo tienes recomendaciones para corregirlo.`
             : 'Mantuviste una postura correcta la mayor parte del tiempo. Revisa las recomendaciones para conservarla.'}
         </p>
-        <div className="flex gap-2.5 print:hidden">
+        <div className="flex flex-col gap-2.5 print:hidden">
           <Link
             to="/recommendations"
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-cream-bone px-3.5 py-3 text-[15px] font-semibold text-moss-deep transition-colors hover:bg-cream"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-cream-bone px-4 py-3 text-[15px] font-semibold text-moss-deep transition-colors hover:bg-cream"
           >
             Ver recomendaciones
             <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
@@ -527,7 +527,7 @@ function Hero({ session, effective, stats }: HeroProps) {
           <button
             type="button"
             onClick={() => void exportSessionToPdf(session.id)}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-cream-bone/30 bg-transparent px-3.5 py-3 text-[15px] font-medium text-cream-bone transition-colors hover:border-cream-bone"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cream-bone/30 bg-transparent px-4 py-3 text-[15px] font-medium text-cream-bone transition-colors hover:border-cream-bone"
           >
             <Download className="h-4 w-4" strokeWidth={1.8} />
             Descargar PDF
