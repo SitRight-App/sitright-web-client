@@ -725,6 +725,21 @@ interface DetailGridProps {
 function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
   const { summary } = effective
 
+  // Composición de la sesión para la barra segmentada (patrón "etapas de sueño").
+  const dist = summary
+    ? Object.entries(summary.counts_by_class)
+        .map(([cls, count]) => ({
+          cls,
+          count,
+          pct: summary.valid_readings ? Math.round((count / summary.valid_readings) * 100) : 0,
+          label:
+            cls === 'adequate' ? 'Postura correcta' : (POSTURE_TAG[cls] ?? POSTURE_LABELS[cls] ?? cls),
+          color: POSTURE_COLORS[cls] ?? 'bg-ink-faint',
+        }))
+        .filter((d) => d.pct > 0)
+        .sort((a, b) => b.count - a.count)
+    : []
+
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
       <section className="rounded-xl border border-sand bg-cream-bone p-7">
@@ -747,38 +762,37 @@ function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
         <h3 className="mb-6 mt-2 text-xl font-semibold leading-tight tracking-tight text-ink">
           Cómo se repartió tu postura
         </h3>
-        {summary && Object.keys(summary.counts_by_class).length > 0 ? (
-          <ul className="space-y-4">
-            {Object.entries(summary.counts_by_class)
-              .sort(([, a], [, b]) => b - a)
-              .map(([cls, count]) => {
-                const pct = summary.valid_readings
-                  ? Math.round((count / summary.valid_readings) * 100)
-                  : 0
-                return (
-                  <li key={cls}>
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-[15px] font-medium text-ink">
-                        {cls === 'adequate'
-                          ? 'Postura correcta'
-                          : (POSTURE_TAG[cls] ?? POSTURE_LABELS[cls] ?? cls)}
-                      </span>
-                      <span
-                        className={`text-lg font-semibold tabular-nums ${cls === 'adequate' ? 'text-ink' : 'text-terracotta-deep'}`}
-                      >
-                        {pct}%
-                      </span>
-                    </div>
-                    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-ink-soft/15">
-                      <div
-                        className={`h-full ${POSTURE_COLORS[cls] ?? 'bg-ink-faint'}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </li>
-                )
-              })}
-          </ul>
+        {dist.length > 0 ? (
+          <>
+            {/* Una sola barra dividida por color (composición de un vistazo). */}
+            <div className="mt-2 flex h-5 w-full overflow-hidden rounded-full bg-ink-soft/10">
+              {dist.map((d) => (
+                <div
+                  key={d.cls}
+                  className={d.color}
+                  style={{ width: `${d.pct}%` }}
+                  title={`${d.label} · ${d.pct}%`}
+                />
+              ))}
+            </div>
+            <ul className="mt-5 space-y-3.5">
+              {dist.map((d) => (
+                <li key={d.cls} className="flex items-center justify-between">
+                  <span className="flex items-center gap-2.5 text-[15px] font-medium text-ink">
+                    <span className={`h-3 w-3 rounded-full ${d.color}`} />
+                    {d.label}
+                  </span>
+                  <span
+                    className={`text-[20px] font-semibold tabular-nums ${
+                      d.cls === 'adequate' ? 'text-moss' : 'text-terracotta-deep'
+                    }`}
+                  >
+                    {d.pct}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
         ) : (
           <p className="text-[14px] text-ink-soft">Aún sin distribución consolidada.</p>
         )}
