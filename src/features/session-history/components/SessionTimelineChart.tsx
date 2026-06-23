@@ -288,10 +288,10 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
         )}
       </div>
 
-      {/* Métricas de lectura rápida (también impresas). */}
-      <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-sand pt-4 sm:grid-cols-4">
-        <Metric label="Tiempo registrado" value={fmtDur(totalMin)} />
-        <Metric label="Tramo continuo más largo" value={longest > 0 ? fmtDur(longest) : '—'} />
+      {/* Métricas de lectura rápida (también impresas). La duración de la sesión
+          ya vive en el encabezado, así que aquí no se repite. */}
+      <dl className="mt-5 grid grid-cols-2 gap-4 border-t border-sand pt-4 sm:grid-cols-3">
+        <Metric label="Tramo de mala postura más largo" value={longest > 0 ? fmtDur(longest) : '—'} />
         <Metric label="Cambios de postura" value={String(Math.max(0, transitions))} />
         <Metric label="Pausas" value={String(pauseCount)} />
       </dl>
@@ -323,6 +323,9 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
         )}
         <span className="ml-auto">{readings.length} mediciones</span>
       </div>
+      <p className="mt-3 text-[11px] text-ink-faint">
+        Una pausa es un tramo de más de 2 minutos sin datos del chaleco.
+      </p>
     </div>
   )
 }

@@ -435,15 +435,18 @@ function Hero({ session, effective, stats }: HeroProps) {
     {
       label: 'Pausas',
       value: stats.pauseEstimate.toString(),
-      meta: stats.pauseAvgMinutes !== null ? `de ${stats.pauseAvgMinutes} min en promedio` : undefined,
+      meta:
+        stats.pauseAvgMinutes !== null
+          ? `de ${stats.pauseAvgMinutes} min en promedio`
+          : 'tramos sin datos del chaleco',
     },
   ]
 
   const lede =
     adequatePct !== null
       ? dominant
-        ? `La desviación más frecuente fue ${POSTURE_COLLOQUIAL[dominant] ?? POSTURE_LABELS[dominant]?.toLowerCase() ?? dominant}.`
-        : 'No hubo una desviación predominante en esta sesión.'
+        ? `Mantuviste una postura correcta el ${adequatePct}% del tiempo. La desviación más frecuente fue ${POSTURE_COLLOQUIAL[dominant] ?? POSTURE_LABELS[dominant]?.toLowerCase() ?? dominant}.`
+        : `Mantuviste una postura correcta el ${adequatePct}% del tiempo, sin una desviación predominante.`
       : 'Esta sesión todavía no tiene un resumen.'
 
   const metaLine = [
@@ -705,7 +708,7 @@ function ZoneAnnotation({ zone, d }: { zone: SpineZone; d: ZoneDeviation }) {
         <p className="mt-0.5 text-[12.5px] text-ink-soft">
           {sev === 'ok'
             ? 'Sin desviación relevante'
-            : `${fmtMin(d.minutes_in_deviation)} desviada · tramo de ${fmtMin(d.longest_streak_min)}`}
+            : `${fmtMin(d.minutes_in_deviation)} desviada · tramo más largo ${fmtMin(d.longest_streak_min)}`}
         </p>
       </div>
       <div className="shrink-0 text-right">
@@ -798,6 +801,9 @@ function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
                 </li>
               ))}
             </ul>
+            <p className="mt-4 border-t border-sand pt-3 text-[12.5px] text-ink-faint">
+              Porcentajes sobre el tiempo registrado de la sesión.
+            </p>
           </>
         ) : (
           <p className="text-[14px] text-ink-soft">Aún sin distribución consolidada.</p>

@@ -187,8 +187,9 @@ export function SessionTrend({
           })}
         </div>
 
-        <p className="mt-4 border-t border-sand pt-3 text-[14px] text-ink-soft">
-          Promedio del periodo: <span className="font-semibold text-ink">{avg}%</span>.
+        <p className="mt-4 border-t border-sand pt-3 text-[13px] text-ink-soft">
+          Cada barra es el % de postura correcta de una sesión. Promedio:{' '}
+          <span className="font-semibold text-ink">{avg}%</span>.
         </p>
       </div>
 
