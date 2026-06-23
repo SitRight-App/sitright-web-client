@@ -4,10 +4,12 @@ import { Link, useParams } from 'react-router-dom'
 import { useRecommendations } from '@/features/recommendations/hooks/useRecommendations'
 import type { TimelineReading } from '@/features/posture-visualization/types/posture'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
+import { ScoreRing } from '@/shared/ui/ScoreRing'
+import { SectionEyebrow } from '@/shared/ui/SectionEyebrow'
 import { SessionBodyMap } from '../components/SessionBodyMap'
 import { SessionTimelineChart } from '../components/SessionTimelineChart'
 import { SessionTrend } from '../components/SessionTrend'
-import { useSession, useZoneAnalysis } from '../hooks/useSessions'
+import { useSession, useSessions, useZoneAnalysis } from '../hooks/useSessions'
 import { useSessionReadings } from '../hooks/useSessionReadings'
 import type {
   PostureSession,
@@ -398,15 +400,21 @@ function Hero({ session, effective, stats }: HeroProps) {
   const adequatePct =
     summary?.adequate_percentage != null ? Math.round(summary.adequate_percentage) : null
 
-  // Cifras clave que antes vivían en su propia fila de tarjetas. Se funden en el
-  // encabezado (el audit marcó "Confianza ML media" como ruido: se elimina).
+  // Variación vs. la sesión anterior (mismo cálculo que la tendencia; la query
+  // de sesiones la comparte TanStack Query, así que no hay doble fetch).
+  const { data: allSessions } = useSessions({ limit: 20 })
+  const delta = useMemo<number | null>(() => {
+    if (!allSessions || adequatePct === null) return null
+    const pts = allSessions
+      .filter((s) => s.summary && s.summary.valid_readings > 0)
+      .map((s) => ({ id: s.id, at: s.started_at, pct: s.summary!.adequate_percentage }))
+      .sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
+    const idx = pts.findIndex((p) => p.id === session.id)
+    if (idx <= 0) return null
+    return Math.round(pts[idx].pct - pts[idx - 1].pct)
+  }, [allSessions, session.id, adequatePct])
+
   const figures: Array<{ label: string; value: string; meta?: string; tone?: 'moss' | 'alert' }> = [
-    {
-      label: 'Postura correcta',
-      value: adequatePct !== null ? `${adequatePct}%` : '—',
-      meta: 'del tiempo',
-      tone: adequatePct !== null && adequatePct >= 70 ? 'moss' : undefined,
-    },
     {
       label: 'Desviación más frecuente',
       value: dominant ? (POSTURE_TAG[dominant] ?? POSTURE_LABELS[dominant] ?? dominant) : 'Ninguna',
@@ -422,72 +430,80 @@ function Hero({ session, effective, stats }: HeroProps) {
   const lede =
     adequatePct !== null
       ? dominant
-        ? `Mantuviste una postura correcta el ${adequatePct}% del tiempo. La desviación más frecuente fue ${POSTURE_COLLOQUIAL[dominant] ?? POSTURE_LABELS[dominant]?.toLowerCase() ?? dominant}.`
-        : `Mantuviste una postura correcta el ${adequatePct}% del tiempo, sin una desviación predominante.`
+        ? `La desviación más frecuente fue ${POSTURE_COLLOQUIAL[dominant] ?? POSTURE_LABELS[dominant]?.toLowerCase() ?? dominant}.`
+        : 'No hubo una desviación predominante en esta sesión.'
       : 'Esta sesión todavía no tiene un resumen.'
 
-  const meta: Array<{ label: string; value: string }> = [
-    {
-      label: 'Horario',
-      value: ended
-        ? `${timeFmt.format(started)} a ${timeFmt.format(ended)}`
-        : timeFmt.format(started),
-    },
-    ...(session.duration_minutes !== null
-      ? [{ label: 'Duración', value: formatHoursMinutes(session.duration_minutes) }]
-      : []),
+  const metaLine = [
+    ended ? `${timeFmt.format(started)} a ${timeFmt.format(ended)}` : timeFmt.format(started),
+    session.duration_minutes !== null ? formatHoursMinutes(session.duration_minutes) : null,
   ]
+    .filter(Boolean)
+    .join(' · ')
 
   return (
-    <section className="mb-9 grid gap-10 border-b border-sand pb-8 lg:grid-cols-[1fr_360px]">
-      <div>
-        <dl className="mb-6 flex flex-wrap gap-x-8 gap-y-3">
-          {meta.map((m) => (
-            <div key={m.label}>
-              <dt className="text-[13px] font-medium text-ink-faint">{m.label}</dt>
-              <dd className="mt-0.5 text-[16px] font-medium text-ink">{m.value}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <h1 className="text-[40px] font-semibold leading-[1.05] tracking-tight text-ink">
-          {adequatePct !== null && adequatePct >= 70 ? (
-            <>
-              Buena postura <span className="text-moss">en general.</span>
-            </>
-          ) : (
-            <>
-              Postura con <span className="text-moss">margen de mejora.</span>
-            </>
+    <section className="mb-9 grid gap-8 border-b border-sand pb-8 lg:grid-cols-[1fr_340px]">
+      <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-center sm:gap-9">
+        {/* Anillo de score: protagonista del encabezado */}
+        <div className="flex shrink-0 flex-col items-center gap-3">
+          <ScoreRing value={adequatePct} />
+          {delta !== null && (
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold ${
+                delta > 0
+                  ? 'bg-moss/10 text-moss'
+                  : delta < 0
+                    ? 'bg-terracotta/10 text-terracotta-deep'
+                    : 'bg-sand/50 text-ink-soft'
+              }`}
+            >
+              {delta > 0 ? '▲' : delta < 0 ? '▼' : '='} {delta > 0 ? '+' : ''}
+              {delta} pts vs. anterior
+            </span>
           )}
-        </h1>
-        <p className="mt-5 max-w-[640px] text-[18px] leading-relaxed text-ink-soft">{lede}</p>
-        {provisional && (
-          <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-amber/40 bg-amber/10 px-3 py-1 text-[12px] font-medium text-ink-soft">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber" />
-            Datos provisionales · la sesión sigue abierta
-          </p>
-        )}
+        </div>
 
-        <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-4 border-t border-sand pt-5">
-          {figures.map((f) => (
-            <div key={f.label}>
-              <dt className="text-[13px] font-medium text-ink-faint">{f.label}</dt>
-              <dd
-                className={`mt-1 text-[24px] font-semibold leading-none tracking-tight ${
-                  f.tone === 'moss'
-                    ? 'text-moss'
-                    : f.tone === 'alert'
-                      ? 'text-terracotta-deep'
-                      : 'text-ink'
-                }`}
-              >
-                {f.value}
-              </dd>
-              {f.meta && <p className="mt-1 text-[13px] text-ink-soft">{f.meta}</p>}
-            </div>
-          ))}
-        </dl>
+        <div className="min-w-0 text-center sm:text-left">
+          <p className="mb-2.5 text-[13px] font-medium text-ink-faint">{metaLine}</p>
+          <h1 className="text-[44px] font-semibold leading-[1.02] tracking-tight text-ink">
+            {adequatePct !== null && adequatePct >= 70 ? (
+              <>
+                Buena postura <span className="text-moss">en general.</span>
+              </>
+            ) : (
+              <>
+                Postura con <span className="text-amber">margen de mejora.</span>
+              </>
+            )}
+          </h1>
+          <p className="mt-4 max-w-[560px] text-[17px] leading-relaxed text-ink-soft">{lede}</p>
+          {provisional && (
+            <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-amber/40 bg-amber/10 px-3 py-1 text-[12px] font-medium text-ink-soft">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber" />
+              Datos provisionales · la sesión sigue abierta
+            </p>
+          )}
+
+          <dl className="mt-6 flex flex-wrap justify-center gap-x-10 gap-y-4 border-t border-sand pt-5 sm:justify-start">
+            {figures.map((f) => (
+              <div key={f.label}>
+                <dt className="text-[13px] font-medium text-ink-faint">{f.label}</dt>
+                <dd
+                  className={`mt-1 text-[26px] font-semibold leading-none tracking-tight ${
+                    f.tone === 'moss'
+                      ? 'text-moss'
+                      : f.tone === 'alert'
+                        ? 'text-terracotta-deep'
+                        : 'text-ink'
+                  }`}
+                >
+                  {f.value}
+                </dd>
+                {f.meta && <p className="mt-1 text-[13px] text-ink-soft">{f.meta}</p>}
+              </div>
+            ))}
+          </dl>
+        </div>
       </div>
 
       <aside className="rounded-xl bg-moss-deep p-7 text-cream-bone">
@@ -615,11 +631,17 @@ function ZoneReport({ sessionId }: ZoneReportProps) {
     )
   }
 
+  // El color de la sección refleja el estado: terracota si alguna zona se desvió,
+  // verde si todas quedaron en rango.
+  const zoneTone = ZONE_ORDER.some((z) => severityOf(data.zones[z].deviated_pct) !== 'ok')
+    ? 'terracotta'
+    : 'moss'
+
   return (
     <section className="mb-7 grid gap-4 lg:grid-cols-[minmax(0,380px)_1fr]">
       <div className="editorial-card flex flex-col bg-cream-deep p-6">
-        <p className="label-mono">Mapa postural</p>
-        <h2 className="mt-1.5 text-xl font-semibold leading-tight tracking-tight text-ink">
+        <SectionEyebrow tone={zoneTone}>Mapa postural</SectionEyebrow>
+        <h2 className="mt-2 text-[22px] font-semibold leading-tight tracking-tight text-ink">
           Tu espalda por zonas
         </h2>
         <div className="mt-3 flex-1">
@@ -632,8 +654,8 @@ function ZoneReport({ sessionId }: ZoneReportProps) {
       </div>
 
       <div className="editorial-card p-6">
-        <p className="label-mono">Carga por zona</p>
-        <h2 className="mt-1.5 text-2xl font-semibold tracking-tight text-ink">
+        <SectionEyebrow tone={zoneTone}>Carga por zona</SectionEyebrow>
+        <h2 className="mt-2 text-[26px] font-semibold tracking-tight text-ink">
           Zona con mayor carga
         </h2>
         <p className="mt-3 max-w-[680px] text-[16px] leading-relaxed text-ink-soft">
@@ -707,8 +729,8 @@ function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
     <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
       <section className="rounded-xl border border-sand bg-cream-bone p-7">
         <div className="mb-5 border-b border-sand pb-4">
-          <p className="label-mono mb-1.5">Línea de tiempo de la sesión</p>
-          <h2 className="text-2xl font-semibold tracking-tight text-ink">
+          <SectionEyebrow tone="neutral">Línea de tiempo de la sesión</SectionEyebrow>
+          <h2 className="mt-2 text-[26px] font-semibold tracking-tight text-ink">
             Cómo se comportó tu columna
           </h2>
         </div>
@@ -721,8 +743,8 @@ function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
       </section>
 
       <section className="rounded-xl border border-sand bg-cream-deep p-7">
-        <p className="label-mono">Distribución</p>
-        <h3 className="mb-6 mt-1.5 text-xl font-semibold leading-tight tracking-tight text-ink">
+        <SectionEyebrow tone="neutral">Distribución</SectionEyebrow>
+        <h3 className="mb-6 mt-2 text-xl font-semibold leading-tight tracking-tight text-ink">
           Cómo se repartió tu postura
         </h3>
         {summary && Object.keys(summary.counts_by_class).length > 0 ? (
@@ -777,8 +799,8 @@ function SecondRow({ recommendations, effective }: SecondRowProps) {
     <div className="mt-4">
       <section className="rounded-xl border border-sand bg-cream-bone p-6">
         <div className="mb-4">
-          <p className="label-mono">Recomendaciones</p>
-          <h2 className="mt-1.5 text-2xl font-semibold tracking-tight text-ink">
+          <SectionEyebrow tone="amber">Recomendaciones</SectionEyebrow>
+          <h2 className="mt-2 text-[26px] font-semibold tracking-tight text-ink">
             Qué puedes mejorar
           </h2>
         </div>

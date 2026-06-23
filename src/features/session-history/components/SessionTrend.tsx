@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
+import { SectionEyebrow } from '@/shared/ui/SectionEyebrow'
 import { useSessions } from '../hooks/useSessions'
 
 /**
@@ -105,8 +106,8 @@ export function SessionTrend({
   if (series.length < 2) {
     return (
       <section className="editorial-card mb-7 bg-cream-deep p-6">
-        <p className="label-mono">Evolución</p>
-        <h2 className="mt-1.5 text-xl font-semibold tracking-tight text-ink">
+        <SectionEyebrow tone="moss">Evolución</SectionEyebrow>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
           Aún no hay con qué comparar
         </h2>
         <p className="mt-2 max-w-2xl text-[16px] leading-relaxed text-ink-soft">
@@ -138,8 +139,8 @@ export function SessionTrend({
   return (
     <section className="editorial-card mb-7 grid gap-6 p-6 lg:grid-cols-[1fr_300px]">
       <div>
-        <p className="label-mono">Evolución</p>
-        <h2 className="mt-1.5 text-xl font-semibold tracking-tight text-ink">
+        <SectionEyebrow tone="moss">Evolución</SectionEyebrow>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
           Postura correcta, últimas {series.length} sesiones
         </h2>
 
