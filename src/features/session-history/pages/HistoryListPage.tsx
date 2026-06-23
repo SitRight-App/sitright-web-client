@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
+import { ScoreRing } from '@/shared/ui/ScoreRing'
 import { useSessions } from '../hooks/useSessions'
 import type { PostureSession } from '../types/session'
 
@@ -167,8 +168,12 @@ export function HistoryListPage() {
                       ? `${Math.round(s.duration_minutes)} min`
                       : '—'}
                   </span>
-                  <span className="text-right text-[16px] font-semibold tabular-nums text-ink">
-                    {s.summary ? `${Math.round(s.summary.adequate_percentage)}%` : '—'}
+                  <span className="flex justify-end">
+                    {s.summary ? (
+                      <ScoreRing value={s.summary.adequate_percentage} size={46} caption={null} />
+                    ) : (
+                      <span className="text-[16px] text-ink-faint">—</span>
+                    )}
                   </span>
                   <span>
                     <StatusPill status={s.status} />

@@ -3,7 +3,8 @@ interface ScoreRingProps {
   value: number | null
   size?: number
   thickness?: number
-  caption?: string
+  /** Texto bajo el número. null o vacío → sin caption (modo compacto). */
+  caption?: string | null
 }
 
 /** Color del anillo según el nivel de postura correcta. */
@@ -17,15 +18,18 @@ function ringColorVar(value: number | null): string {
 /**
  * Anillo de score (donut SVG): muestra el % de postura correcta como arco
  * coloreado por nivel (verde ≥70, ámbar 50-69, terracota <50) con el número
- * grande al centro. Pieza protagonista del encabezado del reporte.
+ * al centro. Tamaño grande en el encabezado del reporte; pequeño (sin caption)
+ * como indicador por fila en el historial.
  */
-export function ScoreRing({ value, size = 184, thickness = 16, caption = 'Postura correcta' }: ScoreRingProps) {
+export function ScoreRing({ value, size = 184, thickness, caption = 'Postura correcta' }: ScoreRingProps) {
+  const stroke = thickness ?? (size > 90 ? 16 : Math.max(4, Math.round(size * 0.11)))
   const pct = value == null ? 0 : Math.max(0, Math.min(100, value))
-  const r = (size - thickness) / 2
+  const r = (size - stroke) / 2
   const c = 2 * Math.PI * r
   const dash = (pct / 100) * c
   const colorVar = ringColorVar(value)
   const center = size / 2
+  const numberFs = Math.round(size * (size > 90 ? 0.25 : 0.3))
 
   return (
     <div className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }}>
@@ -36,7 +40,7 @@ export function ScoreRing({ value, size = 184, thickness = 16, caption = 'Postur
           r={r}
           fill="none"
           stroke="rgb(var(--color-sand))"
-          strokeWidth={thickness}
+          strokeWidth={stroke}
         />
         <circle
           cx={center}
@@ -44,19 +48,19 @@ export function ScoreRing({ value, size = 184, thickness = 16, caption = 'Postur
           r={r}
           fill="none"
           stroke={`rgb(var(${colorVar}))`}
-          strokeWidth={thickness}
+          strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={`${dash} ${c}`}
         />
       </svg>
       <div className="absolute flex flex-col items-center">
         <span
-          className="text-[46px] font-semibold leading-none tracking-tight tabular-nums"
-          style={{ color: `rgb(var(${colorVar}))` }}
+          className="font-semibold leading-none tracking-tight tabular-nums"
+          style={{ fontSize: numberFs, color: `rgb(var(${colorVar}))` }}
         >
           {value == null ? '—' : `${Math.round(pct)}%`}
         </span>
-        <span className="mt-1.5 text-[12px] font-medium text-ink-soft">{caption}</span>
+        {caption && <span className="mt-1.5 text-[12px] font-medium text-ink-soft">{caption}</span>}
       </div>
     </div>
   )
