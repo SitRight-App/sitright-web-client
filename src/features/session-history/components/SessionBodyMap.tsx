@@ -4,6 +4,10 @@ import type { SpineZone, ZoneDeviation } from '../types/session'
 interface Props {
   zones: Record<SpineZone, ZoneDeviation>
   thresholdDeg: number
+  /** Muestra el % junto a cada nodo. Se desactiva cuando los datos se anotan
+   *  aparte (avatar con anotaciones al lado). */
+  showCallouts?: boolean
+  className?: string
 }
 
 // Bandas de color por % de tiempo desviado (presentación, no cutoff clínico).
@@ -13,13 +17,11 @@ function toneFor(pct: number): FigureTone {
   return 'marcada'
 }
 
-function zoneProp(d: ZoneDeviation): SeatedFigureZone {
+function zoneProp(d: ZoneDeviation, showCallouts: boolean): SeatedFigureZone {
   const tone = toneFor(d.deviated_pct)
-  // En la figura mostramos solo el % (lo intuitivo: cuánto tiempo estuvo
-  // desviada). El ángulo y su explicación van en las tarjetas de detalle.
   return {
     tone,
-    callout: tone === 'ok' ? undefined : [`${Math.round(d.deviated_pct)}%`],
+    callout: showCallouts && tone !== 'ok' ? [`${Math.round(d.deviated_pct)}%`] : undefined,
   }
 }
 
@@ -28,7 +30,7 @@ function zoneProp(d: ZoneDeviation): SeatedFigureZone {
  * agregada de cada zona (% de tiempo desviado → color e indicador).
  * La cabeza se inclina solo si la cervical estuvo realmente desviada. (ADR-006)
  */
-export function SessionBodyMap({ zones }: Props) {
+export function SessionBodyMap({ zones, showCallouts = true, className }: Props) {
   // Inclina la cabeza solo cuando la cervical está desviada (si está "en rango",
   // una cabeza torcida contradiría el estado).
   const headTilt =
@@ -37,11 +39,12 @@ export function SessionBodyMap({ zones }: Props) {
       : Math.min(zones.cervical.avg_angle_deg, 32)
   return (
     <SeatedFigure
-      className="mx-auto w-full max-w-[360px]"
+      className={className ?? 'mx-auto w-full max-w-[360px]'}
+      tight={!showCallouts}
       headTilt={headTilt}
-      cervical={zoneProp(zones.cervical)}
-      dorsal={zoneProp(zones.dorsal)}
-      lumbar={zoneProp(zones.lumbar)}
+      cervical={zoneProp(zones.cervical, showCallouts)}
+      dorsal={zoneProp(zones.dorsal, showCallouts)}
+      lumbar={zoneProp(zones.lumbar, showCallouts)}
     />
   )
 }

@@ -638,81 +638,68 @@ function ZoneReport({ sessionId }: ZoneReportProps) {
     : 'moss'
 
   return (
-    <section className="mb-7 grid gap-4 lg:grid-cols-[minmax(0,380px)_1fr]">
-      <div className={`flex flex-col rounded-xl border p-6 ${CARD_TONE[zoneTone]}`}>
-        <SectionEyebrow tone={zoneTone}>Mapa postural</SectionEyebrow>
-        <h2 className="mt-2 text-[22px] font-semibold leading-tight tracking-tight text-ink">
-          Tu espalda por zonas
-        </h2>
-        <div className="mt-3 flex-1">
-          <SessionBodyMap zones={data.zones} thresholdDeg={data.threshold_degrees} />
-        </div>
-        <p className="mt-4 border-t border-sand pt-3 text-[14px] leading-relaxed text-ink-soft">
-          El número es el <span className="font-medium text-ink">% del tiempo</span> que esa zona
-          estuvo desviada. A más color, más tiempo de desviación.
-        </p>
-      </div>
-
-      <div className={`rounded-xl border p-6 ${CARD_TONE[zoneTone]}`}>
+    <section className="mb-7">
+      <div className={`rounded-xl border p-6 sm:p-7 ${CARD_TONE[zoneTone]}`}>
         <SectionEyebrow tone={zoneTone}>Carga por zona</SectionEyebrow>
         <h2 className="mt-2 text-[26px] font-semibold tracking-tight text-ink">
-          Zona con mayor carga
+          Tu espalda, zona por zona
         </h2>
-        <p className="mt-3 max-w-[680px] text-[16px] leading-relaxed text-ink-soft">
+        <p className="mt-3 max-w-[760px] text-[16px] leading-relaxed text-ink-soft">
           {zoneSummary(data)}
         </p>
 
-        <ul className="mt-5 space-y-3">
-          {ZONE_ORDER.map((zone) => (
-            <ZoneRow key={zone} zone={zone} d={data.zones[zone]} />
-          ))}
-        </ul>
+        {/* Avatar con los datos de cada zona anotados al lado (estilo Upright). */}
+        <div className="mt-6 grid items-center gap-6 sm:grid-cols-[minmax(0,230px)_1fr]">
+          <div className="grid place-items-center">
+            <SessionBodyMap
+              zones={data.zones}
+              thresholdDeg={data.threshold_degrees}
+              showCallouts={false}
+              className="w-full max-w-[210px]"
+            />
+          </div>
+          <ul className="space-y-3">
+            {ZONE_ORDER.map((zone) => (
+              <ZoneAnnotation key={zone} zone={zone} d={data.zones[zone]} />
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   )
 }
 
-function ZoneRow({ zone, d }: { zone: SpineZone; d: ZoneDeviation }) {
+function ZoneAnnotation({ zone, d }: { zone: SpineZone; d: ZoneDeviation }) {
   const sev = severityOf(d.deviated_pct)
   const card =
     sev === 'ok'
-      ? 'border-sand bg-cream/60'
+      ? 'border-sand bg-cream-bone'
       : sev === 'leve'
         ? 'border-terracotta/30 bg-terracotta/[0.06]'
         : 'border-terracotta-deep/40 bg-terracotta/10'
   const chip =
-    sev === 'ok'
-      ? 'bg-moss/12 text-moss'
-      : 'bg-terracotta/15 text-terracotta-deep'
+    sev === 'ok' ? 'bg-moss/12 text-moss' : 'bg-terracotta/15 text-terracotta-deep'
   const pctTone = sev === 'ok' ? 'text-ink' : 'text-terracotta-deep'
 
   return (
-    <li className={`rounded-lg border p-4 ${card}`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <span className="text-[15px] font-semibold text-ink">{ZONE_LABELS[zone]}</span>
+    <li className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-3.5 ${card}`}>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[16px] font-semibold text-ink">{ZONE_LABELS[zone]}</span>
           <span className={`rounded-full px-2.5 py-0.5 text-[12px] font-medium ${chip}`}>
             {SEV_LABEL[sev]}
           </span>
         </div>
-        <span className={`text-xl font-semibold tabular-nums ${pctTone}`}>
-          {Math.round(d.deviated_pct)}%
-        </span>
+        <p className="mt-0.5 text-[12.5px] text-ink-soft">
+          {sev === 'ok'
+            ? 'Sin desviación relevante'
+            : `${fmtMin(d.minutes_in_deviation)} desviada · tramo de ${fmtMin(d.longest_streak_min)}`}
+        </p>
       </div>
-      <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2">
-        <ZoneMetric label="Tiempo desviada" value={fmtMin(d.minutes_in_deviation)} />
-        <ZoneMetric label="Tramo más largo" value={fmtMin(d.longest_streak_min)} />
-      </dl>
+      <span className={`shrink-0 text-[30px] font-semibold leading-none tabular-nums ${pctTone}`}>
+        {Math.round(d.deviated_pct)}%
+      </span>
     </li>
-  )
-}
-
-function ZoneMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-[12px] font-medium text-ink-faint">{label}</dt>
-      <dd className="mt-0.5 text-[15px] font-medium tabular-nums text-ink">{value}</dd>
-    </div>
   )
 }
 
