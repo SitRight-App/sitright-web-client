@@ -7,6 +7,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import { ScoreRing } from '@/shared/ui/ScoreRing'
 import type { PostureClass, TimelineReading } from '../types/posture'
 
 interface Props {
@@ -50,16 +51,19 @@ interface DistributionItem {
 }
 
 function computeDistribution(readings: TimelineReading[]): DistributionItem[] {
-  if (readings.length === 0) return []
+  // Excluye las lecturas indeterminadas (ruido del modelo) para que la
+  // distribución cuadre con el anillo en vivo y sea más clara.
+  const valid = readings.filter((r) => r.posture_class !== 'indeterminate')
+  if (valid.length === 0) return []
   const counts: Record<PostureClass, number> = {
     adequate: 0,
     forward_slouch: 0,
     excessive_recline: 0,
     indeterminate: 0,
   }
-  for (const r of readings) counts[r.posture_class]++
-  const total = readings.length
-  return (Object.keys(counts) as PostureClass[])
+  for (const r of valid) counts[r.posture_class]++
+  const total = valid.length
+  return (['adequate', 'forward_slouch', 'excessive_recline'] as PostureClass[])
     .filter((k) => counts[k] > 0)
     .map((posture) => ({
       posture,
@@ -84,16 +88,37 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
 
   const distribution = useMemo(() => computeDistribution(readings), [readings])
 
+  // % de postura correcta en los últimos minutos (anillo en vivo). Excluye las
+  // lecturas indeterminadas para no castigar el score con ruido del modelo.
+  const liveScore = useMemo<number | null>(() => {
+    const valid = readings.filter((r) => r.posture_class !== 'indeterminate')
+    if (valid.length === 0) return null
+    const adeq = valid.filter((r) => r.posture_class === 'adequate').length
+    return Math.round((adeq / valid.length) * 100)
+  }, [readings])
+
   const startTime = readings.length > 0 ? new Date(readings[0].timestamp) : null
   const endTime =
     readings.length > 0 ? new Date(readings[readings.length - 1].timestamp) : null
 
   return (
     <div className="editorial-card p-7">
-      <p className="label-mono">En vivo</p>
-      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
-        Cómo vas <span className="text-moss">ahora mismo.</span>
-      </h2>
+      <div className="flex items-center gap-5">
+        {readings.length > 0 && liveScore !== null && (
+          <ScoreRing value={liveScore} size={92} thickness={9} caption={null} />
+        )}
+        <div>
+          <p className="label-mono">En vivo</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-ink">
+            Cómo vas <span className="text-moss">ahora mismo.</span>
+          </h2>
+          {readings.length > 0 && (
+            <p className="mt-1 text-[13px] text-ink-soft">
+              Postura correcta en los últimos minutos.
+            </p>
+          )}
+        </div>
+      </div>
 
       {isError && (
         <p className="mt-4 border-l-2 border-terracotta bg-terracotta/10 px-3 py-2 text-xs text-terracotta-deep">
