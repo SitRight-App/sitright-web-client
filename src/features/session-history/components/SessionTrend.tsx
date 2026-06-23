@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
-import { SectionEyebrow } from '@/shared/ui/SectionEyebrow'
+import { CARD_TONE, SectionEyebrow } from '@/shared/ui/SectionEyebrow'
 import { useSessions } from '../hooks/useSessions'
 
 /**
@@ -137,7 +137,7 @@ export function SessionTrend({
   const dominantZone = current.dominant ? DOMINANT_ZONE[current.dominant] ?? null : null
 
   return (
-    <section className="editorial-card mb-7 grid gap-6 p-6 lg:grid-cols-[1fr_300px]">
+    <section className={`mb-7 grid gap-6 rounded-xl border p-6 lg:grid-cols-[1fr_300px] ${CARD_TONE.moss}`}>
       <div>
         <SectionEyebrow tone="moss">Evolución</SectionEyebrow>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">

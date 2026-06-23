@@ -10,6 +10,17 @@ const TONES: Record<EyebrowTone, { bar: string; text: string }> = {
 }
 
 /**
+ * Tinte de fondo + borde para una tarjeta de sección, a juego con el eyebrow.
+ * Wash muy sutil para que el contenido (y las sub-tarjetas) sigan resaltando.
+ */
+export const CARD_TONE: Record<EyebrowTone, string> = {
+  moss: 'border-moss/20 bg-moss/[0.045]',
+  terracotta: 'border-terracotta/25 bg-terracotta/[0.05]',
+  amber: 'border-amber/25 bg-amber/[0.06]',
+  neutral: 'border-sand bg-cream-bone',
+}
+
+/**
  * Etiqueta de sección con una barra de color que codifica el tema/estado de la
  * sección (verde = evolución/bien, terracota = carga/desviación, ámbar = acción,
  * neutro = informativo). Reemplaza al eyebrow `label-mono` cuando se quiere dar

@@ -5,7 +5,7 @@ import { useRecommendations } from '@/features/recommendations/hooks/useRecommen
 import type { TimelineReading } from '@/features/posture-visualization/types/posture'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { ScoreRing } from '@/shared/ui/ScoreRing'
-import { SectionEyebrow } from '@/shared/ui/SectionEyebrow'
+import { CARD_TONE, SectionEyebrow } from '@/shared/ui/SectionEyebrow'
 import { SessionBodyMap } from '../components/SessionBodyMap'
 import { SessionTimelineChart } from '../components/SessionTimelineChart'
 import { SessionTrend } from '../components/SessionTrend'
@@ -639,7 +639,7 @@ function ZoneReport({ sessionId }: ZoneReportProps) {
 
   return (
     <section className="mb-7 grid gap-4 lg:grid-cols-[minmax(0,380px)_1fr]">
-      <div className="editorial-card flex flex-col bg-cream-deep p-6">
+      <div className={`flex flex-col rounded-xl border p-6 ${CARD_TONE[zoneTone]}`}>
         <SectionEyebrow tone={zoneTone}>Mapa postural</SectionEyebrow>
         <h2 className="mt-2 text-[22px] font-semibold leading-tight tracking-tight text-ink">
           Tu espalda por zonas
@@ -653,7 +653,7 @@ function ZoneReport({ sessionId }: ZoneReportProps) {
         </p>
       </div>
 
-      <div className="editorial-card p-6">
+      <div className={`rounded-xl border p-6 ${CARD_TONE[zoneTone]}`}>
         <SectionEyebrow tone={zoneTone}>Carga por zona</SectionEyebrow>
         <h2 className="mt-2 text-[26px] font-semibold tracking-tight text-ink">
           Zona con mayor carga
@@ -797,7 +797,7 @@ function SecondRow({ recommendations, effective }: SecondRowProps) {
 
   return (
     <div className="mt-4">
-      <section className="rounded-xl border border-sand bg-cream-bone p-6">
+      <section className={`rounded-xl border p-6 ${CARD_TONE.amber}`}>
         <div className="mb-4">
           <SectionEyebrow tone="amber">Recomendaciones</SectionEyebrow>
           <h2 className="mt-2 text-[26px] font-semibold tracking-tight text-ink">
