@@ -59,6 +59,17 @@ const POSTURE_TAG: Record<string, string> = {
   lateral_tilt: 'Ladeado',
 }
 
+// Descripción breve de cada postura, para que el usuario entienda los términos.
+const POSTURE_DESC: Record<string, string> = {
+  adequate: 'espalda alineada',
+  forward_slouch: 'inclinado hacia adelante',
+  excessive_recline: 'echado hacia atrás',
+  forward_head: 'cabeza adelantada',
+  rounded_shoulders: 'hombros encorvados',
+  slouching: 'espalda encorvada',
+  lateral_tilt: 'inclinado a un lado',
+}
+
 // Nombre de cada desviación en lenguaje claro pero no clínico.
 const POSTURE_COLLOQUIAL: Record<string, string> = {
   forward_slouch: 'inclinarte hacia adelante',
@@ -418,6 +429,7 @@ function Hero({ session, effective, stats }: HeroProps) {
     {
       label: 'Desviación más frecuente',
       value: dominant ? (POSTURE_TAG[dominant] ?? POSTURE_LABELS[dominant] ?? dominant) : 'Ninguna',
+      meta: dominant ? POSTURE_DESC[dominant] : undefined,
       tone: dominant ? 'alert' : undefined,
     },
     {
@@ -696,9 +708,12 @@ function ZoneAnnotation({ zone, d }: { zone: SpineZone; d: ZoneDeviation }) {
             : `${fmtMin(d.minutes_in_deviation)} desviada · tramo de ${fmtMin(d.longest_streak_min)}`}
         </p>
       </div>
-      <span className={`shrink-0 text-[30px] font-semibold leading-none tabular-nums ${pctTone}`}>
-        {Math.round(d.deviated_pct)}%
-      </span>
+      <div className="shrink-0 text-right">
+        <span className={`text-[30px] font-semibold leading-none tabular-nums ${pctTone}`}>
+          {Math.round(d.deviated_pct)}%
+        </span>
+        <p className="mt-1 text-[11px] leading-tight text-ink-faint">del tiempo desviada</p>
+      </div>
     </li>
   )
 }
@@ -721,6 +736,7 @@ function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
           pct: summary.valid_readings ? Math.round((count / summary.valid_readings) * 100) : 0,
           label:
             cls === 'adequate' ? 'Postura correcta' : (POSTURE_TAG[cls] ?? POSTURE_LABELS[cls] ?? cls),
+          desc: POSTURE_DESC[cls] ?? '',
           color: POSTURE_COLORS[cls] ?? 'bg-ink-faint',
         }))
         .filter((d) => d.pct > 0)
@@ -764,10 +780,13 @@ function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
             </div>
             <ul className="mt-5 space-y-3.5">
               {dist.map((d) => (
-                <li key={d.cls} className="flex items-center justify-between">
-                  <span className="flex items-center gap-2.5 text-[15px] font-medium text-ink">
-                    <span className={`h-3 w-3 rounded-full ${d.color}`} />
-                    {d.label}
+                <li key={d.cls} className="flex items-center justify-between gap-3">
+                  <span className="flex items-start gap-2.5">
+                    <span className={`mt-1 h-3 w-3 shrink-0 rounded-full ${d.color}`} />
+                    <span>
+                      <span className="block text-[15px] font-medium text-ink">{d.label}</span>
+                      {d.desc && <span className="block text-[12.5px] text-ink-soft">{d.desc}</span>}
+                    </span>
                   </span>
                   <span
                     className={`text-[20px] font-semibold tabular-nums ${
