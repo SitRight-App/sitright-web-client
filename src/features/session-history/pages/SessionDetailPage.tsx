@@ -392,8 +392,8 @@ function Crumbs({ session }: { session: PostureSession }) {
       <Link to="/history" className="font-medium text-moss hover:text-moss-deep">
         Historial
       </Link>
-      <span className="text-ink-faint">/</span>
-      <span className="text-ink-faint">Sesión del {dateLongFmt.format(startDate)}</span>
+      <span className="text-ink-soft">/</span>
+      <span className="text-ink-soft">Sesión del {dateLongFmt.format(startDate)}</span>
     </div>
   )
 }
@@ -479,7 +479,7 @@ function Hero({ session, effective, stats }: HeroProps) {
         </div>
 
         <div className="min-w-0 text-center sm:text-left">
-          <p className="mb-2.5 text-[13px] font-medium text-ink-faint">{metaLine}</p>
+          <p className="mb-2.5 text-[13px] font-medium text-ink-soft">{metaLine}</p>
           <h1 className="text-[44px] font-semibold leading-[1.02] tracking-tight text-ink">
             {adequatePct !== null && adequatePct >= 70 ? (
               <>
@@ -502,7 +502,7 @@ function Hero({ session, effective, stats }: HeroProps) {
           <dl className="mt-6 flex flex-wrap justify-center gap-x-10 gap-y-4 border-t border-sand pt-5 sm:justify-start">
             {figures.map((f) => (
               <div key={f.label}>
-                <dt className="text-[13px] font-medium text-ink-faint">{f.label}</dt>
+                <dt className="text-[13px] font-medium text-ink-soft">{f.label}</dt>
                 <dd
                   className={`mt-1 text-[26px] font-semibold leading-none tracking-tight ${
                     f.tone === 'moss'
@@ -715,7 +715,7 @@ function ZoneAnnotation({ zone, d }: { zone: SpineZone; d: ZoneDeviation }) {
         <span className={`text-[30px] font-semibold leading-none tabular-nums ${pctTone}`}>
           {Math.round(d.deviated_pct)}%
         </span>
-        <p className="mt-1 text-[11px] leading-tight text-ink-faint">del tiempo desviada</p>
+        <p className="mt-1 text-[12px] leading-tight text-ink-soft">del tiempo desviada</p>
       </div>
     </li>
   )
@@ -801,7 +801,7 @@ function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 border-t border-sand pt-3 text-[12.5px] text-ink-faint">
+            <p className="mt-4 border-t border-sand pt-3 text-[12.5px] text-ink-soft">
               Porcentajes sobre el tiempo registrado de la sesión.
             </p>
           </>

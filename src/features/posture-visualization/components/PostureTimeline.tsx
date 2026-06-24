@@ -127,7 +127,7 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
       )}
 
       {isLoading && readings.length === 0 && (
-        <p className="mt-4 text-[14px] text-ink-faint">Esperando datos del chaleco…</p>
+        <p className="mt-4 text-[14px] text-ink-soft">Esperando datos del chaleco…</p>
       )}
 
       {readings.length === 0 && !isLoading && !isError && (
@@ -153,7 +153,7 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
           </div>
 
           {startTime && endTime && (
-            <div className="mt-2 flex justify-between text-[12px] text-ink-faint">
+            <div className="mt-2 flex justify-between text-[12px] text-ink-soft">
               <span>{timeFmt.format(startTime)}</span>
               <span>se actualiza cada 5 s</span>
               <span>{timeFmt.format(endTime)}</span>

@@ -178,7 +178,7 @@ export function SessionTrend({
               <span
                 key={p.id}
                 className={`flex-1 text-center text-[13px] ${
-                  isCurrent ? 'font-semibold text-moss-deep' : 'text-ink-faint'
+                  isCurrent ? 'font-semibold text-moss-deep' : 'text-ink-soft'
                 }`}
               >
                 {dateLabel}
@@ -195,7 +195,7 @@ export function SessionTrend({
 
       <div className="flex flex-col gap-3 lg:border-l lg:border-sand lg:pl-6">
         <div className="rounded-lg border border-sand bg-cream/60 p-4">
-          <p className="text-[12px] font-medium text-ink-faint">Frente a la sesión anterior</p>
+          <p className="text-[12px] font-medium text-ink-soft">Frente a la sesión anterior</p>
           {delta !== null ? (
             <div
               className={`mt-1.5 flex items-center gap-2 ${
@@ -230,7 +230,7 @@ export function SessionTrend({
         </div>
 
         <div className="rounded-lg border border-sand bg-cream/60 p-4">
-          <p className="text-[12px] font-medium text-ink-faint">Patrón recurrente</p>
+          <p className="text-[12px] font-medium text-ink-soft">Patrón recurrente</p>
           {dominantLabel ? (
             <>
               <p className="mt-1.5 text-[17px] font-semibold leading-tight text-ink">

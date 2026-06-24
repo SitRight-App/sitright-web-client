@@ -239,7 +239,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
         {ticks.map((t, i) => (
           <span
             key={i}
-            className="absolute font-mono text-[12px] tabular-nums text-ink-faint"
+            className="absolute font-mono text-[12px] tabular-nums text-ink-soft"
             style={{
               left: `${(i / (ticks.length - 1)) * 100}%`,
               transform:
@@ -280,7 +280,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
                 </li>
               ))}
             {periods.length > 8 && (
-              <li className="text-[13px] text-ink-faint">
+              <li className="text-[13px] text-ink-soft">
                 y {periods.length - 8} periodos más breves.
               </li>
             )}
@@ -323,7 +323,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
         )}
         <span className="ml-auto">{readings.length} mediciones</span>
       </div>
-      <p className="mt-3 text-[11px] text-ink-faint">
+      <p className="mt-3 text-[12px] text-ink-soft">
         Una pausa es un tramo de más de 2 minutos sin datos del chaleco.
       </p>
     </div>
@@ -333,7 +333,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[12px] font-medium leading-snug text-ink-faint">{label}</dt>
+      <dt className="text-[12px] font-medium leading-snug text-ink-soft">{label}</dt>
       <dd className="mt-0.5 text-[17px] font-semibold tabular-nums text-ink">{value}</dd>
     </div>
   )
