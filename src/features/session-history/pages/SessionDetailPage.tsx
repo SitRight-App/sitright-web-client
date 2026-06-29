@@ -11,7 +11,8 @@ import { SessionTimelineChart } from '../components/SessionTimelineChart'
 import { SessionTrend } from '../components/SessionTrend'
 import { useSession, useSessions, useZoneAnalysis } from '../hooks/useSessions'
 import { useSessionReadings } from '../hooks/useSessionReadings'
-import type { PostureSession, SessionSummary } from '../types/session'
+import type { PostureSession, SessionSummary, ZoneDeviation } from '../types/session'
+import { buildSessionPdf } from '../lib/sessionPdf'
 
 const dateLongFmt = new Intl.DateTimeFormat('es-PE', {
   day: '2-digit',
@@ -209,6 +210,15 @@ function resolveEffective(session: PostureSession, readings: TimelineReading[]):
   }
 }
 
+const EMPTY_ZONE: ZoneDeviation = {
+  deviated_pct: 0,
+  minutes_in_deviation: 0,
+  avg_angle_deg: 0,
+  peak_angle_deg: 0,
+  longest_streak_min: 0,
+  episodes: 0,
+}
+
 export function SessionDetailPage() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const { data: session, isLoading, isError } = useSession(sessionId)
@@ -256,79 +266,6 @@ export function SessionDetailPage() {
       <SecondRow recommendations={recs.data ?? []} effective={effective} />
     </div>
   )
-}
-
-/**
- * HU-21 — exporta el detalle de la sesión como PDF.
- *
- * Usa html2canvas para capturar el bloque `.session-detail-printable` y
- * jsPDF para componer el archivo. Lo carga dinámicamente para no inflar el
- * bundle inicial (la mayoría de usuarios no exporta cada visita).
- *
- * Si la captura falla, hace fallback a `window.print()` (que también
- * permite guardar como PDF desde el diálogo del navegador).
- */
-async function exportSessionToPdf(sessionId: string): Promise<void> {
-  const target = document.querySelector<HTMLElement>('.session-detail-printable')
-  if (!target) {
-    window.print()
-    return
-  }
-  try {
-    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-      import('html2canvas'),
-      import('jspdf'),
-    ])
-    const canvas = await html2canvas(target, {
-      backgroundColor: '#FAFAF9',
-      scale: window.devicePixelRatio > 1 ? 2 : 1.5,
-      useCORS: true,
-    })
-    const imgData = canvas.toDataURL('image/png')
-    // A4 portrait, márgenes 12 mm
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-    const pageWidth = pdf.internal.pageSize.getWidth()
-    const pageHeight = pdf.internal.pageSize.getHeight()
-    const margin = 12
-    const usableWidth = pageWidth - margin * 2
-    const ratio = canvas.height / canvas.width
-    const imgHeight = usableWidth * ratio
-    // Si la imagen es más alta que una página, se trocea en varias.
-    if (imgHeight <= pageHeight - margin * 2) {
-      pdf.addImage(imgData, 'PNG', margin, margin, usableWidth, imgHeight)
-    } else {
-      let yOffset = 0
-      const sliceHeight = pageHeight - margin * 2
-      const sliceCanvasHeight = (sliceHeight / usableWidth) * canvas.width
-      while (yOffset < canvas.height) {
-        const sliceCanvas = document.createElement('canvas')
-        sliceCanvas.width = canvas.width
-        sliceCanvas.height = Math.min(sliceCanvasHeight, canvas.height - yOffset)
-        const ctx = sliceCanvas.getContext('2d')
-        if (!ctx) break
-        ctx.drawImage(
-          canvas,
-          0,
-          yOffset,
-          canvas.width,
-          sliceCanvas.height,
-          0,
-          0,
-          canvas.width,
-          sliceCanvas.height,
-        )
-        const sliceData = sliceCanvas.toDataURL('image/png')
-        if (yOffset > 0) pdf.addPage()
-        const sliceImgHeight = (sliceCanvas.height / canvas.width) * usableWidth
-        pdf.addImage(sliceData, 'PNG', margin, margin, usableWidth, sliceImgHeight)
-        yOffset += sliceCanvas.height
-      }
-    }
-    pdf.save(`sitright-sesion-${sessionId.slice(0, 8)}.pdf`)
-  } catch {
-    // Fallback al diálogo de impresión del navegador.
-    window.print()
-  }
 }
 
 function SessionDetailSkeleton() {
@@ -399,6 +336,7 @@ interface HeroProps {
 }
 
 function Hero({ session, effective, stats }: HeroProps) {
+  const { data: zoneData } = useZoneAnalysis(session.id)
   const { dominant, provisional, summary } = effective
   const started = new Date(session.started_at)
   const ended = session.ended_at ? new Date(session.ended_at) : null
@@ -535,7 +473,25 @@ function Hero({ session, effective, stats }: HeroProps) {
           </Link>
           <button
             type="button"
-            onClick={() => void exportSessionToPdf(session.id)}
+            onClick={() =>
+              void buildSessionPdf({
+                sessionId: session.id,
+                dateLabel: dateLongFmt.format(new Date(session.started_at)),
+                durationLabel: `${session.summary?.total_minutes ?? session.duration_minutes ?? 0} min`,
+                adequatePct:
+                  session.summary?.adequate_percentage != null
+                    ? Math.round(session.summary.adequate_percentage)
+                    : 0,
+                zones:
+                  zoneData?.zones ?? {
+                    cervical: EMPTY_ZONE,
+                    dorsal: EMPTY_ZONE,
+                    lumbar: EMPTY_ZONE,
+                  },
+                calibrated: !!zoneData?.calibrated && (zoneData?.total_readings ?? 0) > 0,
+                dominantDeviation: session.summary?.dominant_deviation ?? null,
+              })
+            }
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cream-bone/30 bg-transparent px-4 py-3 text-[15px] font-medium text-cream-bone transition-colors hover:border-cream-bone"
           >
             <Download className="h-4 w-4" strokeWidth={1.8} />
