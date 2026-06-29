@@ -6,18 +6,12 @@ import type { TimelineReading } from '@/features/posture-visualization/types/pos
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { ScoreRing } from '@/shared/ui/ScoreRing'
 import { CARD_TONE, SectionEyebrow } from '@/shared/ui/SectionEyebrow'
-import { SessionBodyMap } from '../components/SessionBodyMap'
+import { PostureComparison } from '../components/PostureComparison'
 import { SessionTimelineChart } from '../components/SessionTimelineChart'
 import { SessionTrend } from '../components/SessionTrend'
 import { useSession, useSessions, useZoneAnalysis } from '../hooks/useSessions'
 import { useSessionReadings } from '../hooks/useSessionReadings'
-import type {
-  PostureSession,
-  SessionSummary,
-  SpineZone,
-  ZoneAnalysis,
-  ZoneDeviation,
-} from '../types/session'
+import type { PostureSession, SessionSummary } from '../types/session'
 
 const dateLongFmt = new Intl.DateTimeFormat('es-PE', {
   day: '2-digit',
@@ -251,7 +245,7 @@ export function SessionDetailPage() {
     <div className="session-detail-printable">
       <Crumbs session={session} />
       <Hero session={session} effective={effective} stats={stats} />
-      <ZoneReport sessionId={session.id} />
+      <PostureComparisonSection sessionId={session.id} summary={session.summary} />
       <SessionTrend
         currentSessionId={session.id}
         currentStartedAt={session.started_at}
@@ -553,171 +547,37 @@ function Hero({ session, effective, stats }: HeroProps) {
   )
 }
 
-// Nombres en lenguaje cotidiano para cada parte de la espalda.
-const ZONE_LABELS: Record<SpineZone, string> = {
-  cervical: 'Cuello',
-  dorsal: 'Espalda media',
-  lumbar: 'Espalda baja',
-}
-const ZONE_ORDER: SpineZone[] = ['cervical', 'dorsal', 'lumbar']
-
-type Severity = 'ok' | 'leve' | 'marcada'
-function severityOf(pct: number): Severity {
-  if (pct < 5) return 'ok'
-  if (pct < 25) return 'leve'
-  return 'marcada'
-}
-
-const SEV_LABEL: Record<Severity, string> = {
-  ok: 'En rango',
-  leve: 'Leve',
-  marcada: 'Marcada',
-}
-
-function fmtMin(m: number): string {
-  if (m <= 0) return '0 min'
-  if (m < 1) return '<1 min'
-  return `${Math.round(m)} min`
-}
-
-function zoneSummary(a: ZoneAnalysis): string {
-  const dev = ZONE_ORDER.map((z) => ({ z, d: a.zones[z] }))
-    .filter(({ d }) => d.deviated_pct >= 5)
-    .sort((x, y) => y.d.deviated_pct - x.d.deviated_pct)
-
-  if (dev.length === 0) {
-    return 'Ninguna zona presentó una desviación sostenida durante la sesión.'
-  }
-  const worst = dev[0]
-  let s = `La zona con mayor carga fue la ${ZONE_LABELS[worst.z].toLowerCase()}: estuvo desviada el ${Math.round(worst.d.deviated_pct)}% del tiempo.`
-  if (dev.length > 1) s += ` También hubo desviación en la ${ZONE_LABELS[dev[1].z].toLowerCase()}.`
-  return s
-}
-
-interface ZoneReportProps {
+function PostureComparisonSection({
+  sessionId,
+  summary,
+}: {
   sessionId: string
-}
-
-/**
- * Mapa corporal + detalle clínico por zona (ADR-006). Consume el análisis
- * geométrico del backend (ángulo de cada sensor vs. su neutro de calibración),
- * no la clase del modelo.
- */
-function ZoneReport({ sessionId }: ZoneReportProps) {
+  summary: SessionSummary | null
+}) {
   const { data, isLoading, isError } = useZoneAnalysis(sessionId)
 
   if (isLoading) {
     return (
-      <section className="mb-7 grid gap-4 lg:grid-cols-[minmax(0,380px)_1fr]">
-        <SkeletonCard className="bg-cream-deep">
-          <SkeletonTextLine width="40%" />
-          <Skeleton width="100%" height={280} className="mt-4" />
-        </SkeletonCard>
+      <section className="mb-7">
         <SkeletonCard>
           <SkeletonTextLine width="40%" />
-          <Skeleton width="90%" height={20} className="mt-3" />
-          <div className="mt-5 space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} width="100%" height={72} />
-            ))}
-          </div>
+          <Skeleton width="100%" height={240} className="mt-4" />
         </SkeletonCard>
       </section>
     )
   }
 
   // Endpoint nuevo: sesiones viejas o backend sin desplegar → no romper la página.
-  if (isError || !data) {
-    return null
-  }
-
-  const note = !data.calibrated
-    ? 'Tu chaleco no estaba calibrado en esta sesión, así que no pudimos medir cada parte de tu espalda. Calíbralo para verlo la próxima vez.'
-    : data.total_readings === 0
-      ? 'No hubo suficientes datos en esta sesión para revisar tu espalda parte por parte.'
-      : null
-
-  if (note) {
-    return (
-      <section className="editorial-card mb-7 bg-cream-deep p-6">
-        <p className="label-mono">Tu espalda, parte por parte</p>
-        <p className="mt-2 max-w-2xl text-[16px] leading-relaxed text-ink-soft">{note}</p>
-      </section>
-    )
-  }
-
-  // El color de la sección refleja el estado: terracota si alguna zona se desvió,
-  // verde si todas quedaron en rango.
-  const zoneTone = ZONE_ORDER.some((z) => severityOf(data.zones[z].deviated_pct) !== 'ok')
-    ? 'terracotta'
-    : 'moss'
+  if (isError || !data) return null
 
   return (
-    <section className="mb-7">
-      <div className={`rounded-xl border p-6 sm:p-7 ${CARD_TONE[zoneTone]}`}>
-        <SectionEyebrow tone={zoneTone}>Carga por zona</SectionEyebrow>
-        <h2 className="mt-2 text-[26px] font-semibold tracking-tight text-ink">
-          Tu espalda, zona por zona
-        </h2>
-        <p className="mt-3 max-w-[760px] text-[16px] leading-relaxed text-ink-soft">
-          {zoneSummary(data)}
-        </p>
-
-        {/* Avatar con los datos de cada zona anotados al lado (estilo Upright). */}
-        <div className="mt-6 grid items-center gap-6 sm:grid-cols-[minmax(0,230px)_1fr]">
-          <div className="grid place-items-center">
-            <SessionBodyMap
-              zones={data.zones}
-              thresholdDeg={data.threshold_degrees}
-              showCallouts={false}
-              className="w-full max-w-[210px]"
-            />
-          </div>
-          <ul className="space-y-3">
-            {ZONE_ORDER.map((zone) => (
-              <ZoneAnnotation key={zone} zone={zone} d={data.zones[zone]} />
-            ))}
-          </ul>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function ZoneAnnotation({ zone, d }: { zone: SpineZone; d: ZoneDeviation }) {
-  const sev = severityOf(d.deviated_pct)
-  const card =
-    sev === 'ok'
-      ? 'border-sand bg-cream-bone'
-      : sev === 'leve'
-        ? 'border-terracotta/30 bg-terracotta/[0.06]'
-        : 'border-terracotta-deep/40 bg-terracotta/10'
-  const chip =
-    sev === 'ok' ? 'bg-moss/12 text-moss' : 'bg-terracotta/15 text-terracotta-deep'
-  const pctTone = sev === 'ok' ? 'text-ink' : 'text-terracotta-deep'
-
-  return (
-    <li className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-3.5 ${card}`}>
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[16px] font-semibold text-ink">{ZONE_LABELS[zone]}</span>
-          <span className={`rounded-full px-2.5 py-0.5 text-[12px] font-medium ${chip}`}>
-            {SEV_LABEL[sev]}
-          </span>
-        </div>
-        <p className="mt-0.5 text-[12.5px] text-ink-soft">
-          {sev === 'ok'
-            ? 'Sin desviación relevante'
-            : `${fmtMin(d.minutes_in_deviation)} desviada · tramo más largo ${fmtMin(d.longest_streak_min)}`}
-        </p>
-      </div>
-      <div className="shrink-0 text-right">
-        <span className={`text-[30px] font-semibold leading-none tabular-nums ${pctTone}`}>
-          {Math.round(d.deviated_pct)}%
-        </span>
-        <p className="mt-1 text-[12px] leading-tight text-ink-soft">del tiempo desviada</p>
-      </div>
-    </li>
+    <PostureComparison
+      zones={data.zones}
+      thresholdDeg={data.threshold_degrees}
+      calibrated={data.calibrated && data.total_readings > 0}
+      adequatePct={summary?.adequate_percentage != null ? Math.round(summary.adequate_percentage) : 0}
+      dominantDeviation={summary?.dominant_deviation ?? null}
+    />
   )
 }
 
