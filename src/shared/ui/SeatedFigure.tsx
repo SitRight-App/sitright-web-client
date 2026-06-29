@@ -25,6 +25,8 @@ interface Props {
   /** Recorta el margen vacío (la zona de callouts) para que la persona se vea
    *  más grande cuando no se muestran callouts (p. ej. en el dashboard). */
   tight?: boolean
+  /** Inclina el tronco hacia adelante (+) o atrás (-) en grados. Ilustrativo. */
+  lean?: number
 }
 
 const TONE: Record<FigureTone, { core: string; halo: string; ring: string }> = {
@@ -56,7 +58,7 @@ function radiusFor(tone: FigureTone): number {
   return 11
 }
 
-export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className, tight = false }: Props) {
+export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className, tight = false, lean = 0 }: Props) {
   const zones = { cervical, dorsal, lumbar }
   // tight: encuadra a la persona+silla sin el margen de callouts (la izquierda).
   const viewBox = tight ? '54 56 150 230' : '0 40 270 252'
@@ -81,6 +83,8 @@ export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className
       <rect x="158" y="208" width="20" height="62" rx="10" fill={BODY_FILL} stroke={BODY_STROKE} strokeWidth="1.2" />
       <path d="M158 268 q-2 8 12 8 l10 0 q4 0 4 -5 l0 -3 -26 0 Z" fill={BODY_FILL} stroke={BODY_STROKE} strokeWidth="1.2" />
 
+      {/* Cuerpo superior: rota como bloque para mostrar encorvado/reclinado */}
+      <g data-figure-lean transform={`rotate(${lean} 100 200)`}>
       {/* Brazo apoyado en el muslo */}
       <path d="M110 132 q22 6 30 40 q2 14 -8 22" fill="none" stroke={BODY_STROKE} strokeWidth="9" strokeLinecap="round" opacity="0.5" />
 
@@ -152,6 +156,7 @@ export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className
           </g>
         )
       })}
+      </g>
     </svg>
   )
 }
