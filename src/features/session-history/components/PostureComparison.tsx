@@ -6,11 +6,12 @@ import { ZONE_LABELS, ZONE_ORDER, toneFor } from '../lib/zoneTone'
 
 interface PostureComparisonProps {
   zones: Record<SpineZone, ZoneDeviation>
-  thresholdDeg: number
   calibrated: boolean
   adequatePct: number
   dominantDeviation: string | null
 }
+
+const HEAD_TILT_MAX_DEG = 32
 
 const DOMINANT_SUB: Record<string, string> = {
   forward_slouch: 'Encorvado hacia adelante',
@@ -41,9 +42,9 @@ export function PostureComparison({
 
   // Figura "Tu sesión"
   const headTilt =
-    toneFor(zones.cervical.deviated_pct) === 'ok'
-      ? 0
-      : Math.min(zones.cervical.avg_angle_deg, 32)
+    calibrated && toneFor(zones.cervical.deviated_pct) !== 'ok'
+      ? Math.min(zones.cervical.avg_angle_deg, HEAD_TILT_MAX_DEG)
+      : 0
   const lean = calibrated ? leanFor(dominantDeviation, toneFor(worst.d.deviated_pct)) : 0
   const sessionSub = !calibrated
     ? 'Sin detalle por zona'
@@ -60,7 +61,7 @@ export function PostureComparison({
   const verdict = !calibrated
     ? `Mantuviste una postura correcta el ${adequatePct}% del tiempo.`
     : anyDeviated
-      ? `Mantuviste una postura correcta el ${adequatePct}% del tiempo. Tu mayor desafío fue ${ZONE_LABELS[worst.z].toLowerCase()}, desviado el ${Math.round(worst.d.deviated_pct)}% del tiempo.`
+      ? `Mantuviste una postura correcta el ${adequatePct}% del tiempo. Tu mayor desafío fue ${ZONE_LABELS[worst.z].toLowerCase()}, con desviación el ${Math.round(worst.d.deviated_pct)}% del tiempo.`
       : `Tu postura se mantuvo adecuada la mayor parte de la sesión. Buen trabajo.`
 
   return (

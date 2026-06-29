@@ -18,7 +18,6 @@ describe('PostureComparison', () => {
     render(
       <PostureComparison
         zones={{ cervical: z(41, 22), dorsal: z(12), lumbar: z(2, 0) }}
-        thresholdDeg={20}
         calibrated
         adequatePct={70}
         dominantDeviation="forward_slouch"
@@ -26,13 +25,13 @@ describe('PostureComparison', () => {
     )
     expect(screen.getByText('Encorvado hacia adelante')).toBeTruthy()
     expect(screen.getByText('Postura correcta')).toBeTruthy()
+    expect(screen.getByText(/Mantuviste una postura correcta el 70%/)).toBeTruthy()
   })
 
   it('ordena el checklist peor primero y marca zonas en rango', () => {
     render(
       <PostureComparison
         zones={{ cervical: z(41, 22), dorsal: z(12), lumbar: z(2, 0) }}
-        thresholdDeg={20}
         calibrated
         adequatePct={70}
         dominantDeviation="forward_slouch"
@@ -48,7 +47,6 @@ describe('PostureComparison', () => {
     render(
       <PostureComparison
         zones={{ cervical: z(0, 0), dorsal: z(0, 0), lumbar: z(0, 0) }}
-        thresholdDeg={20}
         calibrated={false}
         adequatePct={80}
         dominantDeviation={null}

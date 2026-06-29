@@ -255,7 +255,11 @@ export function SessionDetailPage() {
     <div className="session-detail-printable">
       <Crumbs session={session} />
       <Hero session={session} effective={effective} stats={stats} />
-      <PostureComparisonSection sessionId={session.id} summary={session.summary} />
+      <PostureComparisonSection
+        sessionId={session.id}
+        adequatePct={Math.round(effective.summary?.adequate_percentage ?? 0)}
+        dominantDeviation={effective.dominant}
+      />
       <SessionTrend
         currentSessionId={session.id}
         currentStartedAt={session.started_at}
@@ -477,11 +481,8 @@ function Hero({ session, effective, stats }: HeroProps) {
               void buildSessionPdf({
                 sessionId: session.id,
                 dateLabel: dateLongFmt.format(new Date(session.started_at)),
-                durationLabel: `${session.summary?.total_minutes ?? session.duration_minutes ?? 0} min`,
-                adequatePct:
-                  session.summary?.adequate_percentage != null
-                    ? Math.round(session.summary.adequate_percentage)
-                    : 0,
+                durationLabel: `${summary?.total_minutes ?? session.duration_minutes ?? 0} min`,
+                adequatePct: adequatePct ?? 0,
                 zones:
                   zoneData?.zones ?? {
                     cervical: EMPTY_ZONE,
@@ -489,7 +490,7 @@ function Hero({ session, effective, stats }: HeroProps) {
                     lumbar: EMPTY_ZONE,
                   },
                 calibrated: !!zoneData?.calibrated && (zoneData?.total_readings ?? 0) > 0,
-                dominantDeviation: session.summary?.dominant_deviation ?? null,
+                dominantDeviation: dominant,
               })
             }
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cream-bone/30 bg-transparent px-4 py-3 text-[15px] font-medium text-cream-bone transition-colors hover:border-cream-bone"
@@ -505,10 +506,12 @@ function Hero({ session, effective, stats }: HeroProps) {
 
 function PostureComparisonSection({
   sessionId,
-  summary,
+  adequatePct,
+  dominantDeviation,
 }: {
   sessionId: string
-  summary: SessionSummary | null
+  adequatePct: number
+  dominantDeviation: string | null
 }) {
   const { data, isLoading, isError } = useZoneAnalysis(sessionId)
 
@@ -529,10 +532,9 @@ function PostureComparisonSection({
   return (
     <PostureComparison
       zones={data.zones}
-      thresholdDeg={data.threshold_degrees}
       calibrated={data.calibrated && data.total_readings > 0}
-      adequatePct={summary?.adequate_percentage != null ? Math.round(summary.adequate_percentage) : 0}
-      dominantDeviation={summary?.dominant_deviation ?? null}
+      adequatePct={adequatePct}
+      dominantDeviation={dominantDeviation}
     />
   )
 }
