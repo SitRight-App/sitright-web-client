@@ -1,5 +1,6 @@
-import { SeatedFigure, type FigureTone, type SeatedFigureZone } from '@/shared/ui/SeatedFigure'
+import { SeatedFigure, type SeatedFigureZone } from '@/shared/ui/SeatedFigure'
 import type { SpineZone, ZoneDeviation } from '../types/session'
+import { toneFor } from '../lib/zoneTone'
 
 interface Props {
   zones: Record<SpineZone, ZoneDeviation>
@@ -8,13 +9,6 @@ interface Props {
    *  aparte (avatar con anotaciones al lado). */
   showCallouts?: boolean
   className?: string
-}
-
-// Bandas de color por % de tiempo desviado (presentación, no cutoff clínico).
-function toneFor(pct: number): FigureTone {
-  if (pct < 5) return 'ok'
-  if (pct < 25) return 'leve'
-  return 'marcada'
 }
 
 function zoneProp(d: ZoneDeviation, showCallouts: boolean): SeatedFigureZone {
