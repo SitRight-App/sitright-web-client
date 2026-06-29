@@ -179,6 +179,14 @@ const ALERT_INDEX: Partial<Record<PostureClass, number>> = {
   excessive_recline: 2,
 }
 
+// Inclinación ilustrativa del torso en la figura "Tu postura ahora" según la
+// clase actual (encorvado hacia adelante / reclinado hacia atrás). Moderada,
+// no es el ángulo real medido.
+const LIVE_LEAN: Partial<Record<PostureClass, number>> = {
+  forward_slouch: 12,
+  excessive_recline: -12,
+}
+
 // Título en vivo en lenguaje cotidiano. 'adequate' conserva 'Postura correcta'
 // por requisito del backlog (HU-06 AC1).
 const LIVE_TITLE: Record<PostureClass, string> = {
@@ -211,6 +219,7 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
   const isLive = (status === 'connected' || status === 'battery_low') && reading !== null
   // Índice de la zona desviada según la clase (cervical=0 · dorsal=1 · lumbar=2).
   const alertIdx = isLive ? ALERT_INDEX[cls] ?? -1 : -1
+  const liveLean = isLive ? LIVE_LEAN[cls] ?? 0 : 0
 
   // El color lo llevan los acentos (título, nodos, chips), no un bloque de color
   // completo: es más coherente con la paleta clínica y mantiene legible el diagrama.
@@ -263,15 +272,47 @@ function PostureCard({ reading, status, isLoading }: PostureCardProps) {
       {/* Cuerpo: figura humana grande (encuadre compacto) + zonas en una columna
           ajustada (sin estirarse a todo el ancho ni espaciarse de más). */}
       <div className="mt-5 flex flex-1 items-center gap-5 border-t border-sand pt-5">
-        <div className="grid shrink-0 place-items-center" style={{ width: 280 }}>
-          <SeatedFigure
-            tight
-            cervical={liveZone(0, isLive, alertIdx)}
-            dorsal={liveZone(1, isLive, alertIdx)}
-            lumbar={liveZone(2, isLive, alertIdx)}
-            headTilt={isLive && alertIdx === 0 ? 22 : 0}
-          />
-        </div>
+        {isLive ? (
+          // Comparativa en vivo: referencia "Correcta" + "Tu postura ahora".
+          <div className="grid shrink-0 grid-cols-2 gap-3" style={{ width: 280 }}>
+            <figure className="flex flex-col items-center">
+              <SeatedFigure
+                tight
+                className="w-full max-w-[120px]"
+                cervical={{ tone: 'ok' }}
+                dorsal={{ tone: 'ok' }}
+                lumbar={{ tone: 'ok' }}
+              />
+              <figcaption className="mt-1 text-[12px] font-medium text-ink-soft">Correcta</figcaption>
+            </figure>
+            <figure className="flex flex-col items-center">
+              <SeatedFigure
+                tight
+                className="w-full max-w-[120px]"
+                cervical={liveZone(0, isLive, alertIdx)}
+                dorsal={liveZone(1, isLive, alertIdx)}
+                lumbar={liveZone(2, isLive, alertIdx)}
+                headTilt={alertIdx === 0 ? 22 : 0}
+                lean={liveLean}
+              />
+              <figcaption
+                className={`mt-1 text-[12px] font-medium ${isWarn ? 'text-terracotta-deep' : 'text-moss'}`}
+              >
+                Tu postura
+              </figcaption>
+            </figure>
+          </div>
+        ) : (
+          <div className="grid shrink-0 place-items-center" style={{ width: 280 }}>
+            <SeatedFigure
+              tight
+              cervical={liveZone(0, isLive, alertIdx)}
+              dorsal={liveZone(1, isLive, alertIdx)}
+              lumbar={liveZone(2, isLive, alertIdx)}
+              headTilt={alertIdx === 0 ? 22 : 0}
+            />
+          </div>
+        )}
 
         <div className="flex flex-1 flex-col gap-2.5">
             {(['Cuello', 'Espalda media', 'Espalda baja'] as const).map((zone, i) => {
