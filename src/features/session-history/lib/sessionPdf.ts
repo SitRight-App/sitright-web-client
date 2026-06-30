@@ -187,9 +187,10 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       ensure(wrapped.length * 5 + 1)
       pdf.text(wrapped, M, y); y += wrapped.length * 5 + 1
     }
-    ensure(6)
     pdf.setFontSize(8)
-    pdf.text(pdf.splitTextToSize(`Fuentes: ${guide.sources.join('; ')}.`, pageW - M * 2), M, y + 1)
+    const fuentes = pdf.splitTextToSize(`Fuentes: ${guide.sources.join('; ')}.`, pageW - M * 2)
+    ensure(fuentes.length * 4 + 2)
+    pdf.text(fuentes, M, y + 1)
 
     // Pie en todas las páginas
     const pageCount = pdf.getNumberOfPages()
