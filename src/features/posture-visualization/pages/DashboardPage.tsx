@@ -4,6 +4,7 @@ import { useAuth } from '@/features/iam/context/AuthContext'
 import { RecommendationsCard } from '@/features/recommendations/components/RecommendationsCard'
 import { useRecommendations } from '@/features/recommendations/hooks/useRecommendations'
 import { SessionControls } from '@/features/session-history/components/SessionControls'
+import { useActiveSession } from '@/features/session-history/hooks/useSessions'
 import { useMyVest } from '@/features/vest-management/hooks/useMyVest'
 import { staggerContainer, staggerItem } from '@/shared/ui/motion'
 import { BreakReminder } from '../components/BreakReminder'
@@ -72,11 +73,10 @@ export function DashboardPage() {
 
   const firstName = user?.name.split(' ')[0] ?? 'Hola'
   const now = new Date()
-  // En vivo = chaleco conectado y con una lectura fresca (mismo criterio que
-  // PostureCard). Si no, no tiene sentido mostrar la línea de tiempo ni las
-  // recomendaciones: serían datos viejos o vacíos que contradicen el estado.
-  const isLive =
-    (vestStatus === 'connected' || vestStatus === 'battery_low') && reading != null
+  // La columna de datos (línea de tiempo + recomendaciones) aparece al iniciar
+  // una sesión; antes de eso, cada sección muestra su propio skeleton.
+  const { data: activeSession } = useActiveSession()
+  const sessionActive = activeSession != null
 
   if (!vestLoading && !hasVest) {
     return <UnlinkedDashboard firstName={firstName} now={now} />
@@ -135,94 +135,100 @@ export function DashboardPage() {
           </motion.div>
         </div>
 
-        {/* Columna "datos": solo tiene sentido con flujo en vivo. Sin conexión,
-            un único aviso en vez de línea de tiempo vacía + recomendaciones viejas. */}
+        {/* Columna "datos": cada sección aparece al iniciar una sesión; antes,
+            un skeleton que muestra qué se verá ahí. */}
         <div className="flex flex-col gap-4">
-          {isLive ? (
-            <>
-              <motion.div variants={staggerItem}>
-                <PostureTimeline
-                  readings={recent.data ?? []}
-                  isLoading={recent.isLoading}
-                  isError={recent.isError}
-                />
-              </motion.div>
-              <motion.div variants={staggerItem}>
-                {recommendations && recommendations.length > 0 ? (
-                  <RecommendationsCard
-                    recommendations={recommendations}
-                    postureClass={reading?.posture_class ?? 'indeterminate'}
-                    maxVisible={3}
-                  />
-                ) : (
-                  <div className="editorial-card flex flex-col justify-center p-6">
-                    <p className="label-mono">Recomendaciones</p>
-                    <p className="mt-2 text-[16px] leading-relaxed text-ink-soft">
-                      Cuando se detecte una desviación, aquí verás recomendaciones para corregirla.
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-            </>
-          ) : (
-            <motion.div variants={staggerItem}>
-              <LiveOffCard />
-            </motion.div>
-          )}
+          <motion.div variants={staggerItem}>
+            {sessionActive ? (
+              <PostureTimeline
+                readings={recent.data ?? []}
+                isLoading={recent.isLoading}
+                isError={recent.isError}
+              />
+            ) : (
+              <TimelineSkeleton />
+            )}
+          </motion.div>
+          <motion.div variants={staggerItem}>
+            {!sessionActive ? (
+              <RecommendationsSkeleton />
+            ) : recommendations && recommendations.length > 0 ? (
+              <RecommendationsCard
+                recommendations={recommendations}
+                postureClass={reading?.posture_class ?? 'indeterminate'}
+                maxVisible={3}
+              />
+            ) : (
+              <div className="editorial-card flex flex-col justify-center p-6">
+                <p className="label-mono">Recomendaciones</p>
+                <p className="mt-2 text-[16px] leading-relaxed text-ink-soft">
+                  Cuando se detecte una desviación, aquí verás recomendaciones para corregirla.
+                </p>
+              </div>
+            )}
+          </motion.div>
         </div>
       </motion.div>
     </div>
   )
 }
 
-// Barras "fantasma" para la línea de tiempo en el estado sin conexión.
+// Barras "fantasma" para el skeleton de la línea de tiempo.
 const GHOST_BARS = [18, 26, 14, 30, 22, 28, 16, 24, 20, 30, 14, 26, 22, 18, 28, 16, 24, 20]
 
 /**
- * Estado de la columna de datos cuando no hay flujo en vivo: en vez de un texto
- * suelto, un skeleton de lo que aparecerá (línea de tiempo + recomendaciones),
- * con el mensaje de cómo activarlo.
+ * Skeleton de la sección de línea de tiempo, mientras no haya sesión iniciada.
+ * Imita su encabezado y su cinta de barras para anticipar qué aparecerá.
  */
-function LiveOffCard() {
+function TimelineSkeleton() {
   return (
-    <section className="editorial-card flex h-full flex-col p-6 sm:p-7">
+    <section className="editorial-card p-6 sm:p-7">
       <div className="flex items-center gap-2 text-[13px] font-medium text-ink-soft">
         <span className="h-2 w-2 rounded-full bg-ink-faint" />
         En vivo
       </div>
-
-      <div className="mt-5 rounded-lg border border-dashed border-sand bg-cream-bone/60 p-4">
-        <div className="flex h-12 items-end gap-1" aria-hidden>
-          {GHOST_BARS.map((h, i) => (
-            <Skeleton key={i} height={h} className="flex-1" />
-          ))}
-        </div>
-        <div className="mt-3 flex justify-between" aria-hidden>
-          <Skeleton width={34} height={9} />
-          <Skeleton width={42} height={9} />
-          <Skeleton width={34} height={9} />
-        </div>
-        <div className="mt-4 space-y-2.5 border-t border-dashed border-sand pt-4" aria-hidden>
-          <div className="flex items-center gap-2.5">
-            <Skeleton circle height={18} />
-            <SkeletonTextLine width="68%" />
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Skeleton circle height={18} />
-            <SkeletonTextLine width="52%" />
-          </div>
-        </div>
+      <h2 className="mt-1 text-2xl font-semibold tracking-tight text-ink">
+        Tu postura, minuto a minuto
+      </h2>
+      <div className="mt-5 flex h-14 items-end gap-1" aria-hidden>
+        {GHOST_BARS.map((h, i) => (
+          <Skeleton key={i} height={h} className="flex-1" />
+        ))}
       </div>
-
-      <div className="mt-5 text-center">
-        <h2 className="text-xl font-semibold tracking-tight text-ink">
-          Sin lecturas en vivo por ahora
-        </h2>
-        <p className="mx-auto mt-2 max-w-sm text-[15px] leading-relaxed text-ink-soft">
-          Conecta tu chaleco y empieza a usarlo. En cuanto lleguen datos, aquí verás tu postura
-          minuto a minuto y las recomendaciones para corregirla.
-        </p>
+      <div className="mt-3 flex justify-between" aria-hidden>
+        <Skeleton width={34} height={9} />
+        <Skeleton width={42} height={9} />
+        <Skeleton width={34} height={9} />
       </div>
+      <p className="mt-5 text-[14px] leading-relaxed text-ink-soft">
+        Inicia una sesión para ver aquí tu postura minuto a minuto.
+      </p>
+    </section>
+  )
+}
+
+/**
+ * Skeleton de la sección de recomendaciones, mientras no haya sesión iniciada.
+ * Imita las filas de recomendación (ícono + texto) que aparecerán.
+ */
+function RecommendationsSkeleton() {
+  return (
+    <section className="editorial-card p-6">
+      <p className="label-mono">Recomendaciones</p>
+      <div className="mt-4 space-y-3.5" aria-hidden>
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-start gap-3">
+            <Skeleton circle height={22} />
+            <div className="flex-1 space-y-1.5 pt-0.5">
+              <SkeletonTextLine width={['72%', '60%', '54%'][i]} />
+              <Skeleton width="92%" height={10} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-[14px] leading-relaxed text-ink-soft">
+        Cuando inicies una sesión y se detecte una desviación, aquí verás cómo corregirla.
+      </p>
     </section>
   )
 }
