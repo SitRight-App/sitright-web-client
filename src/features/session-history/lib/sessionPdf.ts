@@ -107,8 +107,18 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
 
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
     const pageW = pdf.internal.pageSize.getWidth()
+    const pageH = pdf.internal.pageSize.getHeight()
     const M = 16
+    const BOTTOM = pageH - 18 // espacio reservado para el pie
     let y = M
+
+    // Salta a una página nueva si el bloque por dibujar (de alto `h`) no entra.
+    const ensure = (h: number) => {
+      if (y + h > BOTTOM) {
+        pdf.addPage()
+        y = M
+      }
+    }
 
     const inkColor = () => pdf.setTextColor(44, 49, 43)
     const softColor = () => pdf.setTextColor(74, 82, 73)
@@ -134,16 +144,17 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     y += 8
 
     // Comparación (figuras)
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(13)
-    inkColor()
-    pdf.text('Cómo te sentaste hoy', M, y)
-    y += 4
     const figW = 50
     const figH = 64
     const colGap = 24
     const x1 = M
     const x2 = M + figW + colGap
+    ensure(4 + figH + 14)
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(13)
+    inkColor()
+    pdf.text('Cómo te sentaste hoy', M, y)
+    y += 4
     if (idealPng) pdf.addImage(idealPng, 'PNG', x1, y, figW, figH)
     if (sessionPng) pdf.addImage(sessionPng, 'PNG', x2, y, figW, figH)
     pdf.setFont('helvetica', 'bold')
@@ -154,6 +165,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
 
     // Hallazgos
     const { good, improve } = buildFindings(data.zones)
+    ensure(12)
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(12)
     pdf.text('Hallazgos', M, y)
@@ -164,10 +176,12 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     if (data.calibrated) {
       for (const line of [...improve.map((s) => `• A corregir — ${s}`), ...good.map((s) => `• Bien — ${s}`)]) {
         const wrapped = pdf.splitTextToSize(line, pageW - M * 2)
+        ensure(wrapped.length * 5 + 1)
         pdf.text(wrapped, M, y)
         y += wrapped.length * 5 + 1
       }
     } else {
+      ensure(6)
       pdf.text('El chaleco no estaba calibrado: no hay detalle por zona en esta sesión.', M, y)
       y += 6
     }
@@ -178,6 +192,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       const headers = ['Zona', '% desviado', 'Áng. prom.', 'Pico', 'Episodios']
       const rows = buildZoneTableRows(data.zones)
       const colX = [M, M + 46, M + 80, M + 110, M + 135]
+      ensure(13)
       pdf.setFont('helvetica', 'bold')
       pdf.setFontSize(10)
       inkColor()
@@ -189,6 +204,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       pdf.setFont('helvetica', 'normal')
       softColor()
       for (const row of rows) {
+        ensure(6)
         row.forEach((cell, i) => pdf.text(cell, colX[i], y))
         y += 6
       }
@@ -196,6 +212,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     }
 
     // Recomendaciones
+    ensure(12)
     pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(12)
     inkColor()
@@ -206,19 +223,23 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     softColor()
     for (const rec of recommendationsFor(data.dominantDeviation)) {
       const wrapped = pdf.splitTextToSize(`• ${rec}`, pageW - M * 2)
+      ensure(wrapped.length * 5 + 1)
       pdf.text(wrapped, M, y)
       y += wrapped.length * 5 + 1
     }
 
-    // Pie
-    const footY = pdf.internal.pageSize.getHeight() - 14
+    // Pie en todas las páginas
+    const pageCount = pdf.getNumberOfPages()
     pdf.setFontSize(8)
     pdf.setTextColor(120, 126, 118)
-    pdf.text(
-      'Prediagnóstico orientativo; no reemplaza la evaluación de un profesional de salud.',
-      M,
-      footY,
-    )
+    for (let p = 1; p <= pageCount; p++) {
+      pdf.setPage(p)
+      pdf.text(
+        'Prediagnóstico orientativo; no reemplaza la evaluación de un profesional de salud.',
+        M,
+        pageH - 14,
+      )
+    }
 
     pdf.save(`sitright-sesion-${data.sessionId.slice(0, 8)}.pdf`)
   } catch {
