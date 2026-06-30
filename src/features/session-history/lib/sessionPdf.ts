@@ -2,7 +2,7 @@
 import type { SpineZone, ZoneDeviation } from '../types/session'
 import { ZONE_LABELS, ZONE_ORDER, toneFor } from './zoneTone'
 import { recommendationsFor } from './postureGuidance'
-import { METRIC_LABELS, streakLabel, verdictSentence } from './sessionCopy'
+import { METRIC_LABELS, POSTURE_LEGEND, streakLabel, verdictSentence } from './sessionCopy'
 
 export function scoreLevel(pct: number): 'good' | 'mid' | 'low' {
   if (pct >= 70) return 'good'
@@ -57,7 +57,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     const C = {
       moss: [45, 74, 54], tSoft: [232, 166, 133], terra: [200, 98, 60], amber: [196, 128, 20],
       ink: [44, 49, 43], soft: [74, 82, 73], sand: [214, 211, 203],
-      tintOk: [235, 240, 236], tintDev: [250, 240, 235], white: [255, 255, 255],
+      tintOk: [235, 240, 236], white: [255, 255, 255],
     } as const
     const col = (c: readonly number[]) => pdf.setTextColor(c[0], c[1], c[2])
     const fill = (c: readonly number[]) => pdf.setFillColor(c[0], c[1], c[2])
@@ -68,7 +68,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
 
     function drawSeatedBody(fx: number, fy: number, fw: number, fh: number, mode: 'ideal' | 'session') {
       const xHip = fx + fw * 0.40
-      const yHip = fy + fh * 0.60
+      const yHip = fy + fh * 0.68
       const chestW = fw * 0.24
       const yCerv = yHip - fh * 0.42
       const yDorsal = yHip - fh * 0.27
@@ -112,7 +112,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       pdf.line(xHip, yHip, xLumbar, yLumbar)
       pdf.line(xLumbar, yLumbar, xDorsal, yDorsal)
       pdf.line(xDorsal, yDorsal, xCerv, yCerv)
-      const headR = fw * 0.13
+      const headR = fw * 0.10
       const headY = yCerv - headR - 2
       pdf.line(xCerv, yCerv, xCerv, headY + headR)
       draw(C.sand); fill(C.white); pdf.setLineWidth(1)
@@ -129,6 +129,15 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
           pdf.line(x, yy, x, yy - L)                                          // neutro
           pdf.setLineWidth(1)
           pdf.line(x, yy, x + L * Math.sin(rad(deg)), yy - L * Math.cos(rad(deg))) // real
+          const r = 5
+          let px = x, py = yy - r
+          for (let s = 1; s <= 6; s++) {
+            const a = (deg * s) / 6
+            const nx = x + r * Math.sin(rad(a))
+            const ny = yy - r * Math.cos(rad(a))
+            pdf.setLineWidth(0.5); pdf.line(px, py, nx, ny)
+            px = nx; py = ny
+          }
           col(toneColor(tone)); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10)
           pdf.text(`${deg}°`, x + L * Math.sin(rad(deg)) + 1.5, yy - L * Math.cos(rad(deg)))
         }
@@ -221,7 +230,11 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
         col(C.ink); pdf.text(wrapped, M + 6, y)
         y += wrapped.length * 5 + 1
       }
-      y += 3
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5)
+      const legendLines = pdf.splitTextToSize(POSTURE_LEGEND, pageW - 2 * M)
+      ensure(legendLines.length * 4 + 4)
+      col(C.soft); pdf.text(legendLines, M, y)
+      y += legendLines.length * 4 + 4
     }
 
     // 5. Qué hacer (recomendaciones, sin fuentes)
