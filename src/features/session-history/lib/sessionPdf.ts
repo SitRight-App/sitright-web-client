@@ -189,7 +189,12 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       )
       for (const { z, d } of ordered) {
         const ok = toneFor(d.deviated_pct) === 'ok'
-        const cardH = 19
+        const metrics = ok
+          ? 'Se mantuvo dentro de lo recomendado.'
+          : `${METRIC_LABELS.deviatedPct}: ${Math.round(d.deviated_pct)}%   ·   ${METRIC_LABELS.avgAngle}: ${Math.round(d.avg_angle_deg)}°   ·   ${METRIC_LABELS.longestStreak}: hasta ${Math.max(1, Math.round(d.longest_streak_min))} min`
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5)
+        const metricLines = pdf.splitTextToSize(metrics, pageW - 2 * M - 8)
+        const cardH = Math.max(16, 9 + metricLines.length * 4.5)
         ensure(cardH + 3)
         fill(ok ? C.tintOk : C.tintDev); draw(C.sand); pdf.setLineWidth(0.3)
         pdf.roundedRect(M, y, pageW - 2 * M, cardH, 2, 2, 'FD')
@@ -198,15 +203,15 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
         col(ok ? C.moss : C.terra); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9)
         pdf.text(ok ? 'En rango' : 'Atención', pageW - M - 4, y + 7, { align: 'right' })
         col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5)
-        const metrics = ok
-          ? 'Se mantuvo dentro de lo recomendado.'
-          : `${METRIC_LABELS.deviatedPct}: ${Math.round(d.deviated_pct)}%   ·   ${METRIC_LABELS.avgAngle}: ${Math.round(d.avg_angle_deg)}°   ·   ${METRIC_LABELS.longestStreak}: hasta ${Math.max(1, Math.round(d.longest_streak_min))} min`
-        pdf.text(metrics, M + 4, y + 14)
+        pdf.text(metricLines, M + 4, y + 13)
         y += cardH + 3
       }
-      ensure(8)
-      col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5)
-      pdf.text(pdf.splitTextToSize(POSTURE_LEGEND, pageW - 2 * M), M, y); y += 8
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5)
+      const legendLines = pdf.splitTextToSize(POSTURE_LEGEND, pageW - 2 * M)
+      ensure(legendLines.length * 4 + 3)
+      col(C.soft)
+      pdf.text(legendLines, M, y)
+      y += legendLines.length * 4 + 3
     }
 
     // Recomendaciones (sin fuentes)
