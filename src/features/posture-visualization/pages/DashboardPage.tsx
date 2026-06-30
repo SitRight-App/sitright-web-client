@@ -71,6 +71,11 @@ export function DashboardPage() {
 
   const firstName = user?.name.split(' ')[0] ?? 'Hola'
   const now = new Date()
+  // En vivo = chaleco conectado y con una lectura fresca (mismo criterio que
+  // PostureCard). Si no, no tiene sentido mostrar la línea de tiempo ni las
+  // recomendaciones: serían datos viejos o vacíos que contradicen el estado.
+  const isLive =
+    (vestStatus === 'connected' || vestStatus === 'battery_low') && reading != null
 
   if (!vestLoading && !hasVest) {
     return <UnlinkedDashboard firstName={firstName} now={now} />
@@ -129,31 +134,49 @@ export function DashboardPage() {
           </motion.div>
         </div>
 
-        {/* Columna "datos": línea de tiempo (ancha) + recomendaciones */}
+        {/* Columna "datos": solo tiene sentido con flujo en vivo. Sin conexión,
+            un único aviso en vez de línea de tiempo vacía + recomendaciones viejas. */}
         <div className="flex flex-col gap-4">
-          <motion.div variants={staggerItem}>
-            <PostureTimeline
-              readings={recent.data ?? []}
-              isLoading={recent.isLoading}
-              isError={recent.isError}
-            />
-          </motion.div>
-          <motion.div variants={staggerItem}>
-            {recommendations && recommendations.length > 0 ? (
-              <RecommendationsCard
-                recommendations={recommendations}
-                postureClass={reading?.posture_class ?? 'indeterminate'}
-                maxVisible={3}
-              />
-            ) : (
-              <div className="editorial-card flex flex-col justify-center p-6">
-                <p className="label-mono">Recomendaciones</p>
-                <p className="mt-2 text-[16px] leading-relaxed text-ink-soft">
-                  Cuando se detecte una desviación, aquí verás recomendaciones para corregirla.
+          {isLive ? (
+            <>
+              <motion.div variants={staggerItem}>
+                <PostureTimeline
+                  readings={recent.data ?? []}
+                  isLoading={recent.isLoading}
+                  isError={recent.isError}
+                />
+              </motion.div>
+              <motion.div variants={staggerItem}>
+                {recommendations && recommendations.length > 0 ? (
+                  <RecommendationsCard
+                    recommendations={recommendations}
+                    postureClass={reading?.posture_class ?? 'indeterminate'}
+                    maxVisible={3}
+                  />
+                ) : (
+                  <div className="editorial-card flex flex-col justify-center p-6">
+                    <p className="label-mono">Recomendaciones</p>
+                    <p className="mt-2 text-[16px] leading-relaxed text-ink-soft">
+                      Cuando se detecte una desviación, aquí verás recomendaciones para corregirla.
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            </>
+          ) : (
+            <motion.div variants={staggerItem}>
+              <section className="editorial-card flex h-full min-h-[220px] flex-col items-center justify-center p-7 text-center">
+                <p className="label-mono">En vivo</p>
+                <h2 className="mt-2 text-xl font-semibold tracking-tight text-ink">
+                  Sin lecturas en vivo por ahora
+                </h2>
+                <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-ink-soft">
+                  Cuando tu chaleco esté conectado y enviando datos, aquí verás tu línea de tiempo
+                  minuto a minuto y las recomendaciones para corregir tu postura.
                 </p>
-              </div>
-            )}
-          </motion.div>
+              </section>
+            </motion.div>
+          )}
         </div>
       </motion.div>
     </div>
