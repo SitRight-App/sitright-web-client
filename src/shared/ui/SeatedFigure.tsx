@@ -27,6 +27,8 @@ interface Props {
   tight?: boolean
   /** Inclina el tronco hacia adelante (+) o atrás (-) en grados. Ilustrativo. */
   lean?: number
+  /** Marcador goniométrico por zona (líneas + arco + grados). Ilustrativo. */
+  angleMarkers?: Partial<Record<'cervical' | 'dorsal' | 'lumbar', { deg: number; tone: FigureTone }>>
 }
 
 const TONE: Record<FigureTone, { core: string; halo: string; ring: string }> = {
@@ -58,10 +60,40 @@ function radiusFor(tone: FigureTone): number {
   return 11
 }
 
-export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className, tight = false, lean = 0 }: Props) {
+export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className, tight = false, lean = 0, angleMarkers }: Props) {
   const zones = { cervical, dorsal, lumbar }
   // tight: encuadra a la persona+silla sin el margen de callouts (la izquierda).
   const viewBox = tight ? '54 56 150 230' : '0 40 270 252'
+
+  const rad = (d: number) => (d * Math.PI) / 180
+  const markerEls = Object.entries(angleMarkers ?? {}).map(([zone, m]) => {
+    const node = NODE[zone as keyof typeof NODE]
+    const { deg, tone } = m
+    const color = CALLOUT_TEXT[tone]
+    const L = 20
+    const r = 11
+    const nx = node.x
+    const ny = node.y - L
+    const dx = node.x + L * Math.sin(rad(deg))
+    const dy = node.y - L * Math.cos(rad(deg))
+    const ax0 = node.x
+    const ay0 = node.y - r
+    const ax1 = node.x + r * Math.sin(rad(deg))
+    const ay1 = node.y - r * Math.cos(rad(deg))
+    const half = deg / 2
+    const lx = node.x + (r + 7) * Math.sin(rad(half))
+    const ly = node.y - (r + 7) * Math.cos(rad(half))
+    return (
+      <g key={zone} data-angle-marker>
+        <line x1={node.x} y1={node.y} x2={nx} y2={ny} stroke={color} strokeWidth={0.8} strokeDasharray="2 2" opacity={0.6} />
+        {deg > 0 && <line x1={node.x} y1={node.y} x2={dx} y2={dy} stroke={color} strokeWidth={1.4} />}
+        {deg > 0 && <path d={`M ${ax0} ${ay0} A ${r} ${r} 0 0 1 ${ax1} ${ay1}`} fill="none" stroke={color} strokeWidth={1} />}
+        <text x={lx} y={ly} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize={9} fill={color}>
+          {deg}°
+        </text>
+      </g>
+    )
+  })
 
   return (
     <svg
@@ -156,6 +188,7 @@ export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className
           </g>
         )
       })}
+      {markerEls}
       </g>
     </svg>
   )
