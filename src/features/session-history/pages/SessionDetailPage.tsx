@@ -481,8 +481,10 @@ function Hero({ session, effective, stats }: HeroProps) {
               void buildSessionPdf({
                 sessionId: session.id,
                 dateLabel: dateLongFmt.format(new Date(session.started_at)),
-                durationLabel: `${summary?.total_minutes ?? session.duration_minutes ?? 0} min`,
-                adequatePct: adequatePct ?? 0,
+                totalMinutes: summary?.total_minutes ?? session.duration_minutes ?? 0,
+                adequatePct:
+                  summary?.adequate_percentage != null ? Math.round(summary.adequate_percentage) : 0,
+                dominantDeviation: dominant,
                 zones:
                   zoneData?.zones ?? {
                     cervical: EMPTY_ZONE,
@@ -490,7 +492,8 @@ function Hero({ session, effective, stats }: HeroProps) {
                     lumbar: EMPTY_ZONE,
                   },
                 calibrated: !!zoneData?.calibrated && (zoneData?.total_readings ?? 0) > 0,
-                dominantDeviation: dominant,
+                countsByClass: summary?.counts_by_class ?? {},
+                pauses: stats.pauseEstimate,
               })
             }
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cream-bone/30 bg-transparent px-4 py-3 text-[15px] font-medium text-cream-bone transition-colors hover:border-cream-bone"

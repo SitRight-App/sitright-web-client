@@ -1,25 +1,17 @@
 // src/features/session-history/lib/sessionPdf.ts
 import type { SpineZone, ZoneDeviation } from '../types/session'
-import { ZONE_LABELS, ZONE_ORDER, toneFor } from './zoneTone'
+import { ZONE_LABELS, ZONE_ORDER } from './zoneTone'
+import { recommendationsFor } from './postureGuidance'
+import { METRIC_LABELS, POSTURE_LEGEND, dominantPlain } from './sessionCopy'
 
-export function buildFindings(zones: Record<SpineZone, ZoneDeviation>): {
-  good: string[]
-  improve: string[]
-} {
-  const good: string[] = []
-  const improve: string[] = []
-  for (const z of ZONE_ORDER) {
-    const d = zones[z]
-    if (toneFor(d.deviated_pct) === 'ok') {
-      good.push(`${ZONE_LABELS[z]}: se mantuvo en rango durante la sesión.`)
-    } else {
-      improve.push(
-        `${ZONE_LABELS[z]}: desviada el ${Math.round(d.deviated_pct)}% del tiempo (≈${Math.round(d.avg_angle_deg)}°).`,
-      )
-    }
-  }
-  return { good, improve }
-}
+export const ZONE_TABLE_HEADERS = [
+  'Zona',
+  '% del tiempo inclinada',
+  'Cuánto se inclinó',
+  'Lo más que se inclinó',
+  'De corrido',
+  'Veces',
+]
 
 export function buildZoneTableRows(zones: Record<SpineZone, ZoneDeviation>): string[][] {
   return ZONE_ORDER.map((z) => {
@@ -29,41 +21,37 @@ export function buildZoneTableRows(zones: Record<SpineZone, ZoneDeviation>): str
       `${Math.round(d.deviated_pct)}%`,
       `${Math.round(d.avg_angle_deg)}°`,
       `${Math.round(d.peak_angle_deg)}°`,
+      `${Math.max(1, Math.round(d.longest_streak_min))} min`,
       String(d.episodes),
     ]
   })
 }
 
-const RECS: Record<string, string[]> = {
-  forward_slouch: [
-    'Coloca la pantalla a la altura de los ojos para no inclinar el cuello.',
-    'Apoya la zona lumbar en el respaldo y evita encorvarte hacia el escritorio.',
-    'Haz pausas activas con estiramientos de cuello cada 45 minutos.',
-  ],
-  excessive_recline: [
-    'Ajusta el respaldo para que el tronco quede casi vertical.',
-    'Mantén los pies apoyados en el suelo y la cadera al fondo del asiento.',
-    'Evita deslizarte hacia adelante en la silla.',
-  ],
+const DIST_LABELS: Record<string, string> = {
+  adequate: 'Correcta',
+  forward_slouch: 'Encorvado',
+  excessive_recline: 'Reclinado',
 }
 
-export function recommendationsFor(dominant: string | null): string[] {
-  return (
-    RECS[dominant ?? ''] ?? [
-      'Mantén la pantalla a la altura de los ojos y la espalda apoyada en el respaldo.',
-      'Haz pausas activas cada 45–60 minutos.',
-    ]
-  )
+export function buildDistribution(countsByClass: Record<string, number>): { label: string; pct: number }[] {
+  const order = ['adequate', 'forward_slouch', 'excessive_recline']
+  const total = order.reduce((a, k) => a + (countsByClass[k] ?? 0), 0)
+  if (total === 0) return []
+  return order
+    .filter((k) => (countsByClass[k] ?? 0) > 0)
+    .map((k) => ({ label: DIST_LABELS[k], pct: ((countsByClass[k] ?? 0) / total) * 100 }))
 }
 
 export interface SessionPdfData {
   sessionId: string
   dateLabel: string
-  durationLabel: string
+  totalMinutes: number
   adequatePct: number
+  dominantDeviation: string | null
   zones: Record<SpineZone, ZoneDeviation>
   calibrated: boolean
-  dominantDeviation: string | null
+  countsByClass: Record<string, number>
+  pauses: number
 }
 
 /** Rasteriza un <svg> del DOM a PNG dataURL. Devuelve null si falla. */
@@ -109,141 +97,110 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     const pageW = pdf.internal.pageSize.getWidth()
     const pageH = pdf.internal.pageSize.getHeight()
     const M = 16
-    const BOTTOM = pageH - 18 // espacio reservado para el pie
+    const BOTTOM = pageH - 18
     let y = M
-
-    // Salta a una página nueva si el bloque por dibujar (de alto `h`) no entra.
     const ensure = (h: number) => {
-      if (y + h > BOTTOM) {
-        pdf.addPage()
-        y = M
-      }
+      if (y + h > BOTTOM) { pdf.addPage(); y = M }
     }
-
-    const inkColor = () => pdf.setTextColor(44, 49, 43)
-    const softColor = () => pdf.setTextColor(74, 82, 73)
+    const ink = () => pdf.setTextColor(44, 49, 43)
+    const soft = () => pdf.setTextColor(74, 82, 73)
 
     // Encabezado
-    pdf.setTextColor(45, 74, 54)
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(18)
+    pdf.setTextColor(45, 74, 54); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(18)
     pdf.text('SitRight', M, y + 2)
-    softColor()
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(11)
+    soft(); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(11)
     pdf.text('Reporte de sesión postural', M, y + 9)
-    inkColor()
-    pdf.setFontSize(12)
-    pdf.text(`${data.dateLabel}  ·  ${data.durationLabel}`, M, y + 16)
+    ink(); pdf.setFontSize(12)
+    pdf.text(`${data.dateLabel}  ·  ${METRIC_LABELS.totalMinutes}: ${data.totalMinutes} min`, M, y + 16)
     pdf.setFont('helvetica', 'bold')
-    pdf.text(`Postura correcta: ${data.adequatePct}% del tiempo`, M, y + 23)
+    pdf.text(`${METRIC_LABELS.adequatePct}: ${data.adequatePct}%`, M, y + 23)
     pdf.setFont('helvetica', 'normal')
-    y += 32
-    pdf.setDrawColor(214, 211, 203)
-    pdf.line(M, y, pageW - M, y)
-    y += 8
+    y += 31
+    pdf.setDrawColor(214, 211, 203); pdf.line(M, y, pageW - M, y); y += 8
 
-    // Comparación (figuras)
-    const figW = 50
-    const figH = 64
-    const colGap = 24
-    const x1 = M
-    const x2 = M + figW + colGap
-    ensure(4 + figH + 14)
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(13)
-    inkColor()
-    pdf.text('Cómo te sentaste hoy', M, y)
+    // Resumen (izq) + Distribución (der)
+    const colR = M + 92
+    ink(); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12)
+    pdf.text('Resumen', M, y)
+    pdf.text('Distribución', colR, y)
+    y += 6
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); soft()
+    const resumen = [
+      `${METRIC_LABELS.totalMinutes}: ${data.totalMinutes} min`,
+      `${METRIC_LABELS.adequatePct}: ${data.adequatePct}%`,
+      `${METRIC_LABELS.dominant}: ${dominantPlain(data.dominantDeviation)}`,
+      `${METRIC_LABELS.pauses}: ${data.pauses}`,
+    ]
+    const dist = buildDistribution(data.countsByClass)
+    const rowsN = Math.max(resumen.length, dist.length || 1)
+    for (let i = 0; i < rowsN; i++) {
+      ensure(6)
+      if (resumen[i]) pdf.text(`• ${resumen[i]}`, M, y)
+      if (dist[i]) pdf.text(`• ${dist[i].label}: ${Math.round(dist[i].pct)}%`, colR, y)
+      y += 6
+    }
+    if (dist.length === 0) { pdf.text('Sin datos suficientes de distribución.', colR, y - rowsN * 6) }
     y += 4
+
+    // Cómo te sentaste hoy (figuras)
+    const figW = 50, figH = 64
+    ensure(4 + figH + 14)
+    ink(); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(13)
+    pdf.text('Cómo te sentaste hoy', M, y); y += 4
+    const x1 = M, x2 = M + figW + 24
     if (idealPng) pdf.addImage(idealPng, 'PNG', x1, y, figW, figH)
     if (sessionPng) pdf.addImage(sessionPng, 'PNG', x2, y, figW, figH)
-    pdf.setFont('helvetica', 'bold')
     pdf.setFontSize(11)
     pdf.text('Postura correcta', x1, y + figH + 6)
     pdf.text('Tu sesión', x2, y + figH + 6)
     y += figH + 14
 
-    // Hallazgos
-    const { good, improve } = buildFindings(data.zones)
-    ensure(12)
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(12)
-    pdf.text('Hallazgos', M, y)
-    y += 6
-    pdf.setFontSize(10)
-    pdf.setFont('helvetica', 'normal')
-    softColor()
+    // Detalle por zona (tabla con glosario) — solo con calibración
     if (data.calibrated) {
-      for (const line of [...improve.map((s) => `• A corregir — ${s}`), ...good.map((s) => `• Bien — ${s}`)]) {
-        const wrapped = pdf.splitTextToSize(line, pageW - M * 2)
-        ensure(wrapped.length * 5 + 1)
-        pdf.text(wrapped, M, y)
-        y += wrapped.length * 5 + 1
-      }
-    } else {
-      ensure(6)
-      pdf.text('El chaleco no estaba calibrado: no hay detalle por zona en esta sesión.', M, y)
-      y += 6
-    }
-    y += 4
-
-    // Tabla por zona (solo con calibración)
-    if (data.calibrated) {
-      const headers = ['Zona', '% desviado', 'Áng. prom.', 'Pico', 'Episodios']
-      const rows = buildZoneTableRows(data.zones)
-      const colX = [M, M + 46, M + 80, M + 110, M + 135]
       ensure(13)
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(10)
-      inkColor()
-      headers.forEach((h, i) => pdf.text(h, colX[i], y))
-      y += 2
-      pdf.setDrawColor(214, 211, 203)
-      pdf.line(M, y, pageW - M, y)
-      y += 5
-      pdf.setFont('helvetica', 'normal')
-      softColor()
-      for (const row of rows) {
+      ink(); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12)
+      pdf.text('Detalle por zona', M, y); y += 6
+      const colX = [M, M + 26, M + 78, M + 116, M + 150, M + 176]
+      pdf.setFontSize(8)
+      ZONE_TABLE_HEADERS.forEach((h, i) => pdf.text(h, colX[i], y))
+      y += 2; pdf.setDrawColor(214, 211, 203); pdf.line(M, y, pageW - M, y); y += 5
+      pdf.setFont('helvetica', 'normal'); soft(); pdf.setFontSize(8)
+      for (const row of buildZoneTableRows(data.zones)) {
         ensure(6)
         row.forEach((cell, i) => pdf.text(cell, colX[i], y))
         y += 6
       }
-      y += 4
+      ensure(6)
+      pdf.setFontSize(7)
+      pdf.text(pdf.splitTextToSize(POSTURE_LEGEND, pageW - M * 2), M, y)
+      y += 8
     }
 
-    // Recomendaciones
+    // Recomendaciones (evidencia) + Fuentes
+    const guide = recommendationsFor(data.dominantDeviation)
     ensure(12)
-    pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(12)
-    inkColor()
-    pdf.text('Recomendaciones', M, y)
-    y += 6
-    pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(10)
-    softColor()
-    for (const rec of recommendationsFor(data.dominantDeviation)) {
-      const wrapped = pdf.splitTextToSize(`• ${rec}`, pageW - M * 2)
+    ink(); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12)
+    pdf.text('Recomendaciones', M, y); y += 6
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); soft()
+    for (const tip of guide.tips) {
+      const wrapped = pdf.splitTextToSize(`• ${tip}`, pageW - M * 2)
       ensure(wrapped.length * 5 + 1)
-      pdf.text(wrapped, M, y)
-      y += wrapped.length * 5 + 1
+      pdf.text(wrapped, M, y); y += wrapped.length * 5 + 1
     }
+    ensure(6)
+    pdf.setFontSize(8)
+    pdf.text(pdf.splitTextToSize(`Fuentes: ${guide.sources.join('; ')}.`, pageW - M * 2), M, y + 1)
 
     // Pie en todas las páginas
     const pageCount = pdf.getNumberOfPages()
-    pdf.setFontSize(8)
-    pdf.setTextColor(120, 126, 118)
+    pdf.setFontSize(8); pdf.setTextColor(120, 126, 118)
     for (let p = 1; p <= pageCount; p++) {
       pdf.setPage(p)
-      pdf.text(
-        'Prediagnóstico orientativo; no reemplaza la evaluación de un profesional de salud.',
-        M,
-        pageH - 14,
-      )
+      pdf.text('Prediagnóstico orientativo; no reemplaza la evaluación de un profesional de salud.', M, pageH - 14)
     }
 
     pdf.save(`sitright-sesion-${data.sessionId.slice(0, 8)}.pdf`)
   } catch {
-    // Último recurso: diálogo de impresión del navegador.
     window.print()
   }
 }
