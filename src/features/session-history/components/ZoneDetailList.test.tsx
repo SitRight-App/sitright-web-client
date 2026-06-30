@@ -18,7 +18,7 @@ describe('ZoneDetailList', () => {
     render(<ZoneDetailList zones={{ cervical: z(41, 22), dorsal: z(12), lumbar: z(2, 0) }} />)
     const items = screen.getAllByRole('listitem')
     expect(within(items[0]).getByText('Cuello')).toBeTruthy()
-    expect(screen.getByText(/Lo más que estuvo inclinada de corrido/)).toBeTruthy()
+    expect(screen.getAllByText(/Lo más que estuvo inclinada de corrido/).length).toBeGreaterThan(0)
     expect(screen.queryByText(/tramo máximo/i)).toBeNull()
   })
   it('marca zonas en rango', () => {

@@ -37,14 +37,12 @@ export function ZoneDetailList({ zones }: { zones: Record<SpineZone, ZoneDeviati
                   <dt>{METRIC_LABELS.avgAngle}</dt>
                   <dd className="font-medium text-ink">{Math.round(d.avg_angle_deg)}°</dd>
                 </div>
-                {tone === 'marcada' && (
-                  <div className="flex justify-between gap-3 sm:col-span-2 sm:block">
-                    <dt>{METRIC_LABELS.longestStreak}</dt>
-                    <dd className="font-medium text-ink">
-                      hasta {Math.max(1, Math.round(d.longest_streak_min))} min seguidos
-                    </dd>
-                  </div>
-                )}
+                <div className="flex justify-between gap-3 sm:col-span-2 sm:block">
+                  <dt>{METRIC_LABELS.longestStreak}</dt>
+                  <dd className="font-medium text-ink">
+                    hasta {Math.max(1, Math.round(d.longest_streak_min))} min seguidos
+                  </dd>
+                </div>
               </dl>
             )}
           </li>
