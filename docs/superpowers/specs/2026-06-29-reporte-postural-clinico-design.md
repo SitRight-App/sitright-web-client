@@ -98,16 +98,17 @@ Bandas de presentación por zona (ya en `lib/zoneTone`): `<5 ok`, `<25 leve`,
 
 `src/features/session-history/components/PostureComparison.tsx`
 
-Props (ampliadas):
+**NO se duplica en pantalla:** la página ya muestra el **Resumen** (en el hero:
+pausas, desviación más frecuente, etc.) y la **Distribución** (barra segmentada, en
+`DetailGrid`). Por eso la sección "Postura" NO los repite; solo se enriquece con los
+ángulos y el detalle por zona. (Resumen + Distribución sí van al **PDF**, donde
+faltan — §6.4.) Por eso los props de `PostureComparison` no cambian:
 ```ts
 interface PostureComparisonProps {
   zones: Record<SpineZone, ZoneDeviation>
   calibrated: boolean
   adequatePct: number
   dominantDeviation: string | null
-  totalMinutes: number
-  countsByClass: Record<string, number>
-  pauses: number
 }
 ```
 
@@ -117,27 +118,16 @@ Estructura (de arriba a abajo):
    marcadores a 0° en las zonas que el usuario desvió) y "Tu sesión" (marcadores con
    el `avg_angle_deg` y tono por zona). Mantienen `lean`/`headTilt` actuales.
 3. **Frase de lectura** (plano), igual que hoy pero con la desviación en palabras.
-4. **Resumen** (fila/grid de cifras): "Tiempo de uso", "% de postura correcta",
-   "Desviación más frecuente" (palabras), "Pausas".
-5. **Distribución de posturas**: barra segmentada con leyenda (mismo patrón que la
-   sección "Distribución" del reporte) con % por clase (Correcta / Encorvado /
-   Reclinado), calculada desde `countsByClass` excluyendo `indeterminate`.
-6. **Detalle por zona ampliado** (solo si `calibrated`): por zona (peor primero),
+4. **Detalle por zona ampliado** (solo si `calibrated`): por zona (peor primero),
    estado (En rango / Atención) + las cifras con los textos del **glosario §4**:
    "% del tiempo inclinada", "Cuánto se inclinó (promedio)", "Lo más que estuvo
    inclinada de corrido". (Se omiten `peak`/`episodes` en pantalla para no saturar;
-   van en el PDF.)
-7. **Definiciones + leyenda + disclaimer**: Encorvado/Reclinado, la leyenda del §4,
+   van en el PDF.) Se extrae a un componente `ZoneDetailList`.
+5. **Definiciones + leyenda + disclaimer**: Encorvado/Reclinado, la leyenda del §4,
    y "prediagnóstico orientativo; no reemplaza la evaluación de un profesional".
 
-Para mantener archivos enfocados, se extraen piezas presentacionales:
-- `ZoneDetailList` (el detalle por zona con textos del glosario).
-- La barra de distribución puede reusar el patrón ya existente en el reporte (sección
-  Distribución) o un pequeño componente local `PostureDistributionBar`.
-
-Caso **sin calibración**: figuras sin marcadores, sin detalle por zona; se muestran
-Resumen + Distribución (que no dependen del ángulo) + aviso "Calibra el chaleco para
-ver el detalle por zona".
+Caso **sin calibración**: figuras sin marcadores, sin detalle por zona + aviso
+"Calibra el chaleco para ver el detalle por zona".
 
 ### 6.3 Recomendaciones con evidencia
 
@@ -194,10 +184,11 @@ Orden y distribución (A4, con el guard de paginación ya existente):
 
 ### 6.5 Cableado en la página
 
-`SessionDetailPage.tsx`: pasa a `PostureComparisonSection` y a `buildSessionPdf` los
-nuevos datos: `totalMinutes` (`effective.summary?.total_minutes`), `countsByClass`
-(`effective.summary?.counts_by_class`), `pauses` (de `deriveStats`). Mantener el uso
-de `effective` (no `session.summary` crudo).
+`SessionDetailPage.tsx`: `PostureComparisonSection` NO cambia sus props (la sección no
+añade resumen/distribución). Solo `buildSessionPdf` recibe los nuevos datos:
+`totalMinutes` (`effective.summary?.total_minutes`), `countsByClass`
+(`effective.summary?.counts_by_class`), `pauses` (de `stats.pauseEstimate`). Mantener
+el uso de `effective` (no `session.summary` crudo).
 
 ## 7. Archivos afectados
 
@@ -206,10 +197,10 @@ de `effective` (no `session.summary` crudo).
 | `src/shared/ui/SeatedFigure.tsx` | + prop `angleMarkers`, render goniométrico |
 | `src/features/session-history/lib/sessionCopy.ts` | NUEVO: textos del glosario (labels + leyenda) reutilizables |
 | `src/features/session-history/lib/postureGuidance.ts` | NUEVO: recomendaciones con evidencia + fuentes |
-| `src/features/session-history/components/PostureComparison.tsx` | rediseño (figuras c/ángulo, resumen, distribución, detalle) |
+| `src/features/session-history/components/PostureComparison.tsx` | rediseño (figuras con ángulo + detalle por zona con glosario) |
 | `src/features/session-history/components/ZoneDetailList.tsx` | NUEVO: detalle por zona con glosario |
-| `src/features/session-history/lib/sessionPdf.ts` | usa `postureGuidance` + `sessionCopy`; `SessionPdfData` ampliado; layout 2-columnas; tabla con glosario + leyenda |
-| `src/features/session-history/pages/SessionDetailPage.tsx` | pasa `totalMinutes`/`countsByClass`/`pauses` a sección y PDF |
+| `src/features/session-history/lib/sessionPdf.ts` | usa `postureGuidance` + `sessionCopy`; `SessionPdfData` ampliado; layout 2-columnas; tabla con glosario + leyenda; figuras con ángulo |
+| `src/features/session-history/pages/SessionDetailPage.tsx` | pasa `totalMinutes`/`countsByClass`/`pauses` SOLO a `buildSessionPdf` |
 
 ## 8. Fuentes (evidencia de las recomendaciones)
 
@@ -236,9 +227,10 @@ de `effective` (no `session.summary` crudo).
 - distribución: cálculo de % por clase excluye `indeterminate` y suma ~100%.
 - `SeatedFigure`: con `angleMarkers` para una zona renderiza el arco + etiqueta
   "{deg}°"; sin `angleMarkers` no agrega marcadores (dashboard intacto).
-- `PostureComparison`: muestra Resumen (tiempo de uso, % correcto, desviación en
-  palabras, pausas), Distribución y el detalle por zona con textos del glosario;
-  sin calibración omite figuras-con-ángulo y detalle pero muestra resumen+distribución.
+- `PostureComparison`: las figuras reciben `angleMarkers` (correcta a 0°, sesión con
+  el ángulo por zona) y se muestra el detalle por zona con textos del glosario (sin
+  "tramo máximo"); sin calibración omite figuras-con-ángulo y detalle (no añade
+  resumen ni distribución — esos ya están en la página).
 - `sessionPdf` (puro): `buildZoneTableRows`/labels usan los encabezados del glosario.
 
 ## 10. Casos borde
