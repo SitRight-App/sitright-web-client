@@ -67,56 +67,65 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     const rad = (deg: number) => (deg * Math.PI) / 180
 
     function drawSeatedBody(fx: number, fy: number, fw: number, fh: number, mode: 'ideal' | 'session') {
-      const xHip = fx + fw * 0.40
-      const yHip = fy + fh * 0.68
-      const chestW = fw * 0.24
-      const yCerv = yHip - fh * 0.42
-      const yDorsal = yHip - fh * 0.27
+      const xHip = fx + fw * 0.36
+      const yHip = fy + fh * 0.62
+      const yCerv = yHip - fh * 0.40
+      const yDorsal = yHip - fh * 0.26
       const yLumbar = yHip - fh * 0.12
-      const off = (z: SpineZone) => (mode === 'session' ? Math.min(data.zones[z].avg_angle_deg, 30) * 0.6 : 0)
+      const off = (z: SpineZone) => (mode === 'session' ? Math.min(data.zones[z].avg_angle_deg, 30) * 0.55 : 0)
       const xLumbar = xHip + off('lumbar')
       const xDorsal = xHip + off('dorsal')
       const xCerv = xHip + off('cervical')
+      const body: readonly number[] = [223, 231, 224]
+      const thighLen = fw * 0.5
 
-      // Silla (sand tenue)
-      draw(C.sand); pdf.setLineWidth(0.5)
-      pdf.line(fx + 1, yHip + 2, fx + 1 + fw * 0.7, yHip + 2)       // asiento
-      pdf.line(fx + 1, yHip + 2, fx + 1, yCerv - 2)                  // respaldo
-      pdf.line(fx + 2, yHip + 2, fx + 2, fy + fh)                    // pata trasera
-      pdf.line(fx + fw * 0.68, yHip + 2, fx + fw * 0.68, fy + fh)    // pata delantera
+      // Silla: asiento (superficie) + respaldo + patas
+      const seatY = yHip + 3
+      const seatX0 = xHip - fw * 0.20
+      const seatX1 = xHip + thighLen + 2
+      draw(C.sand); fill([244, 242, 237]); pdf.setLineWidth(0.5)
+      pdf.rect(seatX0, seatY, seatX1 - seatX0, 2.5, 'FD')              // asiento
+      pdf.line(seatX0, seatY, seatX0, yDorsal)                         // respaldo (hasta dorsal)
+      pdf.line(seatX0 + 1.5, seatY + 2.5, seatX0 + 1.5, fy + fh)       // pata trasera
+      pdf.line(seatX1 - 1.5, seatY + 2.5, seatX1 - 1.5, fy + fh)       // pata delantera
 
-      // Pierna
-      fill(C.tintOk); draw(C.sand); pdf.setLineWidth(0.4)
-      pdf.roundedRect(xHip - 1, yHip - 2, fw * 0.5, 4, 2, 2, 'FD')   // muslo
-      pdf.roundedRect(xHip + fw * 0.46, yHip - 2, 4, fh * 0.3, 2, 2, 'FD') // pierna baja
+      // Pierna: muslo horizontal + pierna baja
+      fill(body); draw(C.sand); pdf.setLineWidth(0.4)
+      pdf.roundedRect(xHip - 2, yHip - 3, thighLen, 5, 2.5, 2.5, 'FD')
+      pdf.roundedRect(xHip + thighLen - 5, yHip + 1, 5, fh * 0.26, 2.5, 2.5, 'FD')
 
-      // Torso (polígono cerrado: borde de espalda + frente)
-      const back = [
-        [xHip, yHip], [xLumbar, yLumbar], [xDorsal, yDorsal], [xCerv, yCerv],
+      // Torso: silueta cerrada con el frente abultado (relleno visible + contorno)
+      const shoulderW = fw * 0.30
+      const bellyW = fw * 0.36
+      const poly = [
+        [xHip, yHip], [xLumbar, yLumbar], [xDorsal, yDorsal], [xCerv, yCerv], // espalda
+        [xCerv + shoulderW, yCerv + 1.5],                                     // hombro
+        [xHip + bellyW, yHip - (yHip - yCerv) * 0.42],                        // panza (abultado)
+        [xHip + bellyW * 0.72, yHip],                                         // frente de cadera
       ]
-      const front = [
-        [xCerv + chestW, yCerv + 1], [xHip + chestW, yHip],
-      ]
-      const poly = [...back, ...front]
       const rel: number[][] = []
       for (let i = 1; i < poly.length; i++) rel.push([poly[i][0] - poly[i - 1][0], poly[i][1] - poly[i - 1][1]])
-      fill(C.tintOk); draw(C.sand); pdf.setLineWidth(0.4)
-      pdf.lines(rel, poly[0][0], poly[0][1], [1, 1], 'F', true)
+      fill(body); draw(C.sand); pdf.setLineWidth(0.5)
+      pdf.lines(rel, poly[0][0], poly[0][1], [1, 1], 'FD', true)
 
-      // Brazo
-      draw(C.sand); pdf.setLineWidth(1.2)
-      pdf.line(xCerv + chestW, yCerv + 3, xHip + fw * 0.42, yHip - 3)
+      // Brazo apoyado en el muslo (tenue, para no competir con la columna)
+      draw(C.sand); pdf.setLineWidth(1.4)
+      pdf.line(xCerv + shoulderW - 1, yCerv + 4, xHip + thighLen * 0.55, yHip - 2)
 
-      // Borde de espalda (más marcado) + cuello
-      draw(C.soft); pdf.setLineWidth(1.3)
+      // Columna (borde de la espalda) marcada
+      draw(C.soft); pdf.setLineWidth(1.2)
       pdf.line(xHip, yHip, xLumbar, yLumbar)
       pdf.line(xLumbar, yLumbar, xDorsal, yDorsal)
       pdf.line(xDorsal, yDorsal, xCerv, yCerv)
-      const headR = fw * 0.10
-      const headY = yCerv - headR - 2
-      pdf.line(xCerv, yCerv, xCerv, headY + headR)
-      draw(C.sand); fill(C.white); pdf.setLineWidth(1)
-      pdf.circle(xCerv, headY, headR, 'FD')
+
+      // Cabeza (chica, rellena) + cuello
+      const headR = fw * 0.085
+      const headCx = xCerv + headR * 0.5
+      const headCy = yCerv - headR - 2.5
+      draw(C.soft); pdf.setLineWidth(1.4)
+      pdf.line(xCerv, yCerv, headCx, headCy + headR)
+      draw(C.sand); fill(body); pdf.setLineWidth(0.5)
+      pdf.circle(headCx, headCy, headR, 'FD')
 
       // Nodos por zona + arco de ángulo (session)
       const drawNode = (x: number, yy: number, z: SpineZone) => {
@@ -172,7 +181,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.text(label, cx, y + 2)
       col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.text(val, cx, y + 7)
     }
-    chip(METRIC_LABELS.totalMinutes, `${data.totalMinutes} min`, M + 64)
+    chip(METRIC_LABELS.totalMinutes, `${Math.round(data.totalMinutes)} min`, M + 64)
     chip(METRIC_LABELS.pauses, String(data.pauses), M + 110)
     y += 16
 
