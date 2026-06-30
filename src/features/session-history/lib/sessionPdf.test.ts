@@ -1,6 +1,6 @@
 // src/features/session-history/lib/sessionPdf.test.ts
 import { describe, expect, it } from 'vitest'
-import { ZONE_TABLE_HEADERS, buildDistribution, buildZoneTableRows } from './sessionPdf'
+import { ZONE_TABLE_HEADERS, buildDistribution, buildZoneTableRows, scoreLevel, toneColor } from './sessionPdf'
 import type { ZoneDeviation } from '../types/session'
 
 const z = (deviated_pct: number, avg = 18): ZoneDeviation => ({
@@ -30,5 +30,20 @@ describe('sessionPdf helpers', () => {
     expect(labels).toContain('Correcta')
     expect(labels).not.toContain('Indeterminada')
     expect(Math.round(dist.reduce((a, d) => a + d.pct, 0))).toBe(100)
+  })
+})
+
+describe('scoreLevel / toneColor', () => {
+  it('scoreLevel mapea las bandas', () => {
+    expect(scoreLevel(70)).toBe('good')
+    expect(scoreLevel(69)).toBe('mid')
+    expect(scoreLevel(50)).toBe('mid')
+    expect(scoreLevel(49)).toBe('low')
+    expect(scoreLevel(0)).toBe('low')
+  })
+  it('toneColor mapea a RGB', () => {
+    expect(toneColor('ok')).toEqual([45, 74, 54])
+    expect(toneColor('leve')).toEqual([232, 166, 133])
+    expect(toneColor('marcada')).toEqual([200, 98, 60])
   })
 })

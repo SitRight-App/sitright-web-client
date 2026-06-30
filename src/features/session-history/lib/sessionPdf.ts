@@ -4,6 +4,18 @@ import { ZONE_LABELS, ZONE_ORDER } from './zoneTone'
 import { recommendationsFor } from './postureGuidance'
 import { METRIC_LABELS, POSTURE_LEGEND, dominantPlain } from './sessionCopy'
 
+export function scoreLevel(pct: number): 'good' | 'mid' | 'low' {
+  if (pct >= 70) return 'good'
+  if (pct >= 50) return 'mid'
+  return 'low'
+}
+
+export function toneColor(tone: 'ok' | 'leve' | 'marcada'): [number, number, number] {
+  if (tone === 'ok') return [45, 74, 54]
+  if (tone === 'leve') return [232, 166, 133]
+  return [200, 98, 60]
+}
+
 export const ZONE_TABLE_HEADERS = [
   'Zona',
   '% del tiempo inclinada',
