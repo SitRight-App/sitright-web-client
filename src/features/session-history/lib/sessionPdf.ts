@@ -2,7 +2,7 @@
 import type { SpineZone, ZoneDeviation } from '../types/session'
 import { ZONE_LABELS, ZONE_ORDER, toneFor } from './zoneTone'
 import { recommendationsFor } from './postureGuidance'
-import { METRIC_LABELS, POSTURE_LEGEND, dominantPlain } from './sessionCopy'
+import { METRIC_LABELS, streakLabel, verdictSentence } from './sessionCopy'
 
 export function scoreLevel(pct: number): 'good' | 'mid' | 'low' {
   if (pct >= 70) return 'good'
@@ -64,39 +64,81 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     const draw = (c: readonly number[]) => pdf.setDrawColor(c[0], c[1], c[2])
     const lvl = scoreLevel(data.adequatePct)
     const levelColor = lvl === 'good' ? C.moss : lvl === 'mid' ? C.amber : C.terra
+    const rad = (deg: number) => (deg * Math.PI) / 180
 
-    function drawSpine(fx: number, fy: number, fw: number, fh: number, mode: 'ideal' | 'session') {
-      const baseX = fx + fw * 0.42
-      const segLen = (fh - 12) / 3
-      const yHip = fy + fh
-      const yLumbar = yHip - segLen
-      const yDorsal = yLumbar - segLen
-      const yCervical = yDorsal - segLen
-      const off = (z: SpineZone) =>
-        mode === 'session' ? Math.min(data.zones[z].avg_angle_deg, 30) * 0.6 : 0
-      const xLumbar = baseX + off('lumbar')
-      const xDorsal = baseX + off('dorsal')
-      const xCervical = baseX + off('cervical')
-      draw(C.soft); pdf.setLineWidth(1.4)
-      pdf.line(baseX, yHip, xLumbar, yLumbar)
+    function drawSeatedBody(fx: number, fy: number, fw: number, fh: number, mode: 'ideal' | 'session') {
+      const xHip = fx + fw * 0.40
+      const yHip = fy + fh * 0.60
+      const chestW = fw * 0.24
+      const yCerv = yHip - fh * 0.42
+      const yDorsal = yHip - fh * 0.27
+      const yLumbar = yHip - fh * 0.12
+      const off = (z: SpineZone) => (mode === 'session' ? Math.min(data.zones[z].avg_angle_deg, 30) * 0.6 : 0)
+      const xLumbar = xHip + off('lumbar')
+      const xDorsal = xHip + off('dorsal')
+      const xCerv = xHip + off('cervical')
+
+      // Silla (sand tenue)
+      draw(C.sand); pdf.setLineWidth(0.5)
+      pdf.line(fx + 1, yHip + 2, fx + 1 + fw * 0.7, yHip + 2)       // asiento
+      pdf.line(fx + 1, yHip + 2, fx + 1, yCerv - 2)                  // respaldo
+      pdf.line(fx + 2, yHip + 2, fx + 2, fy + fh)                    // pata trasera
+      pdf.line(fx + fw * 0.68, yHip + 2, fx + fw * 0.68, fy + fh)    // pata delantera
+
+      // Pierna
+      fill(C.tintOk); draw(C.sand); pdf.setLineWidth(0.4)
+      pdf.roundedRect(xHip - 1, yHip - 2, fw * 0.5, 4, 2, 2, 'FD')   // muslo
+      pdf.roundedRect(xHip + fw * 0.46, yHip - 2, 4, fh * 0.3, 2, 2, 'FD') // pierna baja
+
+      // Torso (polígono cerrado: borde de espalda + frente)
+      const back = [
+        [xHip, yHip], [xLumbar, yLumbar], [xDorsal, yDorsal], [xCerv, yCerv],
+      ]
+      const front = [
+        [xCerv + chestW, yCerv + 1], [xHip + chestW, yHip],
+      ]
+      const poly = [...back, ...front]
+      const rel: number[][] = []
+      for (let i = 1; i < poly.length; i++) rel.push([poly[i][0] - poly[i - 1][0], poly[i][1] - poly[i - 1][1]])
+      fill(C.tintOk); draw(C.sand); pdf.setLineWidth(0.4)
+      pdf.lines(rel, poly[0][0], poly[0][1], [1, 1], 'F', true)
+
+      // Brazo
+      draw(C.sand); pdf.setLineWidth(1.2)
+      pdf.line(xCerv + chestW, yCerv + 3, xHip + fw * 0.42, yHip - 3)
+
+      // Borde de espalda (más marcado) + cuello
+      draw(C.soft); pdf.setLineWidth(1.3)
+      pdf.line(xHip, yHip, xLumbar, yLumbar)
       pdf.line(xLumbar, yLumbar, xDorsal, yDorsal)
-      pdf.line(xDorsal, yDorsal, xCervical, yCervical)
-      const headR = 4.5
-      const headY = yCervical - headR - 2
-      pdf.line(xCervical, yCervical, xCervical, headY + headR)
+      pdf.line(xDorsal, yDorsal, xCerv, yCerv)
+      const headR = fw * 0.13
+      const headY = yCerv - headR - 2
+      pdf.line(xCerv, yCerv, xCerv, headY + headR)
       draw(C.sand); fill(C.white); pdf.setLineWidth(1)
-      pdf.circle(xCervical, headY, headR, 'FD')
-      fill(C.sand); pdf.circle(baseX, yHip, 2, 'F')
-      const node = (x: number, yy: number, z: SpineZone) => {
+      pdf.circle(xCerv, headY, headR, 'FD')
+
+      // Nodos por zona + arco de ángulo (session)
+      const drawNode = (x: number, yy: number, z: SpineZone) => {
         const tone = mode === 'ideal' ? 'ok' : toneFor(data.zones[z].deviated_pct)
-        fill(toneColor(tone)); pdf.circle(x, yy, 2.6, 'F')
+        fill(toneColor(tone)); pdf.circle(x, yy, 2.2, 'F')
+        if (mode === 'session' && tone !== 'ok') {
+          const deg = Math.round(data.zones[z].avg_angle_deg)
+          const L = 9
+          draw(toneColor(tone)); pdf.setLineWidth(0.6)
+          pdf.line(x, yy, x, yy - L)                                          // neutro
+          pdf.setLineWidth(1)
+          pdf.line(x, yy, x + L * Math.sin(rad(deg)), yy - L * Math.cos(rad(deg))) // real
+          col(toneColor(tone)); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10)
+          pdf.text(`${deg}°`, x + L * Math.sin(rad(deg)) + 1.5, yy - L * Math.cos(rad(deg)))
+        }
       }
-      node(xCervical, yCervical, 'cervical')
-      node(xDorsal, yDorsal, 'dorsal')
-      node(xLumbar, yLumbar, 'lumbar')
+      drawNode(xCerv, yCerv, 'cervical')
+      drawNode(xDorsal, yDorsal, 'dorsal')
+      drawNode(xLumbar, yLumbar, 'lumbar')
     }
 
-    // Encabezado
+    // 1. Encabezado
     col(C.moss); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(17)
     pdf.text('SitRight', M, y + 2)
     col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10)
@@ -104,131 +146,99 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     col(C.ink); pdf.setFontSize(11)
     pdf.text(data.dateLabel, pageW - M, y + 8, { align: 'right' })
     y += 13
-    draw(C.sand); pdf.setLineWidth(0.4); pdf.line(M, y, pageW - M, y); y += 10
+    draw(C.sand); pdf.setLineWidth(0.4); pdf.line(M, y, pageW - M, y); y += 9
 
-    // Score + cifras
-    col(levelColor); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(30)
-    pdf.text(`${data.adequatePct}%`, M, y + 3)
-    col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9)
-    pdf.text(METRIC_LABELS.adequatePct, M, y + 9)
-    const figs: [string, string][] = [
-      [METRIC_LABELS.totalMinutes, `${data.totalMinutes} min`],
-      [METRIC_LABELS.dominant, dominantPlain(data.dominantDeviation)],
-      [METRIC_LABELS.pauses, String(data.pauses)],
-    ]
-    figs.forEach(([label, val], i) => {
-      const fx = M + 56 + i * 44
-      col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.text(label, fx, y)
-      col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.text(val, fx, y + 5)
-    })
-    y += 15
+    // 2. Cómo te fue (veredicto + score + barra + chips)
+    const verdict = verdictSentence({ adequatePct: data.adequatePct, zones: data.zones, calibrated: data.calibrated })
+    col(C.ink); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(11)
+    const vLines = pdf.splitTextToSize(verdict, pageW - 2 * M)
+    ensure(vLines.length * 5 + 2)
+    pdf.text(vLines, M, y); y += vLines.length * 5 + 4
 
-    // Barra de distribución
+    col(levelColor); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(26)
+    pdf.text(`${data.adequatePct}%`, M, y + 7)
+    col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5)
+    pdf.text(METRIC_LABELS.adequatePct, M, y + 12)
+    const chip = (label: string, val: string, cx: number) => {
+      col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.text(label, cx, y + 2)
+      col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11); pdf.text(val, cx, y + 7)
+    }
+    chip(METRIC_LABELS.totalMinutes, `${data.totalMinutes} min`, M + 64)
+    chip(METRIC_LABELS.pauses, String(data.pauses), M + 110)
+    y += 16
+
     const dist = buildDistribution(data.countsByClass)
     const distColor = (label: string) => (label === 'Correcta' ? C.moss : label === 'Encorvado' ? C.tSoft : C.terra)
     if (dist.length > 0) {
       const barW = pageW - 2 * M
       let bx = M
+      for (const d of dist) { const w = (d.pct / 100) * barW; fill(distColor(d.label)); pdf.rect(bx, y, w, 6, 'F'); bx += w }
+      y += 11
+      let lx = M; pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9)
       for (const d of dist) {
-        const w = (d.pct / 100) * barW
-        fill(distColor(d.label)); pdf.rect(bx, y, w, 7, 'F')
-        bx += w
-      }
-      y += 12
-      let lx = M
-      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9)
-      for (const d of dist) {
-        const text = `${d.label} ${Math.round(d.pct)}%`
+        const t = `${d.label} ${Math.round(d.pct)}%`
         fill(distColor(d.label)); pdf.circle(lx + 1.5, y - 1.5, 1.5, 'F')
-        col(C.soft); pdf.text(text, lx + 5, y)
-        lx += pdf.getTextWidth(text) + 14
+        col(C.soft); pdf.text(t, lx + 5, y); lx += pdf.getTextWidth(t) + 14
       }
       y += 9
     } else {
-      col(C.soft); pdf.setFontSize(9)
-      pdf.text('Sin datos suficientes de distribución.', M, y); y += 9
+      col(C.soft); pdf.setFontSize(9); pdf.text('Sin datos suficientes de distribución.', M, y); y += 9
     }
 
-    // Cómo te sentaste hoy (perfiles de columna)
+    // 3. Cómo te sentaste hoy (cuerpos)
     if (data.calibrated) {
-      ensure(92)
+      ensure(96)
       col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(13)
       pdf.text('Cómo te sentaste hoy', M, y); y += 7
-      const figY = y, figH = 60, figW = 38
-      drawSpine(M, figY, figW, figH, 'ideal')
-      drawSpine(M + 46, figY, figW, figH, 'session')
+      const figY = y, figH = 64, figW = 70
+      drawSeatedBody(M, figY, figW, figH, 'ideal')
+      drawSeatedBody(M + 96, figY, figW, figH, 'session')
       col(C.soft); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10)
-      pdf.text('Postura correcta', M, figY + figH + 6)
-      pdf.text('Tu sesión', M + 46, figY + figH + 6)
-      const lx2 = M + 98
-      let ly = figY + 8
-      for (const z of ['cervical', 'dorsal', 'lumbar'] as SpineZone[]) {
-        const d = data.zones[z]
-        const tone = toneFor(d.deviated_pct)
-        fill(toneColor(tone)); pdf.circle(lx2 + 2, ly - 1.6, 2, 'F')
-        col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12)
-        pdf.text(`${ZONE_LABELS[z]}  ${Math.round(d.avg_angle_deg)}°`, lx2 + 7, ly)
-        col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5)
-        pdf.text(tone === 'ok' ? 'En rango' : `${Math.round(d.deviated_pct)}% del tiempo`, lx2 + 7, ly + 5)
-        ly += 17
-      }
-      y = figY + figH + 13
+      pdf.text('Postura correcta', M, figY + figH + 4)
+      pdf.text('Tu sesión', M + 96, figY + figH + 4)
+      y = figY + figH + 11
     } else {
       ensure(10)
       col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10)
       pdf.text('El chaleco no estaba calibrado: no hay detalle por zona en esta sesión.', M, y); y += 10
     }
 
-    // Detalle por zona (tarjetas)
+    // 4. Qué pasó en cada zona (líneas)
     if (data.calibrated) {
       ensure(10)
       col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12)
-      pdf.text('Detalle por zona', M, y); y += 6
-      const ordered = ZONE_ORDER.map((z) => ({ z, d: data.zones[z] })).sort(
-        (a, b) => b.d.deviated_pct - a.d.deviated_pct,
-      )
+      pdf.text('Qué pasó en cada zona', M, y); y += 6
+      const ordered = ZONE_ORDER.map((z) => ({ z, d: data.zones[z] })).sort((a, b) => b.d.deviated_pct - a.d.deviated_pct)
       for (const { z, d } of ordered) {
         const ok = toneFor(d.deviated_pct) === 'ok'
-        const metrics = ok
-          ? 'Se mantuvo dentro de lo recomendado.'
-          : `${METRIC_LABELS.deviatedPct}: ${Math.round(d.deviated_pct)}%   ·   ${METRIC_LABELS.avgAngle}: ${Math.round(d.avg_angle_deg)}°   ·   ${METRIC_LABELS.longestStreak}: hasta ${Math.max(1, Math.round(d.longest_streak_min))} min`
-        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5)
-        const metricLines = pdf.splitTextToSize(metrics, pageW - 2 * M - 8)
-        const cardH = Math.max(16, 9 + metricLines.length * 4.5)
-        ensure(cardH + 3)
-        fill(ok ? C.tintOk : C.tintDev); draw(C.sand); pdf.setLineWidth(0.3)
-        pdf.roundedRect(M, y, pageW - 2 * M, cardH, 2, 2, 'FD')
-        col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(11)
-        pdf.text(ZONE_LABELS[z], M + 4, y + 7)
-        col(ok ? C.moss : C.terra); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9)
-        pdf.text(ok ? 'En rango' : 'Atención', pageW - M - 4, y + 7, { align: 'right' })
-        col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5)
-        pdf.text(metricLines, M + 4, y + 13)
-        y += cardH + 3
+        const line = ok
+          ? `${ZONE_LABELS[z]} - en rango`
+          : `${ZONE_LABELS[z]} - se inclinó ${Math.round(d.avg_angle_deg)}° el ${Math.round(d.deviated_pct)}% del tiempo, ${streakLabel(d.longest_streak_min)}`
+        pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10)
+        const wrapped = pdf.splitTextToSize(line, pageW - 2 * M - 6)
+        ensure(wrapped.length * 5 + 1)
+        fill(ok ? C.moss : C.terra); pdf.circle(M + 1.5, y - 1.4, 1.6, 'F')
+        col(C.ink); pdf.text(wrapped, M + 6, y)
+        y += wrapped.length * 5 + 1
       }
-      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5)
-      const legendLines = pdf.splitTextToSize(POSTURE_LEGEND, pageW - 2 * M)
-      ensure(legendLines.length * 4 + 3)
-      col(C.soft)
-      pdf.text(legendLines, M, y)
-      y += legendLines.length * 4 + 3
+      y += 3
     }
 
-    // Recomendaciones (sin fuentes)
+    // 5. Qué hacer (recomendaciones, sin fuentes)
     const guide = recommendationsFor(data.dominantDeviation)
     ensure(12)
     col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12)
-    pdf.text('Recomendaciones', M, y); y += 6
+    pdf.text('Qué hacer', M, y); y += 6
     pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10)
     for (const tip of guide.tips) {
-      const wrapped = pdf.splitTextToSize(tip, pageW - 2 * M - 5)
+      const wrapped = pdf.splitTextToSize(tip, pageW - 2 * M - 6)
       ensure(wrapped.length * 5 + 1)
-      fill(C.moss); pdf.circle(M + 1.2, y - 1.4, 1.2, 'F')
-      col(C.soft); pdf.text(wrapped, M + 5, y)
+      fill(C.moss); pdf.circle(M + 1.5, y - 1.4, 1.2, 'F')
+      col(C.soft); pdf.text(wrapped, M + 6, y)
       y += wrapped.length * 5 + 1
     }
 
-    // Pie en todas las páginas
+    // 6. Pie en todas las páginas
     const pageCount = pdf.getNumberOfPages()
     pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(120, 126, 118)
     for (let p = 1; p <= pageCount; p++) {
