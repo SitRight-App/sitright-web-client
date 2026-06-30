@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/shared/ui/toast'
+import { ACTIVE_SESSION_KEY } from '@/shared/hooks/useActiveSession'
 import {
   closeSession,
-  getActiveSession,
   getSession,
   getZoneAnalysis,
   listSessions,
@@ -10,8 +10,11 @@ import {
 } from '../services/sessionService'
 import type { CloseSessionRequest, ListSessionsParams, StartSessionRequest } from '../types/session'
 
+// El hook de sesión activa vive en shared/ (lo usa también el dashboard, otro
+// feature). Se re-exporta aquí para los consumidores internos del feature.
+export { useActiveSession } from '@/shared/hooks/useActiveSession'
+
 const SESSIONS_KEY = ['sessions'] as const
-const ACTIVE_KEY = ['sessions', 'active'] as const
 
 export function useSessions(params: ListSessionsParams = {}) {
   return useQuery({
@@ -37,21 +40,13 @@ export function useZoneAnalysis(sessionId: string | undefined) {
   })
 }
 
-export function useActiveSession() {
-  return useQuery({
-    queryKey: ACTIVE_KEY,
-    queryFn: getActiveSession,
-    refetchInterval: 30_000,
-  })
-}
-
 export function useStartSession() {
   const qc = useQueryClient()
   const toast = useToast()
   return useMutation({
     mutationFn: (body: StartSessionRequest) => startSession(body),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ACTIVE_KEY })
+      qc.invalidateQueries({ queryKey: ACTIVE_SESSION_KEY })
       qc.invalidateQueries({ queryKey: SESSIONS_KEY })
       toast.success('Sesión iniciada.', 'El chaleco empieza a registrar lecturas.')
     },
@@ -71,7 +66,7 @@ export function useCloseSession() {
     mutationFn: (args: { sessionId: string; body?: CloseSessionRequest }) =>
       closeSession(args.sessionId, args.body ?? {}),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ACTIVE_KEY })
+      qc.invalidateQueries({ queryKey: ACTIVE_SESSION_KEY })
       qc.invalidateQueries({ queryKey: SESSIONS_KEY })
       toast.success('Sesión cerrada.', 'Ya podés revisar el resumen en el historial.')
     },

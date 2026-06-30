@@ -42,15 +42,6 @@ export async function getSessionReadings(sessionId: string): Promise<TimelineRea
   return apiFetch<TimelineReading[]>(`/sessions/${sessionId}/readings`)
 }
 
-export async function getActiveSession(): Promise<PostureSession | null> {
-  try {
-    return await apiFetch<PostureSession>('/sessions/active')
-  } catch (err) {
-    if (err instanceof Error && err.message.startsWith('API 404')) return null
-    throw err
-  }
-}
-
 export async function startSession(body: StartSessionRequest): Promise<PostureSession> {
   return apiFetch<PostureSession>('/sessions', {
     method: 'POST',
