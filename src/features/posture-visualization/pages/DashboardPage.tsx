@@ -21,6 +21,7 @@ import {
   isDeviation,
 } from '../types/posture'
 import { SeatedFigure, type SeatedFigureZone } from '@/shared/ui/SeatedFigure'
+import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 
 const dateFmt = new Intl.DateTimeFormat('es-PE', {
   weekday: 'long',
@@ -165,21 +166,64 @@ export function DashboardPage() {
             </>
           ) : (
             <motion.div variants={staggerItem}>
-              <section className="editorial-card flex h-full min-h-[220px] flex-col items-center justify-center p-7 text-center">
-                <p className="label-mono">En vivo</p>
-                <h2 className="mt-2 text-xl font-semibold tracking-tight text-ink">
-                  Sin lecturas en vivo por ahora
-                </h2>
-                <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-ink-soft">
-                  Cuando tu chaleco esté conectado y enviando datos, aquí verás tu línea de tiempo
-                  minuto a minuto y las recomendaciones para corregir tu postura.
-                </p>
-              </section>
+              <LiveOffCard />
             </motion.div>
           )}
         </div>
       </motion.div>
     </div>
+  )
+}
+
+// Barras "fantasma" para la línea de tiempo en el estado sin conexión.
+const GHOST_BARS = [18, 26, 14, 30, 22, 28, 16, 24, 20, 30, 14, 26, 22, 18, 28, 16, 24, 20]
+
+/**
+ * Estado de la columna de datos cuando no hay flujo en vivo: en vez de un texto
+ * suelto, un skeleton de lo que aparecerá (línea de tiempo + recomendaciones),
+ * con el mensaje de cómo activarlo.
+ */
+function LiveOffCard() {
+  return (
+    <section className="editorial-card flex h-full flex-col p-6 sm:p-7">
+      <div className="flex items-center gap-2 text-[13px] font-medium text-ink-soft">
+        <span className="h-2 w-2 rounded-full bg-ink-faint" />
+        En vivo
+      </div>
+
+      <div className="mt-5 rounded-lg border border-dashed border-sand bg-cream-bone/60 p-4">
+        <div className="flex h-12 items-end gap-1" aria-hidden>
+          {GHOST_BARS.map((h, i) => (
+            <Skeleton key={i} height={h} className="flex-1" />
+          ))}
+        </div>
+        <div className="mt-3 flex justify-between" aria-hidden>
+          <Skeleton width={34} height={9} />
+          <Skeleton width={42} height={9} />
+          <Skeleton width={34} height={9} />
+        </div>
+        <div className="mt-4 space-y-2.5 border-t border-dashed border-sand pt-4" aria-hidden>
+          <div className="flex items-center gap-2.5">
+            <Skeleton circle height={18} />
+            <SkeletonTextLine width="68%" />
+          </div>
+          <div className="flex items-center gap-2.5">
+            <Skeleton circle height={18} />
+            <SkeletonTextLine width="52%" />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 text-center">
+        <h2 className="text-xl font-semibold tracking-tight text-ink">
+          Sin lecturas en vivo por ahora
+        </h2>
+        <p className="mx-auto mt-2 max-w-sm text-[15px] leading-relaxed text-ink-soft">
+          Conecta tu chaleco y empieza a usarlo. En cuanto lleguen datos, aquí verás tu postura
+          minuto a minuto y las recomendaciones para corregirla.
+        </p>
+      </div>
+    </section>
   )
 }
 
