@@ -1,7 +1,7 @@
 // src/features/session-history/components/ZoneDetailList.tsx
 import type { SpineZone, ZoneDeviation } from '../types/session'
 import { ZONE_LABELS, ZONE_ORDER, toneFor } from '../lib/zoneTone'
-import { METRIC_LABELS } from '../lib/sessionCopy'
+import { METRIC_LABELS, streakLabel } from '../lib/sessionCopy'
 
 export function ZoneDetailList({ zones }: { zones: Record<SpineZone, ZoneDeviation> }) {
   const ordered = ZONE_ORDER.map((z) => ({ z, d: zones[z] })).sort(
@@ -39,9 +39,7 @@ export function ZoneDetailList({ zones }: { zones: Record<SpineZone, ZoneDeviati
                 </div>
                 <div className="flex justify-between gap-3 sm:col-span-2 sm:block">
                   <dt>{METRIC_LABELS.longestStreak}</dt>
-                  <dd className="font-medium text-ink">
-                    hasta {Math.max(1, Math.round(d.longest_streak_min))} min seguidos
-                  </dd>
+                  <dd className="font-medium text-ink">{streakLabel(d.longest_streak_min)}</dd>
                 </div>
               </dl>
             )}

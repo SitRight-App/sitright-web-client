@@ -20,3 +20,10 @@ export function dominantPlain(dominant: string | null): string {
   if (dominant === 'excessive_recline') return 'Reclinado'
   return 'Ninguna'
 }
+
+/** Tramo continuo más largo en lenguaje claro y con la concordancia correcta. */
+export function streakLabel(min: number): string {
+  if (min < 1) return 'menos de 1 min'
+  const n = Math.round(min)
+  return `hasta ${n} min ${n === 1 ? 'seguido' : 'seguidos'}`
+}
