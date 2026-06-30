@@ -16,19 +16,34 @@ export function toneColor(tone: 'ok' | 'leve' | 'marcada'): [number, number, num
   return [200, 98, 60]
 }
 
-const DIST_LABELS: Record<string, string> = {
-  adequate: 'Correcta',
-  forward_slouch: 'Encorvado',
-  excessive_recline: 'Reclinado',
-}
-
-export function buildDistribution(countsByClass: Record<string, number>): { label: string; pct: number }[] {
-  const order = ['adequate', 'forward_slouch', 'excessive_recline']
-  const total = order.reduce((a, k) => a + (countsByClass[k] ?? 0), 0)
-  if (total === 0) return []
-  return order
-    .filter((k) => (countsByClass[k] ?? 0) > 0)
-    .map((k) => ({ label: DIST_LABELS[k], pct: ((countsByClass[k] ?? 0) / total) * 100 }))
+/**
+ * Distribución para la barra: "Correcta" usa el MISMO % que el score
+ * (`adequatePct`) para que el reporte sea coherente, y el resto (100 - score) se
+ * reparte entre Encorvado/Reclinado según su proporción en `countsByClass`. Si
+ * no hay clases de desviación, el resto va a un único segmento "Desviada".
+ */
+export function buildDistribution(
+  countsByClass: Record<string, number>,
+  adequatePct: number,
+): { label: string; pct: number }[] {
+  const correcta = Math.max(0, Math.min(100, Math.round(adequatePct)))
+  const remaining = 100 - correcta
+  const out: { label: string; pct: number }[] = []
+  if (correcta > 0) out.push({ label: 'Correcta', pct: correcta })
+  if (remaining > 0) {
+    const fs = countsByClass['forward_slouch'] ?? 0
+    const er = countsByClass['excessive_recline'] ?? 0
+    const devTotal = fs + er
+    if (devTotal > 0) {
+      const enc = Math.round((fs / devTotal) * remaining)
+      const rec = remaining - enc
+      if (enc > 0) out.push({ label: 'Encorvado', pct: enc })
+      if (rec > 0) out.push({ label: 'Reclinado', pct: rec })
+    } else {
+      out.push({ label: 'Desviada', pct: remaining })
+    }
+  }
+  return out
 }
 
 export interface SessionPdfData {
@@ -198,7 +213,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     chip(METRIC_LABELS.pauses, String(data.pauses), M + 110)
     y += 16
 
-    const dist = buildDistribution(data.countsByClass)
+    const dist = buildDistribution(data.countsByClass, data.adequatePct)
     const distColor = (label: string) => (label === 'Correcta' ? C.moss : label === 'Encorvado' ? C.tSoft : C.terra)
     if (dist.length > 0) {
       const barW = pageW - 2 * M

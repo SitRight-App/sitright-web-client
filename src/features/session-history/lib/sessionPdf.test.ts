@@ -3,12 +3,22 @@ import { describe, expect, it } from 'vitest'
 import { buildDistribution, scoreLevel, toneColor } from './sessionPdf'
 
 describe('sessionPdf helpers', () => {
-  it('distribución excluye indeterminate y suma ~100', () => {
-    const dist = buildDistribution({ adequate: 80, forward_slouch: 15, excessive_recline: 5, indeterminate: 50 })
-    const labels = dist.map((d) => d.label)
-    expect(labels).toContain('Correcta')
-    expect(labels).not.toContain('Indeterminada')
-    expect(Math.round(dist.reduce((a, d) => a + d.pct, 0))).toBe(100)
+  it('Correcta usa el score y reparte el resto; suma 100', () => {
+    const dist = buildDistribution(
+      { adequate: 80, forward_slouch: 15, excessive_recline: 5, indeterminate: 50 },
+      82,
+    )
+    expect(dist.find((d) => d.label === 'Correcta')?.pct).toBe(82)
+    expect(dist.map((d) => d.label)).not.toContain('Indeterminada')
+    expect(dist.reduce((a, d) => a + d.pct, 0)).toBe(100)
+    // resto 18 repartido 15:5 → Encorvado 14, Reclinado 4
+    expect(dist.find((d) => d.label === 'Encorvado')?.pct).toBe(14)
+    expect(dist.find((d) => d.label === 'Reclinado')?.pct).toBe(4)
+  })
+  it('sin clases de desviación, el resto va a "Desviada"', () => {
+    const dist = buildDistribution({ adequate: 5 }, 35)
+    expect(dist.find((d) => d.label === 'Correcta')?.pct).toBe(35)
+    expect(dist.find((d) => d.label === 'Desviada')?.pct).toBe(65)
   })
 })
 
