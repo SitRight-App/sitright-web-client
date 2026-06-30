@@ -1,5 +1,4 @@
-// src/features/session-history/components/PostureComparison.test.tsx
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { PostureComparison } from './PostureComparison'
 import type { ZoneDeviation } from '../types/session'
@@ -14,7 +13,7 @@ const z = (deviated_pct: number, avg = 18): ZoneDeviation => ({
 })
 
 describe('PostureComparison', () => {
-  it('rotula la sesión según la desviación dominante', () => {
+  it('rotula la sesión y muestra el verdicto', () => {
     render(
       <PostureComparison
         zones={{ cervical: z(41, 22), dorsal: z(12), lumbar: z(2, 0) }}
@@ -27,9 +26,8 @@ describe('PostureComparison', () => {
     expect(screen.getByText('Postura correcta')).toBeTruthy()
     expect(screen.getByText(/Mantuviste una postura correcta el 70%/)).toBeTruthy()
   })
-
-  it('ordena el checklist peor primero y marca zonas en rango', () => {
-    render(
+  it('dibuja el ángulo en la figura de la sesión y el detalle por zona', () => {
+    const { container } = render(
       <PostureComparison
         zones={{ cervical: z(41, 22), dorsal: z(12), lumbar: z(2, 0) }}
         calibrated
@@ -37,14 +35,13 @@ describe('PostureComparison', () => {
         dominantDeviation="forward_slouch"
       />,
     )
-    const items = screen.getAllByRole('listitem')
-    expect(within(items[0]).getByText('Cuello')).toBeTruthy()
-    expect(within(items[2]).getByText('Espalda baja')).toBeTruthy()
-    expect(within(items[2]).getByText(/En rango/)).toBeTruthy()
+    // hay marcadores de ángulo (en ambas figuras: 0° en referencia, real en sesión)
+    expect(container.querySelectorAll('[data-angle-marker]').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('22°')[0]).toBeTruthy()
+    expect(screen.getAllByText(/Lo más que estuvo inclinada de corrido/)[0]).toBeTruthy()
   })
-
-  it('sin calibración muestra aviso y omite el checklist', () => {
-    render(
+  it('sin calibración omite figuras-con-ángulo y detalle', () => {
+    const { container } = render(
       <PostureComparison
         zones={{ cervical: z(0, 0), dorsal: z(0, 0), lumbar: z(0, 0) }}
         calibrated={false}
@@ -53,6 +50,7 @@ describe('PostureComparison', () => {
       />,
     )
     expect(screen.getByText(/Calibra el chaleco/)).toBeTruthy()
+    expect(container.querySelectorAll('[data-angle-marker]')).toHaveLength(0)
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 })

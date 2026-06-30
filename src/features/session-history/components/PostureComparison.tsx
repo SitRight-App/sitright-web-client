@@ -1,8 +1,10 @@
 // src/features/session-history/components/PostureComparison.tsx
-import { SeatedFigure } from '@/shared/ui/SeatedFigure'
+import { SeatedFigure, type FigureTone } from '@/shared/ui/SeatedFigure'
 import { CARD_TONE, SectionEyebrow } from '@/shared/ui/SectionEyebrow'
 import type { SpineZone, ZoneDeviation } from '../types/session'
 import { ZONE_LABELS, ZONE_ORDER, toneFor } from '../lib/zoneTone'
+import { ZoneDetailList } from './ZoneDetailList'
+import { POSTURE_LEGEND } from '../lib/sessionCopy'
 
 interface PostureComparisonProps {
   zones: Record<SpineZone, ZoneDeviation>
@@ -46,6 +48,21 @@ export function PostureComparison({
       ? Math.min(zones.cervical.avg_angle_deg, HEAD_TILT_MAX_DEG)
       : 0
   const lean = calibrated ? leanFor(dominantDeviation, toneFor(worst.d.deviated_pct)) : 0
+
+  // Marcadores de ángulo por zona: en la sesión, el ángulo real de las zonas
+  // desviadas; en la referencia, las mismas zonas a 0°.
+  const sessionMarkers: Partial<Record<'cervical' | 'dorsal' | 'lumbar', { deg: number; tone: FigureTone }>> = {}
+  const idealMarkers: Partial<Record<'cervical' | 'dorsal' | 'lumbar', { deg: number; tone: FigureTone }>> = {}
+  if (calibrated) {
+    for (const { z, d } of ordered) {
+      const t = toneFor(d.deviated_pct)
+      if (t !== 'ok') {
+        sessionMarkers[z] = { deg: Math.round(d.avg_angle_deg), tone: t }
+        idealMarkers[z] = { deg: 0, tone: 'ok' }
+      }
+    }
+  }
+
   const sessionSub = !calibrated
     ? 'Sin detalle por zona'
     : (DOMINANT_SUB[dominantDeviation ?? ''] ?? 'Alineada')
@@ -81,6 +98,7 @@ export function PostureComparison({
                 cervical={OK_ZONE}
                 dorsal={OK_ZONE}
                 lumbar={OK_ZONE}
+                angleMarkers={idealMarkers}
               />
             </div>
             <figcaption className="mt-2">
@@ -99,6 +117,7 @@ export function PostureComparison({
                 cervical={sessionZones.cervical}
                 dorsal={sessionZones.dorsal}
                 lumbar={sessionZones.lumbar}
+                angleMarkers={sessionMarkers}
               />
             </div>
             <figcaption className="mt-2">
@@ -110,42 +129,7 @@ export function PostureComparison({
 
         <p className="mt-6 max-w-[760px] text-[16px] leading-relaxed text-ink-soft">{verdict}</p>
 
-        {calibrated && (
-          <ul className="mt-5 space-y-2.5">
-            {ordered.map(({ z, d }) => {
-              const tone = toneFor(d.deviated_pct)
-              const ok = tone === 'ok'
-              return (
-                <li
-                  key={z}
-                  className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-3 ${ok ? 'border-sand bg-cream-bone' : 'border-terracotta/30 bg-terracotta/[0.06]'}`}
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span
-                      className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[13px] font-semibold ${ok ? 'bg-moss/12 text-moss' : 'bg-terracotta/15 text-terracotta-deep'}`}
-                      aria-hidden
-                    >
-                      {ok ? '✓' : '!'}
-                    </span>
-                    <div className="min-w-0">
-                      <span className="text-[16px] font-semibold text-ink">{ZONE_LABELS[z]}</span>
-                      <p className="mt-0.5 text-[13px] text-ink-soft">
-                        {ok
-                          ? 'Se mantuvo dentro de lo recomendado'
-                          : `Se inclinó ${Math.round(d.avg_angle_deg)}° el ${Math.round(d.deviated_pct)}% del tiempo`}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-0.5 text-[12px] font-medium ${ok ? 'bg-moss/12 text-moss' : 'bg-terracotta/15 text-terracotta-deep'}`}
-                  >
-                    {ok ? 'En rango' : 'Atención'}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-        )}
+        {calibrated && <ZoneDetailList zones={zones} />}
 
         {!calibrated && (
           <p className="mt-4 rounded-lg border border-sand bg-cream-bone px-4 py-3 text-[14px] text-ink-soft">
@@ -155,8 +139,8 @@ export function PostureComparison({
 
         <p className="mt-5 text-[12px] leading-relaxed text-ink-soft">
           Encorvado: espalda o cuello inclinados hacia adelante. Reclinado: tronco echado hacia
-          atrás. Este resumen es un prediagnóstico orientativo y no reemplaza la evaluación de un
-          profesional de salud.
+          atrás. {POSTURE_LEGEND} Este resumen es un prediagnóstico orientativo y no reemplaza la
+          evaluación de un profesional de salud.
         </p>
       </div>
     </section>
