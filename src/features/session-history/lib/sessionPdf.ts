@@ -72,10 +72,23 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       const yCerv = yHip - fh * 0.40
       const yDorsal = yHip - fh * 0.26
       const yLumbar = yHip - fh * 0.12
-      const off = (z: SpineZone) => (mode === 'session' ? Math.min(data.zones[z].avg_angle_deg, 30) * 0.55 : 0)
-      const xLumbar = xHip + off('lumbar')
-      const xDorsal = xHip + off('dorsal')
-      const xCerv = xHip + off('cervical')
+      // Zona peor (mayor % de tiempo desviada) — sobre ella va el arco.
+      let worstZ: SpineZone | null = null
+      let worstPct = -1
+      for (const z of ZONE_ORDER) {
+        const p = data.zones[z].deviated_pct
+        if (toneFor(p) !== 'ok' && p > worstPct) { worstPct = p; worstZ = z }
+      }
+      // Inclinación única y ACOTADA del tronco (no se dobla cada vértebra por su
+      // cuenta: eso se rompía con ángulos grandes). Adelante para encorvado,
+      // atrás para reclinado; magnitud según la zona peor, con tope.
+      const dir = data.dominantDeviation === 'excessive_recline' ? -1 : 1
+      const leanMm =
+        mode === 'session' && worstZ ? Math.min(data.zones[worstZ].avg_angle_deg, 30) * 0.3 * dir : 0
+      const frac = (z: SpineZone) => (z === 'cervical' ? 1 : z === 'dorsal' ? 0.55 : 0.15)
+      const xLumbar = xHip + leanMm * frac('lumbar')
+      const xDorsal = xHip + leanMm * frac('dorsal')
+      const xCerv = xHip + leanMm * frac('cervical')
       const body: readonly number[] = [223, 231, 224]
       const thighLen = fw * 0.5
 
@@ -131,7 +144,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       const drawNode = (x: number, yy: number, z: SpineZone) => {
         const tone = mode === 'ideal' ? 'ok' : toneFor(data.zones[z].deviated_pct)
         fill(toneColor(tone)); pdf.circle(x, yy, 2.2, 'F')
-        if (mode === 'session' && tone !== 'ok') {
+        if (mode === 'session' && z === worstZ && tone !== 'ok') {
           const deg = Math.round(data.zones[z].avg_angle_deg)
           const L = 9
           draw(toneColor(tone)); pdf.setLineWidth(0.6)
