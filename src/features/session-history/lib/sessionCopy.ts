@@ -1,4 +1,7 @@
 // src/features/session-history/lib/sessionCopy.ts
+import { ZONE_LABELS, ZONE_ORDER, toneFor } from './zoneTone'
+import type { SpineZone, ZoneDeviation } from '../types/session'
+
 export const METRIC_LABELS = {
   deviatedPct: '% del tiempo inclinada',
   minutesInDeviation: 'Tiempo inclinada en total',
@@ -26,4 +29,22 @@ export function streakLabel(min: number): string {
   if (min < 1) return 'menos de 1 min'
   const n = Math.round(min)
   return `hasta ${n} min ${n === 1 ? 'seguido' : 'seguidos'}`
+}
+
+export function verdictSentence(opts: {
+  adequatePct: number
+  zones: Record<SpineZone, ZoneDeviation>
+  calibrated: boolean
+}): string {
+  const { adequatePct, zones, calibrated } = opts
+  if (!calibrated) return `Mantuviste una postura correcta el ${adequatePct}% del tiempo.`
+  const ordered = ZONE_ORDER.map((z) => ({ z, d: zones[z] })).sort(
+    (a, b) => b.d.deviated_pct - a.d.deviated_pct,
+  )
+  const anyDeviated = ordered.some(({ d }) => toneFor(d.deviated_pct) !== 'ok')
+  if (!anyDeviated) {
+    return 'Tu postura se mantuvo adecuada la mayor parte de la sesión. Buen trabajo.'
+  }
+  const worst = ordered[0]
+  return `Mantuviste una postura correcta el ${adequatePct}% del tiempo. Tu mayor desafío fue ${ZONE_LABELS[worst.z].toLowerCase()}, con desviación el ${Math.round(worst.d.deviated_pct)}% del tiempo.`
 }

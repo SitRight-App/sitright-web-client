@@ -2,9 +2,9 @@
 import { SeatedFigure, type FigureTone } from '@/shared/ui/SeatedFigure'
 import { CARD_TONE, SectionEyebrow } from '@/shared/ui/SectionEyebrow'
 import type { SpineZone, ZoneDeviation } from '../types/session'
-import { ZONE_LABELS, ZONE_ORDER, toneFor } from '../lib/zoneTone'
+import { ZONE_ORDER, toneFor } from '../lib/zoneTone'
 import { ZoneDetailList } from './ZoneDetailList'
-import { POSTURE_LEGEND } from '../lib/sessionCopy'
+import { POSTURE_LEGEND, verdictSentence } from '../lib/sessionCopy'
 
 interface PostureComparisonProps {
   zones: Record<SpineZone, ZoneDeviation>
@@ -75,11 +75,7 @@ export function PostureComparison({
       }
     : { cervical: { tone: 'neutral' as const }, dorsal: { tone: 'neutral' as const }, lumbar: { tone: 'neutral' as const } }
 
-  const verdict = !calibrated
-    ? `Mantuviste una postura correcta el ${adequatePct}% del tiempo.`
-    : anyDeviated
-      ? `Mantuviste una postura correcta el ${adequatePct}% del tiempo. Tu mayor desafío fue ${ZONE_LABELS[worst.z].toLowerCase()}, con desviación el ${Math.round(worst.d.deviated_pct)}% del tiempo.`
-      : `Tu postura se mantuvo adecuada la mayor parte de la sesión. Buen trabajo.`
+  const verdict = verdictSentence({ adequatePct, zones, calibrated })
 
   return (
     <section className="mb-7">
