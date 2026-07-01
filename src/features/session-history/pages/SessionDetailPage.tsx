@@ -13,6 +13,7 @@ import { useSessionReadings } from '../hooks/useSessionReadings'
 import type { PostureSession, SessionSummary, ZoneDeviation } from '../types/session'
 import { buildSessionPdf } from '../lib/sessionPdf'
 import { recommendationKey, recommendationsFor } from '../lib/postureGuidance'
+import { buildTrend } from '../lib/sessionTrend'
 
 const dateLongFmt = new Intl.DateTimeFormat('es-PE', {
   day: '2-digit',
@@ -350,16 +351,26 @@ function Hero({ session, effective, stats }: HeroProps) {
   // Variación vs. la sesión anterior (mismo cálculo que la tendencia; la query
   // de sesiones la comparte TanStack Query, así que no hay doble fetch).
   const { data: allSessions } = useSessions({ limit: 20 })
-  const delta = useMemo<number | null>(() => {
-    if (!allSessions || adequatePct === null) return null
-    const pts = allSessions
-      .filter((s) => s.summary && s.summary.valid_readings > 0)
-      .map((s) => ({ id: s.id, at: s.started_at, pct: s.summary!.adequate_percentage }))
-      .sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
-    const idx = pts.findIndex((p) => p.id === session.id)
-    if (idx <= 0) return null
-    return Math.round(pts[idx].pct - pts[idx - 1].pct)
-  }, [allSessions, session.id, adequatePct])
+  const trendResult = useMemo(
+    () =>
+      buildTrend(allSessions ?? [], {
+        id: session.id,
+        startedAt: session.started_at,
+        adequatePct: adequatePct,
+        dominant,
+      }),
+    [allSessions, session.id, session.started_at, adequatePct, dominant],
+  )
+  const delta = trendResult.delta
+  const shortDateFmt = new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: '2-digit' })
+  const trend = {
+    bars: trendResult.points.map((p, i) => ({
+      label: shortDateFmt.format(new Date(p.at)),
+      pct: Math.round(p.pct),
+      current: i === trendResult.currentIndex,
+    })),
+    delta: trendResult.delta,
+  }
 
   const figures: Array<{ label: string; value: string; meta?: string; tone?: 'moss' | 'alert' }> = [
     {
@@ -494,6 +505,7 @@ function Hero({ session, effective, stats }: HeroProps) {
                 calibrated: !!zoneData?.calibrated && (zoneData?.total_readings ?? 0) > 0,
                 countsByClass: summary?.counts_by_class ?? {},
                 pauses: stats.pauseEstimate,
+                trend,
               })
             }
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cream-bone/30 bg-transparent px-4 py-3 text-[15px] font-medium text-cream-bone transition-colors hover:border-cream-bone"

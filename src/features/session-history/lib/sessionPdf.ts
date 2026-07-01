@@ -1,7 +1,7 @@
 // src/features/session-history/lib/sessionPdf.ts
 import type { SpineZone, ZoneDeviation } from '../types/session'
 import { ZONE_LABELS, ZONE_ORDER, toneFor } from './zoneTone'
-import { recommendationsFor } from './postureGuidance'
+import { recommendationKey, recommendationsFor } from './postureGuidance'
 import { METRIC_LABELS, POSTURE_LEGEND, streakLabel, verdictSentence } from './sessionCopy'
 
 export function scoreLevel(pct: number): 'good' | 'mid' | 'low' {
@@ -56,6 +56,7 @@ export interface SessionPdfData {
   calibrated: boolean
   countsByClass: Record<string, number>
   pauses: number
+  trend: { bars: { label: string; pct: number; current: boolean }[]; delta: number | null }
 }
 
 export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
@@ -274,8 +275,49 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       y += legendLines.length * 4 + 4
     }
 
+    // Comparación con otros días
+    ensure(12)
+    col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12)
+    pdf.text('Comparación con otros días', M, y); y += 6
+    if (data.trend.bars.length < 2) {
+      col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10)
+      pdf.text('Primera sesión registrada - aún no hay con qué comparar.', M, y); y += 8
+    } else {
+      const bars = data.trend.bars
+      const chartH = 20
+      const gap = 3
+      const barW = Math.min(16, (pageW - 2 * M - gap * (bars.length - 1)) / bars.length)
+      ensure(chartH + 16)
+      const baseY = y + chartH
+      bars.forEach((b, i) => {
+        const bx = M + i * (barW + gap)
+        const h = Math.max(1.5, (b.pct / 100) * chartH)
+        const lvl = scoreLevel(b.pct)
+        const c = lvl === 'good' ? C.moss : lvl === 'mid' ? C.amber : C.terra
+        fill(c); pdf.rect(bx, baseY - h, barW, h, 'F')
+        if (b.current) {
+          draw(C.ink); pdf.setLineWidth(0.5); pdf.rect(bx, baseY - h, barW, h, 'S')
+          col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8)
+          pdf.text(`${b.pct}%`, bx, baseY - h - 1.5)
+        }
+        col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7)
+        pdf.text(b.label, bx, baseY + 4)
+      })
+      y = baseY + 9
+      const d = data.trend.delta
+      if (d === null) {
+        col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10)
+        pdf.text('Sin sesión previa.', M, y)
+      } else {
+        const dc = d > 0 ? C.moss : d < 0 ? C.terra : C.soft
+        col(dc); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10)
+        pdf.text(`Frente a la sesión anterior: ${d > 0 ? '+' : ''}${d} pts`, M, y)
+      }
+      y += 9
+    }
+
     // 5. Qué hacer (recomendaciones, sin fuentes)
-    const guide = recommendationsFor(data.dominantDeviation)
+    const guide = recommendationsFor(recommendationKey(data.dominantDeviation, data.zones))
     ensure(12)
     col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12)
     pdf.text('Qué hacer', M, y); y += 6
