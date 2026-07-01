@@ -70,25 +70,40 @@ export function SeatedFigure({ cervical, dorsal, lumbar, headTilt = 0, className
     const node = NODE[zone as keyof typeof NODE]
     const { deg, tone } = m
     const color = CALLOUT_TEXT[tone]
-    const L = 20
-    const r = 11
+    // La geometría arranca FUERA del nodo (su radio depende del tono) para que
+    // las líneas, el arco y el número no queden pegados al círculo.
+    const nodeR = radiusFor(tone)
+    const arcR = nodeR + 6
+    const L = nodeR + 20
     const nx = node.x
     const ny = node.y - L
     const dx = node.x + L * Math.sin(rad(deg))
     const dy = node.y - L * Math.cos(rad(deg))
     const ax0 = node.x
-    const ay0 = node.y - r
-    const ax1 = node.x + r * Math.sin(rad(deg))
-    const ay1 = node.y - r * Math.cos(rad(deg))
+    const ay0 = node.y - arcR
+    const ax1 = node.x + arcR * Math.sin(rad(deg))
+    const ay1 = node.y - arcR * Math.cos(rad(deg))
     const half = deg / 2
-    const lx = node.x + (r + 7) * Math.sin(rad(half))
-    const ly = node.y - (r + 7) * Math.cos(rad(half))
+    const labelR = arcR + 11
+    const lx = node.x + labelR * Math.sin(rad(half))
+    const ly = node.y - labelR * Math.cos(rad(half))
     return (
       <g key={zone} data-angle-marker>
         <line x1={node.x} y1={node.y} x2={nx} y2={ny} stroke={color} strokeWidth={0.8} strokeDasharray="2 2" opacity={0.6} />
         {deg > 0 && <line x1={node.x} y1={node.y} x2={dx} y2={dy} stroke={color} strokeWidth={1.4} />}
-        {deg > 0 && <path d={`M ${ax0} ${ay0} A ${r} ${r} 0 0 1 ${ax1} ${ay1}`} fill="none" stroke={color} strokeWidth={1} />}
-        <text x={lx} y={ly} textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize={9} fill={color}>
+        {deg > 0 && <path d={`M ${ax0} ${ay0} A ${arcR} ${arcR} 0 0 1 ${ax1} ${ay1}`} fill="none" stroke={color} strokeWidth={1} />}
+        <text
+          x={lx}
+          y={ly + 3}
+          textAnchor="middle"
+          fontFamily="JetBrains Mono, monospace"
+          fontSize={10}
+          fontWeight={600}
+          fill={color}
+          stroke="#FFFFFF"
+          strokeWidth={3}
+          paintOrder="stroke"
+        >
           {deg}°
         </text>
       </g>

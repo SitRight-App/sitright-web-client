@@ -226,7 +226,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     }
     chip(METRIC_LABELS.totalMinutes, `${Math.round(data.totalMinutes)} min`, M + 64)
     chip(METRIC_LABELS.pauses, String(data.pauses), M + 110)
-    y += 16
+    y += 14
 
     const dist = buildDistribution(data.countsByClass, data.adequatePct)
     const distColor = (label: string) => (label === 'Correcta' ? C.moss : label === 'Encorvado' ? C.tSoft : C.terra)
@@ -248,10 +248,10 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
 
     // 3. Cómo te sentaste hoy (cuerpos)
     if (data.calibrated) {
-      ensure(74)
+      ensure(64)
       col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(13)
       pdf.text('Cómo te sentaste hoy', M, y); y += 8
-      const figY = y, figH = 44, figW = 70
+      const figY = y, figH = 38, figW = 70
       drawSeatedBody(M, figY, figW, figH, 'ideal')
       drawSeatedBody(M + 96, figY, figW, figH, 'session')
       col(C.soft); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10)
@@ -280,7 +280,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
         ensure(wrapped.length * 5 + 1)
         fill(ok ? C.moss : C.terra); pdf.circle(M + 1.5, y - 1.4, 1.6, 'F')
         col(C.ink); pdf.text(wrapped, M + 6, y)
-        y += wrapped.length * 5 + 1
+        y += wrapped.length * 4.6 + 1
       }
       pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7.5)
       const legendLines = pdf.splitTextToSize(POSTURE_LEGEND, pageW - 2 * M)
@@ -298,7 +298,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       pdf.text('Primera sesión registrada - aún no hay con qué comparar.', M, y); y += 8
     } else {
       const bars = data.trend.bars
-      const chartH = 20
+      const chartH = 16
       const gap = 3
       const barW = Math.min(16, (pageW - 2 * M - gap * (bars.length - 1)) / bars.length)
       ensure(chartH + 16)
@@ -341,7 +341,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       ensure(wrapped.length * 5 + 1)
       fill(C.moss); pdf.circle(M + 1.5, y - 1.4, 1.2, 'F')
       col(C.soft); pdf.text(wrapped, M + 6, y)
-      y += wrapped.length * 5 + 1
+      y += wrapped.length * 4.6 + 1
     }
 
     // 6. Aviso en recuadro gris punteado (no es un prediagnóstico)

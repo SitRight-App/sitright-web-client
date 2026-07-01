@@ -135,8 +135,8 @@ export function PostureComparison({
 
         <p className="mt-5 text-[12px] leading-relaxed text-ink-soft">
           Encorvado: espalda o cuello inclinados hacia adelante. Reclinado: tronco echado hacia
-          atrás. {POSTURE_LEGEND} Este resumen es un prediagnóstico orientativo y no reemplaza la
-          evaluación de un profesional de salud.
+          atrás. {POSTURE_LEGEND} Este resumen es una evaluación orientativa y no reemplaza la
+          valoración de un profesional de la salud.
         </p>
       </div>
     </section>
