@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { ArrowRight, Download } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import type { TimelineReading } from '@/features/posture-visualization/types/posture'
+import { useAuth } from '@/features/iam/context/AuthContext'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { ScoreRing } from '@/shared/ui/ScoreRing'
 import { CARD_TONE, SectionEyebrow } from '@/shared/ui/SectionEyebrow'
@@ -341,6 +342,7 @@ interface HeroProps {
 }
 
 function Hero({ session, effective, stats }: HeroProps) {
+  const { user } = useAuth()
   const { data: zoneData } = useZoneAnalysis(session.id)
   const { dominant, provisional, summary } = effective
   const started = new Date(session.started_at)
@@ -491,6 +493,7 @@ function Hero({ session, effective, stats }: HeroProps) {
             onClick={() =>
               void buildSessionPdf({
                 sessionId: session.id,
+                patientName: user?.name ?? 'Paciente',
                 dateLabel: dateLongFmt.format(new Date(session.started_at)),
                 totalMinutes: summary?.total_minutes ?? session.duration_minutes ?? 0,
                 adequatePct:

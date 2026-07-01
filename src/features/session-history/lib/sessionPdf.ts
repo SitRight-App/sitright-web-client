@@ -48,6 +48,7 @@ export function buildDistribution(
 
 export interface SessionPdfData {
   sessionId: string
+  patientName: string
   dateLabel: string
   totalMinutes: number
   adequatePct: number
@@ -82,12 +83,20 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     const levelColor = lvl === 'good' ? C.moss : lvl === 'mid' ? C.amber : C.terra
     const rad = (deg: number) => (deg * Math.PI) / 180
 
+    // Esquema lateral de una persona sentada. La COLUMNA es el borde de la
+    // espalda (línea marcada con nodos por zona); el torso es una banda de
+    // grosor constante que la sigue (nunca una mancha). Sobre la zona peor se
+    // dibuja el arco del ángulo respecto a la vertical, al estilo ficha clínica.
     function drawSeatedBody(fx: number, fy: number, fw: number, fh: number, mode: 'ideal' | 'session') {
-      const xHip = fx + fw * 0.36
-      const yHip = fy + fh * 0.62
-      const yCerv = yHip - fh * 0.40
-      const yDorsal = yHip - fh * 0.26
-      const yLumbar = yHip - fh * 0.12
+      const bodyC: readonly number[] = [226, 232, 226]
+      const chairC: readonly number[] = [196, 193, 185]
+      const hipX = fx + fw * 0.36
+      const hipY = fy + fh * 0.66
+      const spineLen = fh * 0.42
+      const yLum = hipY - spineLen * 0.32
+      const yDor = hipY - spineLen * 0.66
+      const yCer = hipY - spineLen * 1.0
+
       // Zona peor (mayor % de tiempo desviada) — sobre ella va el arco.
       let worstZ: SpineZone | null = null
       let worstPct = -1
@@ -95,94 +104,97 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
         const p = data.zones[z].deviated_pct
         if (toneFor(p) !== 'ok' && p > worstPct) { worstPct = p; worstZ = z }
       }
-      // Inclinación única y ACOTADA del tronco (no se dobla cada vértebra por su
-      // cuenta: eso se rompía con ángulos grandes). Adelante para encorvado,
-      // atrás para reclinado; magnitud según la zona peor, con tope.
-      const dir = data.dominantDeviation === 'excessive_recline' ? -1 : 1
-      const leanMm =
-        mode === 'session' && worstZ ? Math.min(data.zones[worstZ].avg_angle_deg, 30) * 0.3 * dir : 0
-      const frac = (z: SpineZone) => (z === 'cervical' ? 1 : z === 'dorsal' ? 0.55 : 0.15)
-      const xLumbar = xHip + leanMm * frac('lumbar')
-      const xDorsal = xHip + leanMm * frac('dorsal')
-      const xCerv = xHip + leanMm * frac('cervical')
-      const body: readonly number[] = [223, 231, 224]
-      const thighLen = fw * 0.5
 
-      // Silla: asiento (superficie) + respaldo + patas
-      const seatY = yHip + 3
-      const seatX0 = xHip - fw * 0.20
-      const seatX1 = xHip + thighLen + 2
-      draw(C.sand); fill([244, 242, 237]); pdf.setLineWidth(0.5)
-      pdf.rect(seatX0, seatY, seatX1 - seatX0, 2.5, 'FD')              // asiento
-      pdf.line(seatX0, seatY, seatX0, yDorsal)                         // respaldo (hasta dorsal)
-      pdf.line(seatX0 + 1.5, seatY + 2.5, seatX0 + 1.5, fy + fh)       // pata trasera
-      pdf.line(seatX1 - 1.5, seatY + 2.5, seatX1 - 1.5, fy + fh)       // pata delantera
+      // Curvatura del tronco: crece hacia arriba. Adelante para encorvado,
+      // atrás para reclinado; magnitud según el ángulo de la zona peor (con tope).
+      const dir = data.dominantDeviation === 'excessive_recline' ? -1 : 1
+      const deg = mode === 'session' && worstZ ? Math.min(data.zones[worstZ].avg_angle_deg, 40) : 0
+      const k = spineLen * 0.012
+      const dCer = dir * deg * k
+      const xHip = hipX
+      const xLum = hipX + dCer * 0.16
+      const xDor = hipX + dCer * 0.5
+      const xCer = hipX + dCer
+
+      // Silla: asiento + respaldo + patas
+      const seatY = hipY + fh * 0.05
+      const backX = hipX - fw * 0.24
+      const kneeX = hipX + fw * 0.5
+      draw(chairC); pdf.setLineWidth(0.9)
+      pdf.line(backX, seatY, kneeX + fw * 0.04, seatY)
+      pdf.line(backX, seatY, backX, yDor)
+      pdf.setLineWidth(0.6)
+      pdf.line(backX + fw * 0.03, seatY, backX + fw * 0.03, fy + fh)
+      pdf.line(kneeX - fw * 0.02, seatY, kneeX - fw * 0.02, fy + fh)
 
       // Pierna: muslo horizontal + pierna baja
-      fill(body); draw(C.sand); pdf.setLineWidth(0.4)
-      pdf.roundedRect(xHip - 2, yHip - 3, thighLen, 5, 2.5, 2.5, 'FD')
-      pdf.roundedRect(xHip + thighLen - 5, yHip + 1, 5, fh * 0.26, 2.5, 2.5, 'FD')
+      fill(bodyC); draw(C.soft); pdf.setLineWidth(0.5)
+      pdf.roundedRect(hipX - fw * 0.04, seatY - fh * 0.055, kneeX - (hipX - fw * 0.04), fh * 0.055, fh * 0.02, fh * 0.02, 'FD')
+      pdf.roundedRect(kneeX - fh * 0.05, seatY, fh * 0.05, fh * 0.27, fh * 0.02, fh * 0.02, 'FD')
 
-      // Torso: silueta cerrada con el frente abultado (relleno visible + contorno)
-      const shoulderW = fw * 0.30
-      const bellyW = fw * 0.36
+      // Torso: banda de grosor constante que sigue la columna (espalda + frente)
+      const tw = fw * 0.2
       const poly = [
-        [xHip, yHip], [xLumbar, yLumbar], [xDorsal, yDorsal], [xCerv, yCerv], // espalda
-        [xCerv + shoulderW, yCerv + 1.5],                                     // hombro
-        [xHip + bellyW, yHip - (yHip - yCerv) * 0.42],                        // panza (abultado)
-        [xHip + bellyW * 0.72, yHip],                                         // frente de cadera
+        [xHip, hipY], [xLum, yLum], [xDor, yDor], [xCer, yCer],             // espalda (columna)
+        [xCer + tw, yCer + fh * 0.006], [xDor + tw, yDor],                  // frente (paralelo)
+        [xLum + tw, yLum], [xHip + tw, hipY],
       ]
       const rel: number[][] = []
       for (let i = 1; i < poly.length; i++) rel.push([poly[i][0] - poly[i - 1][0], poly[i][1] - poly[i - 1][1]])
-      fill(body); draw(C.sand); pdf.setLineWidth(0.5)
+      fill(bodyC); draw(C.soft); pdf.setLineWidth(0.5)
       pdf.lines(rel, poly[0][0], poly[0][1], [1, 1], 'FD', true)
 
       // Brazo apoyado en el muslo (tenue, para no competir con la columna)
-      draw(C.sand); pdf.setLineWidth(1.4)
-      pdf.line(xCerv + shoulderW - 1, yCerv + 4, xHip + thighLen * 0.55, yHip - 2)
+      draw(chairC); pdf.setLineWidth(1.6)
+      pdf.line(xCer + tw * 0.7, yCer + fh * 0.04, kneeX - fw * 0.16, seatY - fh * 0.02)
 
       // Columna (borde de la espalda) marcada
-      draw(C.soft); pdf.setLineWidth(1.2)
-      pdf.line(xHip, yHip, xLumbar, yLumbar)
-      pdf.line(xLumbar, yLumbar, xDorsal, yDorsal)
-      pdf.line(xDorsal, yDorsal, xCerv, yCerv)
-
-      // Cabeza (chica, rellena) + cuello
-      const headR = fw * 0.085
-      const headCx = xCerv + headR * 0.5
-      const headCy = yCerv - headR - 2.5
       draw(C.soft); pdf.setLineWidth(1.4)
-      pdf.line(xCerv, yCerv, headCx, headCy + headR)
-      draw(C.sand); fill(body); pdf.setLineWidth(0.5)
+      pdf.line(xHip, hipY, xLum, yLum)
+      pdf.line(xLum, yLum, xDor, yDor)
+      pdf.line(xDor, yDor, xCer, yCer)
+
+      // Cuello + cabeza
+      const headR = fw * 0.09
+      const neckTopX = xCer + dir * deg * k * 0.35
+      const neckTopY = yCer - fh * 0.055
+      const headCx = neckTopX + dir * headR * 0.4
+      const headCy = neckTopY - headR * 0.85
+      draw(C.soft); pdf.setLineWidth(1.7)
+      pdf.line(xCer, yCer, neckTopX, neckTopY)
+      draw(C.soft); fill(bodyC); pdf.setLineWidth(0.6)
       pdf.circle(headCx, headCy, headR, 'FD')
 
-      // Nodos por zona + arco de ángulo (session)
+      // Nodos por zona + arco de ángulo (session) respecto a la vertical
       const drawNode = (x: number, yy: number, z: SpineZone) => {
         const tone = mode === 'ideal' ? 'ok' : toneFor(data.zones[z].deviated_pct)
-        fill(toneColor(tone)); pdf.circle(x, yy, 2.2, 'F')
+        fill(toneColor(tone)); draw(C.white); pdf.setLineWidth(0.5)
+        pdf.circle(x, yy, 2.1, 'FD')
         if (mode === 'session' && z === worstZ && tone !== 'ok') {
-          const deg = Math.round(data.zones[z].avg_angle_deg)
-          const L = 9
-          draw(toneColor(tone)); pdf.setLineWidth(0.6)
-          pdf.line(x, yy, x, yy - L)                                          // neutro
-          pdf.setLineWidth(1)
-          pdf.line(x, yy, x + L * Math.sin(rad(deg)), yy - L * Math.cos(rad(deg))) // real
-          const r = 5
+          const d = Math.round(data.zones[z].avg_angle_deg)
+          const L = fh * (z === 'cervical' ? 0.12 : 0.17)
+          draw([150, 154, 148]); pdf.setLineWidth(0.5)
+          pdf.line(x, yy, x, yy - L)                                          // vertical neutra
+          draw(toneColor(tone)); pdf.setLineWidth(1.2)
+          const ax = x + dir * L * Math.sin(rad(d))
+          const ay = yy - L * Math.cos(rad(d))
+          pdf.line(x, yy, ax, ay)                                             // dirección real
+          const r = L * 0.5
           let px = x, py = yy - r
-          for (let s = 1; s <= 6; s++) {
-            const a = (deg * s) / 6
-            const nx = x + r * Math.sin(rad(a))
+          for (let s = 1; s <= 8; s++) {
+            const a = (d * s) / 8
+            const nx = x + dir * r * Math.sin(rad(a))
             const ny = yy - r * Math.cos(rad(a))
-            pdf.setLineWidth(0.5); pdf.line(px, py, nx, ny)
+            pdf.setLineWidth(0.6); pdf.line(px, py, nx, ny)
             px = nx; py = ny
           }
-          col(toneColor(tone)); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10)
-          pdf.text(`${deg}°`, x + L * Math.sin(rad(deg)) + 1.5, yy - L * Math.cos(rad(deg)))
+          col(toneColor(tone)); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9)
+          pdf.text(`${d}°`, ax + dir * 1.5, ay, { align: dir > 0 ? 'left' : 'right' })
         }
       }
-      drawNode(xCerv, yCerv, 'cervical')
-      drawNode(xDorsal, yDorsal, 'dorsal')
-      drawNode(xLumbar, yLumbar, 'lumbar')
+      drawNode(xCer, yCer, 'cervical')
+      drawNode(xDor, yDor, 'dorsal')
+      drawNode(xLum, yLum, 'lumbar')
     }
 
     // 1. Encabezado
@@ -190,10 +202,12 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
     pdf.text('SitRight', M, y + 2)
     col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10)
     pdf.text('Reporte de sesión postural', M, y + 8)
-    col(C.ink); pdf.setFontSize(11)
-    pdf.text(data.dateLabel, pageW - M, y + 8, { align: 'right' })
-    y += 13
-    draw(C.sand); pdf.setLineWidth(0.4); pdf.line(M, y, pageW - M, y); y += 9
+    col(C.ink); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10)
+    pdf.text(data.dateLabel, pageW - M, y + 2, { align: 'right' })
+    y += 12
+    draw(C.sand); pdf.setLineWidth(0.4); pdf.line(M, y, pageW - M, y); y += 7
+    col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12)
+    pdf.text(`Paciente: ${data.patientName}`, M, y); y += 8
 
     // 2. Cómo te fue (veredicto + score + barra + chips)
     const verdict = verdictSentence({ adequatePct: data.adequatePct, zones: data.zones, calibrated: data.calibrated })
@@ -227,23 +241,23 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
         fill(distColor(d.label)); pdf.circle(lx + 1.5, y - 1.5, 1.5, 'F')
         col(C.soft); pdf.text(t, lx + 5, y); lx += pdf.getTextWidth(t) + 14
       }
-      y += 9
+      y += 6
     } else {
       col(C.soft); pdf.setFontSize(9); pdf.text('Sin datos suficientes de distribución.', M, y); y += 9
     }
 
     // 3. Cómo te sentaste hoy (cuerpos)
     if (data.calibrated) {
-      ensure(96)
+      ensure(74)
       col(C.ink); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(13)
-      pdf.text('Cómo te sentaste hoy', M, y); y += 7
-      const figY = y, figH = 64, figW = 70
+      pdf.text('Cómo te sentaste hoy', M, y); y += 8
+      const figY = y, figH = 44, figW = 70
       drawSeatedBody(M, figY, figW, figH, 'ideal')
       drawSeatedBody(M + 96, figY, figW, figH, 'session')
       col(C.soft); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10)
       pdf.text('Postura correcta', M, figY + figH + 4)
       pdf.text('Tu sesión', M + 96, figY + figH + 4)
-      y = figY + figH + 11
+      y = figY + figH + 9
     } else {
       ensure(10)
       col(C.soft); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10)
@@ -313,7 +327,7 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
         col(dc); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10)
         pdf.text(`Frente a la sesión anterior: ${d > 0 ? '+' : ''}${d} pts`, M, y)
       }
-      y += 9
+      y += 7
     }
 
     // 5. Qué hacer (recomendaciones, sin fuentes)
@@ -330,13 +344,20 @@ export async function buildSessionPdf(data: SessionPdfData): Promise<void> {
       y += wrapped.length * 5 + 1
     }
 
-    // 6. Pie en todas las páginas
-    const pageCount = pdf.getNumberOfPages()
-    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8); pdf.setTextColor(120, 126, 118)
-    for (let p = 1; p <= pageCount; p++) {
-      pdf.setPage(p)
-      pdf.text('Prediagnóstico orientativo; no reemplaza la evaluación de un profesional de salud.', M, pageH - 14)
-    }
+    // 6. Aviso en recuadro gris punteado (no es un prediagnóstico)
+    const disclaimer =
+      'Considera este reporte como una evaluación orientativa de tu postura. No reemplaza la valoración de un profesional de la salud.'
+    const dPad = 4
+    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9)
+    const dLines = pdf.splitTextToSize(disclaimer, pageW - 2 * M - 2 * dPad)
+    const dH = dLines.length * 4.6 + 2 * dPad
+    ensure(dH + 3)
+    y += 3
+    fill([245, 245, 243]); draw([150, 154, 148]); pdf.setLineWidth(0.4)
+    pdf.setLineDashPattern([0.7, 0.7], 0)
+    pdf.rect(M, y, pageW - 2 * M, dH, 'FD')
+    pdf.setLineDashPattern([], 0)
+    col(C.soft); pdf.text(dLines, M + dPad, y + dPad + 3.2)
 
     pdf.save(`sitright-sesion-${data.sessionId.slice(0, 8)}.pdf`)
   } catch {
