@@ -2,6 +2,9 @@
 // Recomendaciones de corrección postural basadas en guías ergonómicas/clínicas.
 // Fuentes: OSHA Computer Workstations; ángulo craneovertebral (postura de cabeza);
 // guías de pausas activas en sedentarismo.
+import { ZONE_ORDER, toneFor } from './zoneTone'
+import type { SpineZone, ZoneDeviation } from '../types/session'
+
 export interface Guidance {
   tips: string[]
   sources: string[]
@@ -37,4 +40,21 @@ const GENERAL = [
 
 export function recommendationsFor(dominant: string | null): Guidance {
   return { tips: GUIDANCE[dominant ?? ''] ?? GENERAL, sources: SOURCES }
+}
+
+/** Clave de recomendación: dominante explícito, o inferida de la zona peor. */
+export function recommendationKey(
+  dominant: string | null,
+  zones?: Record<SpineZone, ZoneDeviation>,
+): string | null {
+  if (dominant === 'forward_slouch' || dominant === 'excessive_recline') return dominant
+  if (!zones) return null
+  let worst: SpineZone | null = null
+  let worstPct = -1
+  for (const z of ZONE_ORDER) {
+    const p = zones[z].deviated_pct
+    if (toneFor(p) !== 'ok' && p > worstPct) { worstPct = p; worst = z }
+  }
+  if (!worst) return null
+  return worst === 'lumbar' ? 'excessive_recline' : 'forward_slouch'
 }
