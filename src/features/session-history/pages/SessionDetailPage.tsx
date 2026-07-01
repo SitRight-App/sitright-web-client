@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { ArrowRight, Download } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { useRecommendations } from '@/features/recommendations/hooks/useRecommendations'
 import type { TimelineReading } from '@/features/posture-visualization/types/posture'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { ScoreRing } from '@/shared/ui/ScoreRing'
@@ -13,6 +12,7 @@ import { useSession, useSessions, useZoneAnalysis } from '../hooks/useSessions'
 import { useSessionReadings } from '../hooks/useSessionReadings'
 import type { PostureSession, SessionSummary, ZoneDeviation } from '../types/session'
 import { buildSessionPdf } from '../lib/sessionPdf'
+import { recommendationKey, recommendationsFor } from '../lib/postureGuidance'
 
 const dateLongFmt = new Intl.DateTimeFormat('es-PE', {
   day: '2-digit',
@@ -231,7 +231,7 @@ export function SessionDetailPage() {
     [session, readings],
   )
   const dominant = effective?.dominant ?? null
-  const recs = useRecommendations(dominant ?? undefined)
+  const { data: reportZones } = useZoneAnalysis(session?.id)
   const stats = useMemo(() => deriveStats(readings, dominant), [readings, dominant])
 
   if (isLoading) {
@@ -267,7 +267,7 @@ export function SessionDetailPage() {
         currentDominant={effective.dominant}
       />
       <DetailGrid session={session} readingsQuery={readingsQuery} effective={effective} />
-      <SecondRow recommendations={recs.data ?? []} effective={effective} />
+      <SecondRow tips={recommendationsFor(recommendationKey(dominant, reportZones?.zones)).tips} />
     </div>
   )
 }
@@ -634,14 +634,7 @@ function DetailGrid({ session, readingsQuery, effective }: DetailGridProps) {
   )
 }
 
-interface SecondRowProps {
-  recommendations: Array<{ id: string; number: string; title: string; description: string }>
-  effective: EffectiveSession
-}
-
-function SecondRow({ recommendations, effective }: SecondRowProps) {
-  const { dominant } = effective
-
+function SecondRow({ tips }: { tips: string[] }) {
   return (
     <div className="mt-4">
       <section className={`rounded-xl border p-6 ${CARD_TONE.amber}`}>
@@ -651,36 +644,19 @@ function SecondRow({ recommendations, effective }: SecondRowProps) {
             Qué puedes mejorar
           </h2>
         </div>
-
-        {recommendations.length === 0 ? (
-          <p className="text-[15px] text-ink-soft">
-            No hay recomendaciones específicas para esta sesión.
-          </p>
-        ) : (
-          <ul className="space-y-3">
-            {recommendations.slice(0, 4).map((r, i) => (
-              <li
-                key={r.id}
-                className="grid grid-cols-[32px_1fr_auto] items-center gap-4 rounded-xl border border-sand bg-cream/60 p-4 transition-colors hover:border-moss/40 hover:bg-cream"
-              >
-                <span className="text-center font-mono text-base font-semibold tabular-nums text-terracotta-deep">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <div>
-                  <p className="text-[16px] font-medium text-ink">{r.title}</p>
-                  <p className="mt-0.5 text-[14px] leading-snug text-ink-soft">
-                    {r.description}
-                  </p>
-                </div>
-                {dominant && (
-                  <span className="whitespace-nowrap rounded-full border border-terracotta/30 bg-terracotta/10 px-2.5 py-1 text-[12px] font-medium text-terracotta-deep">
-                    {POSTURE_TAG[dominant] ?? POSTURE_LABELS[dominant] ?? dominant}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        <ul className="space-y-3">
+          {tips.map((tip, i) => (
+            <li
+              key={i}
+              className="grid grid-cols-[32px_1fr] items-start gap-4 rounded-xl border border-sand bg-cream/60 p-4"
+            >
+              <span className="text-center font-mono text-base font-semibold tabular-nums text-terracotta-deep">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <p className="text-[15px] leading-snug text-ink">{tip}</p>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   )
