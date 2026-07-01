@@ -3,6 +3,7 @@ import { Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { CARD_TONE, SectionEyebrow } from '@/shared/ui/SectionEyebrow'
 import { useSessions } from '../hooks/useSessions'
+import { buildTrend, type TrendPoint } from '../lib/sessionTrend'
 
 /**
  * Tendencia entre sesiones (benchmark #3 — seguimiento del paciente).
@@ -46,13 +47,6 @@ function isToday(iso: string): boolean {
   )
 }
 
-interface Point {
-  id: string
-  at: string
-  pct: number
-  dominant: string | null
-}
-
 interface SessionTrendProps {
   currentSessionId: string
   currentStartedAt: string
@@ -68,30 +62,15 @@ export function SessionTrend({
 }: SessionTrendProps) {
   const { data, isLoading } = useSessions({ limit: 20 })
 
-  const series = useMemo<Point[]>(() => {
-    const points: Point[] = (data ?? [])
-      .filter((s) => s.summary && s.summary.valid_readings > 0)
-      .map((s) => ({
-        id: s.id,
-        at: s.started_at,
-        pct: s.summary!.adequate_percentage,
-        dominant: s.summary!.dominant_deviation,
-      }))
-
-    // La sesión actual puede no estar en la lista todavía (recién cerrada, caché)
-    // o estar provisional sin resumen consolidado: la inyectamos con su valor.
-    if (currentAdequatePct != null && !points.some((p) => p.id === currentSessionId)) {
-      points.push({
-        id: currentSessionId,
-        at: currentStartedAt,
-        pct: currentAdequatePct,
-        dominant: currentDominant,
-      })
-    }
-
-    points.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
-    return points.slice(-MAX_POINTS)
-  }, [data, currentSessionId, currentStartedAt, currentAdequatePct, currentDominant])
+  const series = useMemo<TrendPoint[]>(
+    () =>
+      buildTrend(
+        data ?? [],
+        { id: currentSessionId, startedAt: currentStartedAt, adequatePct: currentAdequatePct, dominant: currentDominant },
+        MAX_POINTS,
+      ).points,
+    [data, currentSessionId, currentStartedAt, currentAdequatePct, currentDominant],
+  )
 
   if (isLoading) {
     return (
