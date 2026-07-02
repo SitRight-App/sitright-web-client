@@ -287,7 +287,11 @@ function CalibrationCard({ vest }: PropsWithVest) {
       </div>
 
       <div className="mt-5 border-t border-sand pt-5">
-        <CalibrationPanel vestId={vest.id} isCalibrated={vest.is_calibrated} />
+        <CalibrationPanel
+          vestId={vest.id}
+          isCalibrated={vest.is_calibrated}
+          calibratedAt={vest.calibrated_at}
+        />
       </div>
     </section>
   )

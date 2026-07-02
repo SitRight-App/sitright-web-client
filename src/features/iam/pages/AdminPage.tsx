@@ -1,10 +1,20 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { staggerContainer, staggerItem } from '@/shared/ui/motion'
 import { useToast } from '@/shared/ui/toast'
+import type { UserStatusFilter } from '../services/adminService'
 import { useAdminStats, useAllUsers, useDeactivateUser } from '../hooks/useAdmin'
 import type { AuthUser } from '../types/auth'
+
+type StatusFilterOption = 'all' | UserStatusFilter
+
+const STATUS_FILTER_LABELS: Record<StatusFilterOption, string> = {
+  all: 'Todos',
+  active: 'Activos',
+  inactive: 'Inactivos',
+}
 
 const longDateFmt = new Intl.DateTimeFormat('es-PE', {
   day: '2-digit',
@@ -21,7 +31,10 @@ const shortDateFmt = new Intl.DateTimeFormat('es-PE', {
 })
 
 export function AdminPage() {
-  const { data, isLoading, isError } = useAllUsers()
+  const [statusFilter, setStatusFilter] = useState<StatusFilterOption>('all')
+  const { data, isLoading, isError } = useAllUsers(
+    statusFilter === 'all' ? undefined : statusFilter,
+  )
   const { data: adminStats } = useAdminStats()
 
   const stats = useMemo(() => {
@@ -95,20 +108,55 @@ export function AdminPage() {
               <h2 className="text-xl font-semibold tracking-tight text-ink">
                 Usuarios del sistema
               </h2>
-              <span className="text-[13px] text-ink-soft">
-                {stats.total} {stats.total === 1 ? 'cuenta' : 'cuentas'}
-              </span>
+              <div className="flex flex-wrap items-center gap-3">
+                <div
+                  role="group"
+                  aria-label="Filtrar por estado"
+                  className="inline-flex rounded-full border border-sand bg-cream p-1"
+                >
+                  {(Object.keys(STATUS_FILTER_LABELS) as StatusFilterOption[]).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setStatusFilter(option)}
+                      aria-pressed={statusFilter === option}
+                      className={`rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                        statusFilter === option
+                          ? 'bg-moss text-cream-bone'
+                          : 'text-ink-soft hover:text-ink'
+                      }`}
+                    >
+                      {STATUS_FILTER_LABELS[option]}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-[13px] text-ink-soft">
+                  {stats.total} {stats.total === 1 ? 'cuenta' : 'cuentas'}
+                </span>
+              </div>
             </div>
 
             {data && data.users.length > 0 && <UsersTable users={data.users} />}
             {data && data.users.length === 0 && (
               <div className="rounded-xl border border-sand bg-cream p-10 text-center">
                 <p className="text-xl font-semibold tracking-tight text-ink">
-                  Aún no hay usuarios registrados en el sistema.
+                  {statusFilter === 'all'
+                    ? 'Aún no hay usuarios registrados en el sistema.'
+                    : 'No hay usuarios que coincidan con este filtro.'}
                 </p>
                 <p className="mt-2 text-sm text-ink-soft">
-                  Cuando alguien se registre desde la pantalla pública, aparecerá aquí.
+                  {statusFilter === 'all'
+                    ? 'Cuando alguien se registre desde la pantalla pública, aparecerá aquí.'
+                    : 'Prueba con otro estado.'}
                 </p>
+                {statusFilter === 'all' && (
+                  <Link
+                    to="/register"
+                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-moss px-5 py-3 text-[14px] font-semibold text-cream-bone transition hover:bg-moss-deep active:scale-[0.97]"
+                  >
+                    Invitar al primer usuario
+                  </Link>
+                )}
               </div>
             )}
           </section>

@@ -209,54 +209,56 @@ export function WeeklyEvolutionPage() {
             </div>
           )}
 
-          <div className="editorial-card rounded-xl p-7">
-            <p className="label-mono">Bien sentado por día</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
-              Últimos 7 días
-            </h2>
+          {/* HU-20 AC2 — con <3 días de datos solo se muestra el mensaje de arriba,
+              sin gráfico ni tendencia. */}
+          {daysWithData >= 3 && (
+            <div className="editorial-card rounded-xl p-7">
+              <p className="label-mono">Bien sentado por día</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
+                Últimos 7 días
+              </h2>
 
-            <div className="mt-6" style={{ height: 320, width: '100%' }}>
-              <ResponsiveContainer width="100%" height={320}>
-                <ComposedChart data={chartData} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
-                  <CartesianGrid
-                    strokeDasharray="3 4"
-                    stroke="rgb(var(--color-ink-soft) / 0.10)"
-                  />
-                  <XAxis
-                    dataKey="label"
-                    stroke="rgb(var(--color-ink-faint))"
-                    tick={{
-                      fontFamily: 'JetBrains Mono',
-                      fontSize: 10,
-                      fill: 'rgb(var(--color-ink-faint))',
-                    }}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    ticks={[0, 25, 50, 75, 100]}
-                    tickFormatter={(v) => `${v}%`}
-                    stroke="rgb(var(--color-ink-faint))"
-                    tick={{
-                      fontFamily: 'JetBrains Mono',
-                      fontSize: 10,
-                      fill: 'rgb(var(--color-ink-faint))',
-                    }}
-                    width={42}
-                  />
-                  <ReferenceLine
-                    y={70}
-                    stroke="rgb(var(--color-terracotta-soft))"
-                    strokeDasharray="3 4"
-                    strokeWidth={1}
-                  />
-                  <Tooltip content={<WeeklyTooltip />} cursor={{ fill: 'rgb(var(--color-ink-soft) / 0.06)' }} />
-                  <Bar
-                    dataKey="percent"
-                    fill="rgb(var(--color-moss))"
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={42}
-                  />
-                  {daysWithData >= 2 && (
+              <div className="mt-6" style={{ height: 320, width: '100%' }}>
+                <ResponsiveContainer width="100%" height={320}>
+                  <ComposedChart data={chartData} margin={{ top: 12, right: 12, bottom: 0, left: 0 }}>
+                    <CartesianGrid
+                      strokeDasharray="3 4"
+                      stroke="rgb(var(--color-ink-soft) / 0.10)"
+                    />
+                    <XAxis
+                      dataKey="label"
+                      stroke="rgb(var(--color-ink-faint))"
+                      tick={{
+                        fontFamily: 'JetBrains Mono',
+                        fontSize: 10,
+                        fill: 'rgb(var(--color-ink-faint))',
+                      }}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      ticks={[0, 25, 50, 75, 100]}
+                      tickFormatter={(v) => `${v}%`}
+                      stroke="rgb(var(--color-ink-faint))"
+                      tick={{
+                        fontFamily: 'JetBrains Mono',
+                        fontSize: 10,
+                        fill: 'rgb(var(--color-ink-faint))',
+                      }}
+                      width={42}
+                    />
+                    <ReferenceLine
+                      y={70}
+                      stroke="rgb(var(--color-terracotta-soft))"
+                      strokeDasharray="3 4"
+                      strokeWidth={1}
+                    />
+                    <Tooltip content={<WeeklyTooltip />} cursor={{ fill: 'rgb(var(--color-ink-soft) / 0.06)' }} />
+                    <Bar
+                      dataKey="percent"
+                      fill="rgb(var(--color-moss))"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={42}
+                    />
                     <Line
                       type="monotone"
                       dataKey="trend"
@@ -266,28 +268,26 @@ export function WeeklyEvolutionPage() {
                       activeDot={false}
                       strokeDasharray="2 4"
                     />
-                  )}
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
 
-            <div className="mt-4 flex flex-wrap gap-4 text-[12px] text-ink-soft">
-              <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-moss" />
-                Bien sentado por día
-              </span>
-              {daysWithData >= 2 && (
+              <div className="mt-4 flex flex-wrap gap-4 text-[12px] text-ink-soft">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-block h-2.5 w-2.5 rounded-sm bg-moss" />
+                  Bien sentado por día
+                </span>
                 <span className="inline-flex items-center gap-1.5">
                   <span className="inline-block h-px w-5 bg-terracotta" />
                   Cómo vienes
                 </span>
-              )}
-              <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block h-px w-5 bg-terracotta-soft" />
-                Meta: 70%
-              </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-block h-px w-5 bg-terracotta-soft" />
+                  Meta: 70%
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

@@ -403,12 +403,10 @@ interface CardProps {
 function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
   const category = entry.category as RecommendationCategory
   const isApplied = entry.applied
+  const checkboxId = `recommendation-applied-${entry.id}`
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      disabled={disabled}
-      className={`group relative flex min-h-[230px] flex-col rounded-xl border p-5 text-left transition hover:-translate-y-0.5 hover:border-moss disabled:opacity-60 ${
+    <div
+      className={`group relative flex min-h-[230px] flex-col rounded-xl border p-5 text-left transition hover:-translate-y-0.5 hover:border-moss ${
         isApplied
           ? 'border-moss/30 bg-moss/[0.05]'
           : 'border-sand bg-cream-bone'
@@ -435,10 +433,20 @@ function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
         </span>
       </div>
 
-      <h3 className="mb-1.5 text-[18px] font-semibold leading-tight tracking-tight text-ink">
+      <h3
+        className={`mb-1.5 text-[18px] font-semibold leading-tight tracking-tight text-ink ${
+          isApplied ? 'line-through text-ink-soft' : ''
+        }`}
+      >
         {entry.title}
       </h3>
-      <p className="mb-auto text-[14px] leading-relaxed text-ink-soft">{entry.description}</p>
+      <p
+        className={`mb-auto text-[14px] leading-relaxed text-ink-soft ${
+          isApplied ? 'line-through' : ''
+        }`}
+      >
+        {entry.description}
+      </p>
 
       <div className="mt-4 flex items-center justify-between border-t border-sand pt-3 text-[12px] text-ink-soft">
         <span>
@@ -446,15 +454,24 @@ function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
             ? `Hecha · ${timeFmt.format(new Date(entry.appliedAt))}`
             : entry.frequency_label}
         </span>
-        {isApplied ? (
-          <Check className="h-4 w-4 text-moss" strokeWidth={1.5} />
-        ) : (
-          <ArrowRight
-            className="h-4 w-4 text-ink transition-transform group-hover:translate-x-1"
-            strokeWidth={1.5}
+        <label
+          htmlFor={checkboxId}
+          className="inline-flex cursor-pointer items-center gap-1.5"
+        >
+          <span className="sr-only">
+            Marcar &quot;{entry.title}&quot; como hecha
+          </span>
+          <input
+            id={checkboxId}
+            type="checkbox"
+            checked={isApplied}
+            onChange={onToggle}
+            disabled={disabled}
+            aria-label={`Marcar "${entry.title}" como hecha`}
+            className="h-[18px] w-[18px] cursor-pointer rounded border-sand text-moss accent-[rgb(var(--color-moss))] focus:outline-none focus:ring-2 focus:ring-moss/40 disabled:cursor-not-allowed disabled:opacity-60"
           />
-        )}
+        </label>
       </div>
-    </button>
+    </div>
   )
 }

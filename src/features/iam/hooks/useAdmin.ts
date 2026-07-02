@@ -1,10 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { deactivateUser, getAdminStats, listAllUsers } from '../services/adminService'
+import {
+  deactivateUser,
+  getAdminStats,
+  listAllUsers,
+  type UserStatusFilter,
+} from '../services/adminService'
 
-export function useAllUsers() {
+export function useAllUsers(status?: UserStatusFilter) {
   return useQuery({
-    queryKey: ['admin', 'users'],
-    queryFn: () => listAllUsers(),
+    queryKey: ['admin', 'users', status ?? 'all'],
+    queryFn: () => listAllUsers({ status }),
     staleTime: 60_000,
   })
 }

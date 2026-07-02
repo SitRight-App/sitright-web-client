@@ -10,7 +10,15 @@ import { useCalibrateVest } from '../hooks/useMyVest'
 interface Props {
   vestId: string
   isCalibrated: boolean
+  /** HU-15 AC — fecha de la última calibración exitosa (ISO-8601), si existe. */
+  calibratedAt?: string | null
 }
+
+const calibratedAtFmt = new Intl.DateTimeFormat('es-PE', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+})
 
 const CALIBRATION_SECONDS = 5
 const SAMPLE_INTERVAL_MS = 500
@@ -46,7 +54,7 @@ function maxMagnitudeDeltaG(samples: LatestRawReading[]): number {
   return maxDelta
 }
 
-export function CalibrationPanel({ vestId, isCalibrated }: Props) {
+export function CalibrationPanel({ vestId, isCalibrated, calibratedAt }: Props) {
   const calibrate = useCalibrateVest(vestId)
   const toast = useToast()
   const [phase, setPhase] = useState<Phase>('idle')
@@ -154,6 +162,12 @@ export function CalibrationPanel({ vestId, isCalibrated }: Props) {
           {isCalibrated ? 'Calibrado' : 'Sin calibrar'}
         </span>
       </div>
+
+      {isCalibrated && calibratedAt && (
+        <p className="mb-4 text-[13px] text-ink-faint">
+          Última calibración: {calibratedAtFmt.format(new Date(calibratedAt))}
+        </p>
+      )}
 
       <p className="max-w-md text-[15px] leading-relaxed text-ink-soft">
         Siéntate bien erguido y quédate quieto {CALIBRATION_SECONDS} segundos. Guardaremos

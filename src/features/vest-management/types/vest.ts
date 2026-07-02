@@ -8,6 +8,8 @@ export interface VestDevice {
   is_calibrated: boolean
   is_linked: boolean
   linked_at: string | null
+  /** ISO-8601 de la última calibración exitosa. `null` si nunca se calibró. */
+  calibrated_at?: string | null
   created_at: string
 }
 

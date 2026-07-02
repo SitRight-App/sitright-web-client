@@ -6,8 +6,22 @@ export interface UsersPage {
   users: AuthUser[]
 }
 
-export async function listAllUsers(limit = 100, offset = 0): Promise<UsersPage> {
+export type UserStatusFilter = 'active' | 'inactive'
+
+export interface ListAllUsersParams {
+  limit?: number
+  offset?: number
+  /** US029 — filtra por estado de la cuenta. Se omite para traer todas. */
+  status?: UserStatusFilter
+}
+
+export async function listAllUsers({
+  limit = 100,
+  offset = 0,
+  status,
+}: ListAllUsersParams = {}): Promise<UsersPage> {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+  if (status) params.set('status', status)
   return apiFetch<UsersPage>(`/admin/users?${params.toString()}`)
 }
 
