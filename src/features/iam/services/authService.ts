@@ -47,6 +47,14 @@ export async function requestPasswordReset(email: string): Promise<void> {
   })
 }
 
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  await apiFetch<void>('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, new_password: newPassword }),
+    skipAuth: true,
+  })
+}
+
 export async function changeMyPassword(
   currentPassword: string,
   newPassword: string,
