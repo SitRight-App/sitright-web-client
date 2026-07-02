@@ -6,6 +6,7 @@ import { AppLayout } from '@/shared/layout/AppLayout'
 import { DashboardPage } from '@/features/posture-visualization/pages/DashboardPage'
 import { AuthProvider } from '@/features/iam/context/AuthContext'
 import { ProtectedRoute } from '@/features/iam/components/ProtectedRoute'
+import { AdminRoute } from '@/features/iam/components/AdminRoute'
 import { ForgotPasswordPage } from '@/features/iam/pages/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/features/iam/pages/ResetPasswordPage'
 import { LoginPage } from '@/features/iam/pages/LoginPage'
@@ -48,7 +49,7 @@ export default function App() {
                   <Route path="recommendations" element={<RecommendationsPage />} />
                   <Route path="vest" element={<VestManagementPage />} />
                   <Route path="settings" element={<SettingsPage />} />
-                  <Route path="admin" element={<AdminPage />} />
+                  <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
               </Route>
