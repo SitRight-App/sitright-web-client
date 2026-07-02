@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { LogOut } from 'lucide-react'
+import { apiErrorMessage } from '@/shared/api/client'
 import { useToast } from '@/shared/ui/toast'
 import { useAuth } from '../context/AuthContext'
 import { changeMyPassword, updateMe } from '../services/authService'
@@ -69,10 +70,7 @@ export function SettingsPage() {
       setUser(updated)
       toast.success('Cambios guardados.', 'Tu perfil quedó actualizado.')
     } catch (err) {
-      toast.error(
-        'No se pudieron guardar los cambios.',
-        err instanceof Error ? err.message : 'Error desconocido',
-      )
+      toast.error('No se pudieron guardar los cambios.', apiErrorMessage(err))
     } finally {
       setSaving(false)
     }
@@ -265,10 +263,7 @@ function ChangePasswordPanel() {
       setNewPassword('')
       setConfirmPassword('')
     } catch (err) {
-      toast.error(
-        'No se pudo cambiar la contraseña',
-        err instanceof Error ? err.message : 'Reintenta en unos segundos',
-      )
+      toast.error('No se pudo cambiar la contraseña', apiErrorMessage(err, 'Reintenta en unos segundos'))
     } finally {
       setSubmitting(false)
     }

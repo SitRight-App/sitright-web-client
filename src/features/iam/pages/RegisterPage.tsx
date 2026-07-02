@@ -19,6 +19,8 @@ export function RegisterPage() {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
+  const [weight, setWeight] = useState('')
+  const [height, setHeight] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -31,7 +33,13 @@ export function RegisterPage() {
     }
     setSubmitting(true)
     try {
-      await register({ email, password, name })
+      await register({
+        email,
+        password,
+        name,
+        weight_kg: weight ? Number(weight) : undefined,
+        height_cm: height ? Number(height) : undefined,
+      })
       navigate('/', { replace: true })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido'
@@ -170,6 +178,37 @@ export function RegisterPage() {
                 className="w-full rounded-xl border border-sand bg-cream-bone px-4 py-3 text-[15px] text-ink shadow-sm transition-colors placeholder:text-ink-faint focus:border-moss focus:outline-none focus:ring-4 focus:ring-moss/15"
               />
               <p className="mt-1.5 text-[13px] text-ink-faint">Mínimo 8 caracteres</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="weight" className="mb-1.5 block text-[13px] font-medium text-ink">
+                  Peso (kg) <span className="font-normal text-ink-faint">— opcional</span>
+                </label>
+                <input
+                  id="weight"
+                  type="number"
+                  step="0.1"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder="ej. 72.5"
+                  className="w-full rounded-xl border border-sand bg-cream-bone px-4 py-3 text-[15px] text-ink shadow-sm transition-colors placeholder:text-ink-faint focus:border-moss focus:outline-none focus:ring-4 focus:ring-moss/15"
+                />
+              </div>
+              <div>
+                <label htmlFor="height" className="mb-1.5 block text-[13px] font-medium text-ink">
+                  Estatura (cm) <span className="font-normal text-ink-faint">— opcional</span>
+                </label>
+                <input
+                  id="height"
+                  type="number"
+                  step="0.1"
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value)}
+                  placeholder="ej. 174"
+                  className="w-full rounded-xl border border-sand bg-cream-bone px-4 py-3 text-[15px] text-ink shadow-sm transition-colors placeholder:text-ink-faint focus:border-moss focus:outline-none focus:ring-4 focus:ring-moss/15"
+                />
+              </div>
             </div>
 
             {error && (

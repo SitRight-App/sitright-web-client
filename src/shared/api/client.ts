@@ -94,3 +94,24 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
   }
   return response.json() as Promise<T>
 }
+
+/**
+ * US026 — traduce el error crudo de `apiFetch` (`"API <status>: <body>"`,
+ * donde `<body>` suele ser JSON con `detail`) a un mensaje legible para el
+ * usuario. No toca `apiFetch` porque otras páginas dependen del prefijo
+ * `API <status>:` para detectar códigos como 409.
+ */
+export function apiErrorMessage(err: unknown, fallback = 'Ocurrió un error. Intenta de nuevo.'): string {
+  if (err instanceof Error) {
+    const m = err.message.match(/^API \d+: ([\s\S]*)$/)
+    const body = m ? m[1] : err.message
+    try {
+      const parsed = JSON.parse(body)
+      if (parsed && typeof parsed.detail === 'string') return parsed.detail
+    } catch {
+      // body was not JSON — fall through
+    }
+    return body.trim() || fallback
+  }
+  return fallback
+}

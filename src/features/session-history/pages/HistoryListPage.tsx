@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { ScoreRing } from '@/shared/ui/ScoreRing'
 import { useSessions } from '../hooks/useSessions'
+import { dominantPlain } from '../lib/sessionCopy'
 import type { PostureSession } from '../types/session'
 
 /** Bloque de métrica del encabezado: número grande en mono tabular sobre tarjeta. */
@@ -160,8 +161,15 @@ export function HistoryListPage() {
                   to={`/history/${s.id}`}
                   className="group grid grid-cols-[1fr_120px_120px_120px_24px] items-center gap-5 border-b border-sand-light px-6 py-4 transition-colors last:border-b-0 hover:bg-cream-deep"
                 >
-                  <span className="text-[15px] font-medium text-ink">
-                    {dateFmt.format(new Date(s.started_at))}
+                  <span>
+                    <span className="block text-[15px] font-medium text-ink">
+                      {dateFmt.format(new Date(s.started_at))}
+                    </span>
+                    {s.summary?.dominant_deviation && (
+                      <span className="mt-0.5 block text-[12px] text-ink-faint">
+                        Desviación más frecuente: {dominantPlain(s.summary.dominant_deviation)}
+                      </span>
+                    )}
                   </span>
                   <span className="text-right text-[14px] tabular-nums text-ink-soft">
                     {s.duration_minutes !== null

@@ -41,7 +41,7 @@ export function LoginPage() {
       navigate(to, { replace: true })
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido'
-      setError(message.includes('401') ? 'Credenciales inválidas' : message)
+      setError(message.includes('401') ? 'Credenciales incorrectas' : message)
     } finally {
       setSubmitting(false)
     }
