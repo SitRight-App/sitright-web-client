@@ -7,6 +7,7 @@ import { DashboardPage } from '@/features/posture-visualization/pages/DashboardP
 import { AuthProvider } from '@/features/iam/context/AuthContext'
 import { ProtectedRoute } from '@/features/iam/components/ProtectedRoute'
 import { ForgotPasswordPage } from '@/features/iam/pages/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/features/iam/pages/ResetPasswordPage'
 import { LoginPage } from '@/features/iam/pages/LoginPage'
 import { RegisterPage } from '@/features/iam/pages/RegisterPage'
 import { HistoryListPage } from '@/features/session-history/pages/HistoryListPage'
@@ -36,6 +37,7 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
               <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
