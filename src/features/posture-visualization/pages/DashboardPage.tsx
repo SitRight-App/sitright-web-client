@@ -17,6 +17,7 @@ import { useProlongedBadPosture } from '../hooks/useProlongedBadPosture'
 import { useRecentReadings } from '../hooks/useRecentReadings'
 import { useVestStatus, type VestStatus } from '../hooks/useVestStatus'
 import { playAlertSound } from '../lib/playAlertSound'
+import { notifyEvent } from '../services/notifyEvent'
 import type { LatestReading, PostureClass } from '../types/posture'
 import {
   POSTURE_CORRECTION,
@@ -76,9 +77,22 @@ export function DashboardPage() {
   useEffect(() => {
     if (isAlertActive && !wasAlertActiveRef.current && notificationsEnabled) {
       playAlertSound()
+      void notifyEvent('bad_posture_alert').catch(() => {})
     }
     wasAlertActiveRef.current = isAlertActive
   }, [isAlertActive, notificationsEnabled])
+
+  // Avisa al backend cuando el recordatorio de pausa pasa de inactivo a
+  // activo (flanco de subida), para que envíe el correo correspondiente.
+  // Mismo criterio que la alerta de postura: no bloquea la UI ni se envía
+  // si las notificaciones están deshabilitadas.
+  const wasReminderShownRef = useRef(false)
+  useEffect(() => {
+    if (showReminder && !wasReminderShownRef.current && notificationsEnabled) {
+      void notifyEvent('break_reminder').catch(() => {})
+    }
+    wasReminderShownRef.current = showReminder
+  }, [showReminder, notificationsEnabled])
   const { data: recommendations } = useRecommendations(reading?.posture_class)
   const recent = useRecentReadings({
     limit: 60,
