@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type {
   PostureClass,
   TimelineReading,
@@ -145,6 +145,62 @@ function badPeriods(minutes: Minute[]): BadPeriod[] {
   return out
 }
 
+interface RangeOption {
+  key: string
+  label: string
+  /** Índice inicial (inclusivo) sobre el arreglo de minutos. */
+  start: number
+  /** Índice final (exclusivo) sobre el arreglo de minutos. */
+  end: number
+}
+
+const HOUR_MS = 60 * MINUTE
+// Umbral a partir del cual conviene trocear por hora de reloj en vez de tercios.
+const HOURLY_ZOOM_MIN = 60
+// Por debajo de esto, trocear en tercios da tramos de menos de 2 min: no aporta.
+const MIN_MINUTES_FOR_ZOOM = 6
+
+/**
+ * US010 (zoom): franjas para acotar la línea de tiempo.
+ * - Sesiones de una hora o más: una franja por hora de reloj (09:00–10:00, ...).
+ * - Sesiones más cortas (y de al menos 6 min): se dividen en tres tramos
+ *   (inicio / medio / final).
+ * - Sesiones muy breves: no se ofrece zoom (no hay nada útil que acotar).
+ */
+function buildRangeOptions(minutes: Minute[]): RangeOption[] {
+  if (minutes.length < MIN_MINUTES_FOR_ZOOM) return []
+
+  if (minutes.length >= HOURLY_ZOOM_MIN) {
+    const out: RangeOption[] = []
+    let start = 0
+    for (let i = 1; i <= minutes.length; i++) {
+      const prevHour = Math.floor(minutes[i - 1].t / HOUR_MS)
+      const curHour = i < minutes.length ? Math.floor(minutes[i].t / HOUR_MS) : null
+      if (curHour === null || curHour !== prevHour) {
+        out.push({
+          key: `hour-${start}`,
+          label: `${fmtT(minutes[start].t)}–${fmtT(minutes[i - 1].t + MINUTE)}`,
+          start,
+          end: i,
+        })
+        start = i
+      }
+    }
+    return out.length > 1 ? out : []
+  }
+
+  const third = Math.ceil(minutes.length / 3)
+  const bounds = [0, third, Math.min(third * 2, minutes.length), minutes.length]
+  const labels = ['Inicio de la sesión', 'Tramo medio', 'Final de la sesión']
+  const out: RangeOption[] = []
+  for (let i = 0; i < 3; i++) {
+    const start = bounds[i]
+    const end = bounds[i + 1]
+    if (end > start) out.push({ key: `third-${i}`, label: labels[i], start, end })
+  }
+  return out.length > 1 ? out : []
+}
+
 function fmtDur(min: number): string {
   if (min < 1) return '<1 min'
   if (min < 60) return `${Math.round(min)} min`
@@ -155,6 +211,14 @@ function fmtDur(min: number): string {
 
 export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
   const minutes = useMemo(() => buildMinutes(readings), [readings])
+  const rangeOptions = useMemo(() => buildRangeOptions(minutes), [minutes])
+  // US010 AC: zoom en franjas horarias específicas. `null` = línea de tiempo completa.
+  const [zoomRange, setZoomRange] = useState<[number, number] | null>(null)
+
+  // Si cambian las lecturas (otra sesión), se vuelve a la vista completa.
+  useEffect(() => {
+    setZoomRange(null)
+  }, [minutes])
 
   if (isError) {
     return (
@@ -186,7 +250,8 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
     )
   }
 
-  const view = minutes
+  const view = zoomRange ? minutes.slice(zoomRange[0], zoomRange[1]) : minutes
+  const isZoomed = zoomRange != null
   const blocks = mergeBlocks(view)
   const totalMin = view.length
   const t0 = view[0].t
@@ -216,6 +281,45 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
         Cada bloque es tu postura predominante en ese minuto. Los tramos cálidos señalan los
         periodos de mala postura; abajo se detallan con su horario.
       </p>
+
+      {rangeOptions.length > 0 && (
+        <div
+          role="group"
+          aria-label="Zoom de la línea de tiempo"
+          className="mb-3 flex flex-wrap items-center gap-2"
+        >
+          <button
+            type="button"
+            onClick={() => setZoomRange(null)}
+            aria-pressed={!isZoomed}
+            className={`border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+              isZoomed
+                ? 'border-sand text-ink-soft hover:border-ink hover:text-ink'
+                : 'border-ink bg-ink text-cream'
+            }`}
+          >
+            Ver todo
+          </button>
+          {rangeOptions.map((opt) => {
+            const active = zoomRange != null && zoomRange[0] === opt.start && zoomRange[1] === opt.end
+            return (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => setZoomRange([opt.start, opt.end])}
+                aria-pressed={active}
+                className={`border px-3 py-1.5 text-[12px] font-medium tabular-nums transition-colors ${
+                  active
+                    ? 'border-ink bg-ink text-cream'
+                    : 'border-sand text-ink-soft hover:border-ink hover:text-ink'
+                }`}
+              >
+                {opt.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {/* Cinta de bloques por minuto. Legible impresa, sin depender del hover. */}
       <div className="flex h-14 w-full overflow-hidden rounded-md border border-sand">
@@ -250,6 +354,12 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
           </span>
         ))}
       </div>
+
+      {isZoomed && (
+        <p className="mt-2 text-[12px] text-ink-soft">
+          Mostrando {view.length} de {minutes.length} min · {fmtT(t0)}–{fmtT(tEnd)}
+        </p>
+      )}
 
       {/* US019 AC1: resalta los períodos inadecuados con su tipo de desviación. */}
       <div className="mt-5 border-t border-sand pt-4">
