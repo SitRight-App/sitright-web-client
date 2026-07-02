@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
+import { useAuth } from '@/features/iam/context/AuthContext'
 import type { LatestReading } from '../types/posture'
 
 const BAD_CLASSES = new Set(['forward_slouch', 'excessive_recline'])
-const READINGS_THRESHOLD = 60  // 60 × 5s = 5 minutos
+const READINGS_PER_MINUTE = 12 // 12 lecturas × 5 s = 60 s
+// US017 AC — si el usuario no configuró un umbral, se usa el valor por
+// defecto de 5 minutos (60 lecturas), igual al comportamiento anterior.
+const DEFAULT_ALERT_THRESHOLD_MINUTES = 5
 
 export function useProlongedBadPosture(reading: LatestReading | null | undefined) {
+  const { user } = useAuth()
+  const thresholdMinutes = user?.preferences?.alert_threshold_minutes ?? DEFAULT_ALERT_THRESHOLD_MINUTES
+  const readingsThreshold = Math.round(thresholdMinutes * READINGS_PER_MINUTE)
+
   const [isAlertActive, setAlertActive] = useState(false)
   const prevIdRef = useRef<string | undefined>(undefined)
   const badCountRef = useRef(0)
@@ -15,12 +23,12 @@ export function useProlongedBadPosture(reading: LatestReading | null | undefined
 
     if (BAD_CLASSES.has(reading.posture_class)) {
       badCountRef.current += 1
-      if (badCountRef.current >= READINGS_THRESHOLD) setAlertActive(true)
+      if (badCountRef.current >= readingsThreshold) setAlertActive(true)
     } else {
       badCountRef.current = 0
       setAlertActive(false)
     }
-  }, [reading])
+  }, [reading, readingsThreshold])
 
   return { isAlertActive, dismiss: () => setAlertActive(false) }
 }

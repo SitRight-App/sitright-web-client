@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/features/iam/context/AuthContext'
 import { RecommendationsCard } from '@/features/recommendations/components/RecommendationsCard'
@@ -15,6 +16,7 @@ import { useCurrentPosture } from '../hooks/useCurrentPosture'
 import { useProlongedBadPosture } from '../hooks/useProlongedBadPosture'
 import { useRecentReadings } from '../hooks/useRecentReadings'
 import { useVestStatus, type VestStatus } from '../hooks/useVestStatus'
+import { playAlertSound } from '../lib/playAlertSound'
 import type { LatestReading, PostureClass } from '../types/posture'
 import {
   POSTURE_CORRECTION,
@@ -64,6 +66,19 @@ export function DashboardPage() {
   const vestStatus = useVestStatus(reading)
   const { isAlertActive, dismiss: dismissAlert } = useProlongedBadPosture(reading)
   const { showReminder, dismiss: dismissReminder } = useBreakReminder(vestStatus, reading)
+
+  // US008 AC — reproduce un sonido cuando la alerta de postura prolongada
+  // pasa de inactiva a activa (flanco de subida), solo si las notificaciones
+  // están habilitadas. Se compara contra el valor previo en vez de disparar
+  // en cada render donde isAlertActive ya es true.
+  const notificationsEnabled = user?.preferences.email_notifications !== false
+  const wasAlertActiveRef = useRef(false)
+  useEffect(() => {
+    if (isAlertActive && !wasAlertActiveRef.current && notificationsEnabled) {
+      playAlertSound()
+    }
+    wasAlertActiveRef.current = isAlertActive
+  }, [isAlertActive, notificationsEnabled])
   const { data: recommendations } = useRecommendations(reading?.posture_class)
   const recent = useRecentReadings({
     limit: 60,
