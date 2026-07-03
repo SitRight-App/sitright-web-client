@@ -11,6 +11,7 @@ import { staggerContainer, staggerItem } from '@/shared/ui/motion'
 import { BreakReminder } from '../components/BreakReminder'
 import { PostureAlert } from '../components/PostureAlert'
 import { PostureTimeline } from '../components/PostureTimeline'
+import { VestStatusBadge } from '../components/VestStatusBadge'
 import { useBreakReminder } from '../hooks/useBreakReminder'
 import { useCurrentPosture } from '../hooks/useCurrentPosture'
 import { useProlongedBadPosture } from '../hooks/useProlongedBadPosture'
@@ -66,7 +67,7 @@ export function DashboardPage() {
 
   const vestStatus = useVestStatus(reading)
   const { isAlertActive, dismiss: dismissAlert } = useProlongedBadPosture(reading)
-  const { showReminder, dismiss: dismissReminder } = useBreakReminder(vestStatus, reading)
+  const { showReminder, dismiss: dismissReminder } = useBreakReminder(reading)
 
   // US008 AC — reproduce un sonido cuando la alerta de postura prolongada
   // pasa de inactiva a activa (flanco de subida), solo si las notificaciones
@@ -113,17 +114,22 @@ export function DashboardPage() {
 
   return (
     <div>
-      {/* Encabezado delgado — el estado del chaleco lo lleva la tarjeta protagonista */}
+      {/* Encabezado delgado — el badge lleva de forma explícita el estado de
+          conexión ("Conectado" / "Chaleco sin conexión") y el aviso ámbar de
+          batería baja "conectar cargador" (HU-07). */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-3">
         <div>
           <p className="text-[14px] text-ink-soft">Buen día,</p>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">{firstName}</h1>
         </div>
-        <span className="hidden text-right text-[13px] leading-tight text-ink-soft sm:block">
-          {capitalize(dateFmt.format(now))}
-          <br />
-          <span className="text-ink-faint">{timeFmt.format(now)}</span>
-        </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <VestStatusBadge status={vestStatus} batteryPercent={reading?.battery_percent} />
+          <span className="hidden text-right text-[13px] leading-tight text-ink-soft sm:block">
+            {capitalize(dateFmt.format(now))}
+            <br />
+            <span className="text-ink-faint">{timeFmt.format(now)}</span>
+          </span>
+        </div>
       </div>
 
       {isError && (
