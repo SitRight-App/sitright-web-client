@@ -36,8 +36,8 @@ export async function getZoneAnalysis(sessionId: string): Promise<ZoneAnalysis |
   }
 }
 
-// Lecturas de la sesión por session_id (clave estable; reemplaza el filtro
-// frágil por rango horario sobre /readings/recent). Ver ADR-006.
+// Lecturas de la sesión por session_id (clave estable, sin depender de
+// filtros por rango horario). Ver ADR-006.
 export async function getSessionReadings(sessionId: string): Promise<TimelineReading[]> {
   return apiFetch<TimelineReading[]>(`/sessions/${sessionId}/readings`)
 }

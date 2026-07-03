@@ -11,7 +11,7 @@ export type UserStatusFilter = 'active' | 'inactive'
 export interface ListAllUsersParams {
   limit?: number
   offset?: number
-  /** US029 — filtra por estado de la cuenta. Se omite para traer todas. */
+  /** Filtra por estado de la cuenta. Se omite para traer todas. */
   status?: UserStatusFilter
 }
 

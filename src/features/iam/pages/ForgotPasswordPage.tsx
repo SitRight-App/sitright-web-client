@@ -6,13 +6,12 @@ import { Brandmark } from '@/shared/ui/Brandmark'
 import { requestPasswordReset } from '../services/authService'
 
 /**
- * HU-27 — pantalla de recuperación de contraseña.
+ * Pantalla de recuperación de contraseña.
  *
- * El backend responde el mismo mensaje haya o no cuenta asociada (AC2), por
- * lo que aquí solo necesitamos disparar la solicitud y mostrar el aviso
- * genérico de éxito. Si el correo era válido, el sistema enviará un enlace
- * con TTL de 1 h (AC3) — la entrega real queda como hook para el servicio
- * de email externo.
+ * El backend responde el mismo mensaje haya o no cuenta asociada, por lo que
+ * aquí solo necesitamos disparar la solicitud y mostrar el aviso genérico de
+ * éxito. Si el correo era válido, el sistema enviará un enlace con TTL de 1 h;
+ * la entrega real queda como hook para el servicio de email externo.
  */
 
 // Textura de ruido sutil para dar materialidad al panel de marca. Mismo patrón

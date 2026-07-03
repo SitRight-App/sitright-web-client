@@ -201,7 +201,7 @@ export function WeeklyEvolutionPage() {
 
       {!isLoading && (
         <div>
-          {/* HU-20 AC2 — datos insuficientes (<3 días) */}
+          {/* Datos insuficientes (<3 días) */}
           {daysWithData < 3 && (
             <div className="mb-6 rounded-lg border border-sand bg-cream-deep px-4 py-3 text-[14px] text-ink-soft">
               Se necesitan al menos 3 días de uso para mostrar una tendencia. Tienes{' '}
@@ -209,7 +209,7 @@ export function WeeklyEvolutionPage() {
             </div>
           )}
 
-          {/* HU-20 AC2 — con <3 días de datos solo se muestra el mensaje de arriba,
+          {/* Con <3 días de datos solo se muestra el mensaje de arriba,
               sin gráfico ni tendencia. */}
           {daysWithData >= 3 && (
             <div className="editorial-card rounded-xl p-7">

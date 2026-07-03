@@ -11,7 +11,7 @@ export interface Preferences {
 }
 
 /**
- * HU-29 AC1 — datos extra que el panel admin necesita ver junto a la lista
+ * Datos extra que el panel admin necesita ver junto a la lista
  * de usuarios. Se entregan solo desde `/admin/users` (el `/users/me` del
  * usuario regular no los necesita).
  */

@@ -96,7 +96,7 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 }
 
 /**
- * US026 — traduce el error crudo de `apiFetch` (`"API <status>: <body>"`,
+ * Traduce el error crudo de `apiFetch` (`"API <status>: <body>"`,
  * donde `<body>` suele ser JSON con `detail`) a un mensaje legible para el
  * usuario. No toca `apiFetch` porque otras páginas dependen del prefijo
  * `API <status>:` para detectar códigos como 409.

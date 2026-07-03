@@ -12,8 +12,8 @@ import { useActiveSession } from '../hooks/useSessions'
  */
 // Una jornada real no dura más de ~12 h. Si una sesión sigue "activa" más allá
 // de eso, casi seguro quedó sin cerrar (el trabajador se fue) y un cronómetro en
-// vivo engañaría. En ese caso la mostramos como "sin cerrar" en vez de seguir
-// contando horas.
+// vivo engañaría. En ese caso la mostramos como "sin cerrar" y detenemos el
+// conteo de horas.
 const STALE_SESSION_MS = 12 * 60 * 60 * 1000
 
 export function ActiveSessionPill() {

@@ -10,7 +10,7 @@ import { useCalibrateVest } from '../hooks/useMyVest'
 interface Props {
   vestId: string
   isCalibrated: boolean
-  /** HU-15 AC — fecha de la última calibración exitosa (ISO-8601), si existe. */
+  /** Fecha de la última calibración exitosa (ISO-8601), si existe. */
   calibratedAt?: string | null
 }
 
@@ -22,7 +22,7 @@ const calibratedAtFmt = new Intl.DateTimeFormat('es-PE', {
 
 const CALIBRATION_SECONDS = 5
 const SAMPLE_INTERVAL_MS = 500
-// HU-15 AC2: si la magnitud del vector de aceleración varía más que esto
+// Si la magnitud del vector de aceleración varía más que esto
 // entre la primera y la última muestra, asumimos movimiento significativo y
 // cancelamos la calibración. ~0.5 g cubre cabeceo notable sin disparar con
 // micro-oscilaciones normales.
@@ -119,7 +119,7 @@ export function CalibrationPanel({ vestId, isCalibrated, calibratedAt }: Props) 
       return
     }
 
-    // HU-15 AC2 — detectar movimiento significativo
+    // Detectar movimiento significativo
     const delta = maxMagnitudeDeltaG(samples)
     if (delta > MOVEMENT_THRESHOLD_G) {
       toast.error(

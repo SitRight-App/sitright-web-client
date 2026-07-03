@@ -72,9 +72,9 @@ export function AdminPage() {
         <AdminSkeleton />
       ) : (
         <>
-          {/* HU-22 AC1 — métricas globales del piloto. Una sola fila: las 3
-              cifras que el AC pide explícitamente + el desglose por rol que
-              le aporta contexto al admin. */}
+          {/* Métricas globales del piloto. Una sola fila: las 3 cifras
+              principales + el desglose por rol que le aporta contexto al
+              admin. */}
           <motion.div
             className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
             initial="hidden"
@@ -201,7 +201,7 @@ function UsersTable({ users }: { users: AuthUser[] }) {
   const toast = useToast()
 
   const handleDeactivate = (u: AuthUser) => {
-    // HU-30 — confirmación previa.
+    // Confirmación previa.
     if (!confirm(`¿Desactivar la cuenta de ${u.name}? El usuario no podrá iniciar sesión hasta ser reactivada.`)) {
       return
     }

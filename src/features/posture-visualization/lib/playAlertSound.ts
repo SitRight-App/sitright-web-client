@@ -1,5 +1,5 @@
 /**
- * US008 — reproduce un aviso sonoro insistente (~7 s) cuando se activa la
+ * Reproduce un aviso sonoro insistente (~7 s) cuando se activa la
  * alerta de postura prolongada: 15 repeticiones de un doble-beep (880/660 Hz)
  * con onda cuadrada, a modo de alarma, con la Web Audio API (sin
  * archivo de audio), para que sea difícil de ignorar. Nunca lanza: si

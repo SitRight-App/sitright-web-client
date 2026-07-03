@@ -30,7 +30,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-// HU-25 AC2 — auto-logout por inactividad. El AC pide 30 min.
+// Auto-logout por inactividad tras 30 min.
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -64,8 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
-  // HU-25 AC2 — escucha de actividad: cualquier interacción reinicia el
-  // contador. Si el usuario está null no hay contador activo.
+  // Escucha de actividad: cualquier interacción reinicia el contador.
+  // Si el usuario está null no hay contador activo.
   useEffect(() => {
     if (!user) {
       if (inactivityTimerRef.current !== null) {
@@ -129,8 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(me)
       },
       logout() {
-        // HU-25 AC1 — avisamos al backend para que quede en logs antes de
-        // descartar tokens. No bloqueamos la UI si la llamada falla.
+        // Avisamos al backend para que quede en logs antes de descartar
+        // tokens. No bloqueamos la UI si la llamada falla.
         logoutApi().catch(() => {})
         tokenStorage.clear()
         setUser(null)

@@ -69,10 +69,10 @@ export function DashboardPage() {
   const { isAlertActive, dismiss: dismissAlert } = useProlongedBadPosture(reading)
   const { showReminder, dismiss: dismissReminder } = useBreakReminder(reading)
 
-  // US008 AC — reproduce un sonido cuando la alerta de postura prolongada
-  // pasa de inactiva a activa (flanco de subida), solo si las notificaciones
-  // están habilitadas. Se compara contra el valor previo en vez de disparar
-  // en cada render donde isAlertActive ya es true.
+  // Reproduce un sonido cuando la alerta de postura prolongada pasa de
+  // inactiva a activa (flanco de subida), solo si las notificaciones están
+  // habilitadas. Se compara contra el valor previo para disparar únicamente
+  // en la transición, no en cada render donde isAlertActive ya es true.
   const notificationsEnabled = user?.preferences.email_notifications !== false
   const wasAlertActiveRef = useRef(false)
   useEffect(() => {
@@ -278,9 +278,8 @@ interface PostureCardProps {
  * Zona de la columna que enciende cada desviación (índice en el orden
  * Cervical=0 · Dorsal=1 · Lumbar=2). Coincide con AFFECTED_ZONE de
  * recomendaciones: inclinación frontal → cervical, reclinación excesiva →
- * lumbar. Antes el dashboard marcaba siempre la lumbar para cualquier
- * desviación, así que forward_slouch (clase cervical) encendía la zona
- * equivocada.
+ * lumbar. La zona encendida coincide con la clase: forward_slouch → cervical,
+ * excessive_recline → lumbar.
  */
 const ALERT_INDEX: Partial<Record<PostureClass, number>> = {
   forward_slouch: 0,
@@ -296,7 +295,7 @@ const LIVE_LEAN: Partial<Record<PostureClass, number>> = {
 }
 
 // Título en vivo en lenguaje cotidiano. 'adequate' conserva 'Postura correcta'
-// por requisito del backlog (HU-06 AC1).
+// por requisito del producto.
 const LIVE_TITLE: Record<PostureClass, string> = {
   adequate: 'Postura correcta',
   forward_slouch: 'Inclinación hacia adelante',
@@ -312,9 +311,8 @@ function liveZone(idx: number, isLive: boolean, alertIdx: number): SeatedFigureZ
 
 /**
  * Tarjeta protagonista del dashboard: fusiona el estado en vivo (título grande,
- * batería, conexión) con la visualización de la columna por zona. Antes eran dos
- * tarjetas separadas que decían lo mismo ("¿cómo está mi postura ahora?"); al
- * unirlas se elimina la redundancia y el hueco muerto de la columna.
+ * batería, conexión) con la visualización de la columna por zona en una sola
+ * tarjeta.
  *
  * Sólo presenta la postura como "en vivo" cuando el chaleco está realmente
  * conectado (última lectura ≤ 30 s). Si la lectura es vieja, pasa a estado

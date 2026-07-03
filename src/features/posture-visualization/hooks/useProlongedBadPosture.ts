@@ -4,8 +4,8 @@ import type { LatestReading } from '../types/posture'
 
 const BAD_CLASSES = new Set(['forward_slouch', 'excessive_recline'])
 const READINGS_PER_MINUTE = 12 // 12 lecturas × 5 s = 60 s
-// US017 AC — si el usuario no configuró un umbral, se usa el valor por
-// defecto de 5 minutos (60 lecturas), igual al comportamiento anterior.
+// Si el usuario no configuró un umbral, se usa el valor por defecto de
+// 5 minutos (60 lecturas).
 const DEFAULT_ALERT_THRESHOLD_MINUTES = 5
 
 export function useProlongedBadPosture(reading: LatestReading | null | undefined) {

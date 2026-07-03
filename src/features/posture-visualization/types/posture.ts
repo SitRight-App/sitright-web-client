@@ -21,7 +21,7 @@ export interface TimelineReading {
 }
 
 export const POSTURE_LABELS: Record<PostureClass, string> = {
-  // HU-06 AC1: el sistema muestra el texto 'Postura correcta' para 'adequate'.
+  // El sistema muestra el texto 'Postura correcta' para 'adequate'.
   adequate: 'Postura correcta',
   forward_slouch: 'Inclinación frontal',
   excessive_recline: 'Reclinación excesiva',

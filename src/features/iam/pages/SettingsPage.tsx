@@ -9,8 +9,8 @@ function FormField({
   label,
   children,
 }: {
-  // `num` se mantiene aceptado en la firma para no romper llamadas existentes,
-  // pero ya no se pinta como adorno numérico.
+  // `num` se acepta en la firma por compatibilidad con las llamadas
+  // existentes, pero no se renderiza como adorno numérico.
   num?: string
   label: string
   children: React.ReactNode

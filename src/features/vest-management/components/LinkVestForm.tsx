@@ -3,7 +3,7 @@ import { useToast } from '@/shared/ui/toast'
 import { useLinkVest } from '../hooks/useMyVest'
 import type { LinkVestResponse } from '../types/vest'
 
-// HU-14 AC3 — validación cliente de formato MAC.
+// Validación cliente de formato MAC.
 const MAC_REGEX = /^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/
 
 export function LinkVestForm() {
@@ -20,7 +20,7 @@ export function LinkVestForm() {
 
     const normalized = macAddress.toUpperCase().trim()
     if (!MAC_REGEX.test(normalized)) {
-      // HU-14 AC3 — texto literal exigido por el AC.
+      // Texto literal del mensaje de error.
       setMacError('El identificador no es una dirección MAC válida')
       return
     }

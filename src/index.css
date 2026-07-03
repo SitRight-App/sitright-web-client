@@ -31,7 +31,7 @@
   /* Tinta — textos primarios y secundarios (alto contraste) */
   --color-ink: 26 31 27;            /* #1A1F1B — 16.0:1 sobre fondo */
   --color-ink-soft: 74 82 73;       /* #4A5249 — 7.8:1 */
-  --color-ink-faint: 92 100 91;     /* #5C645B — 5.9:1 (antes 2.85, FALLABA) */
+  --color-ink-faint: 92 100 91;     /* #5C645B — contraste 5.9:1 */
 
   /* Verde musgo — acento principal de marca */
   --color-moss: 45 74 54;           /* #2D4A36 — 9.4:1 */
@@ -43,10 +43,10 @@
   --color-terracotta-deep: 162 74 40; /* #A24A28 */
   --color-terracotta-soft: 232 166 133; /* #E8A685 */
 
-  /* Ámbar — advertencia (batería baja, HU-07 AC2) */
+  /* Ámbar — advertencia (batería baja) */
   --color-amber: 196 128 20;        /* #C48014 */
 
-  /* Neutro de bordes y divisores (antes "arena" cálida) */
+  /* Neutro de bordes y divisores */
   --color-sand: 224 224 220;        /* #E0E0DC — bordes hairline */
   --color-sand-light: 237 237 233;  /* #EDEDE9 — divisores sutiles */
 }
@@ -96,9 +96,8 @@
 
 @layer components {
   /*
-   * Etiquetas de sección legibles. Antes eran mono MAYÚSCULAS con tracking
-   * apretado; en pruebas con usuarios la asesora las marcó como difíciles de
-   * leer, así que ahora son sans, en caja normal y un poco más grandes.
+   * Etiquetas de sección legibles: sans, en caja normal y un poco más grandes
+   * para que sean fáciles de leer.
    */
   .label-mono {
     @apply text-[13px] font-semibold tracking-normal text-ink-soft;

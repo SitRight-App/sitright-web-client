@@ -32,7 +32,7 @@ export async function refresh(refreshToken: string): Promise<AuthTokens> {
   })
 }
 
-/** HU-25 AC1 — notifica al backend del cierre de sesión. Los JWT son
+/** Notifica al backend del cierre de sesión. Los JWT son
  * stateless así que el backend sólo responde 204; pero llamar este endpoint
  * deja constancia en logs y permite invalidación server-side a futuro. */
 export async function logout(): Promise<void> {

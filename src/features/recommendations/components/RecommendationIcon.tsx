@@ -33,8 +33,8 @@ const ICONS: Record<RecommendationIconSlug, LucideIcon> = {
 }
 
 /**
- * Iconos editoriales de recomendaciones, ahora basados en `lucide-react` para
- * mantener consistencia visual con el resto de la UI y evitar SVG hand-rolled.
+ * Iconos editoriales de recomendaciones, basados en `lucide-react` para
+ * mantener consistencia visual con el resto de la UI.
  */
 export function RecommendationIcon({ icon, size = 36 }: Props) {
   const Icon = ICONS[icon] ?? ShieldCheck

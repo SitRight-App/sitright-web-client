@@ -29,7 +29,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* reducedMotion="user": framer-motion respeta la preferencia del SO y
-          reemplaza los desplazamientos por fundidos cuando el usuario lo pide. */}
+          convierte los desplazamientos en fundidos cuando el usuario lo pide. */}
       <MotionConfig reducedMotion="user">
       <ToastProvider>
         <BrowserRouter>

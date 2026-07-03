@@ -94,7 +94,7 @@ export function HistoryListPage() {
       </div>
 
       <div className="mt-8">
-        {/* HU-09 AC2 — resumen diario con datos insuficientes (<30 min) */}
+        {/* Resumen diario con datos insuficientes (<30 min) */}
         {!isLoading && closed.length > 0 && totalMinutes < 30 && (
           <div className="mb-6 rounded-lg border border-sand bg-cream-deep px-4 py-3 text-[14px] text-ink-soft">
             <strong className="font-semibold text-ink">No hay datos suficientes para generar el resumen.</strong>{' '}

@@ -26,7 +26,6 @@ type NavItem = {
 
 /**
  * Navegación única de la app: una sola barra lateral con icono + etiqueta.
- * (Antes había topbar y sidebar duplicando las mismas secciones.)
  */
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Tiempo real', end: true, Icon: Activity },

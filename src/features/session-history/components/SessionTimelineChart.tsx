@@ -72,7 +72,7 @@ function dominant(counts: Record<string, number>): PostureClass {
   return best
 }
 
-/** Agrupa las lecturas en minutos (US010: bloques de color por minuto). */
+/** Agrupa las lecturas en minutos (bloques de color por minuto). */
 function buildMinutes(readings: TimelineReading[]): Minute[] {
   const sorted = [...readings].sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
@@ -161,7 +161,7 @@ const HOURLY_ZOOM_MIN = 60
 const MIN_MINUTES_FOR_ZOOM = 6
 
 /**
- * US010 (zoom): franjas para acotar la línea de tiempo.
+ * Zoom: franjas para acotar la línea de tiempo.
  * - Sesiones de una hora o más: una franja por hora de reloj (09:00–10:00, ...).
  * - Sesiones más cortas (y de al menos 6 min): se dividen en tres tramos
  *   (inicio / medio / final).
@@ -212,7 +212,7 @@ function fmtDur(min: number): string {
 export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
   const minutes = useMemo(() => buildMinutes(readings), [readings])
   const rangeOptions = useMemo(() => buildRangeOptions(minutes), [minutes])
-  // US010 AC: zoom en franjas horarias específicas. `null` = línea de tiempo completa.
+  // Zoom en franjas horarias específicas. `null` = línea de tiempo completa.
   const [zoomRange, setZoomRange] = useState<[number, number] | null>(null)
 
   // Si cambian las lecturas (otra sesión), se vuelve a la vista completa.
@@ -265,7 +265,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
   const longest = periods.reduce((mx, p) => Math.max(mx, p.durMin), 0)
   const pauseCount = blocks.filter((b) => b.kind === 'pausa').length
 
-  // Sesión corta (US010/US019 AC2): se mide por el tiempo realmente registrado.
+  // Sesión corta: se mide por el tiempo realmente registrado.
   const isShort = minutes.length < SHORT_SESSION_MIN
 
   return (
@@ -361,7 +361,7 @@ export function SessionTimelineChart({ readings, isLoading, isError }: Props) {
         </p>
       )}
 
-      {/* US019 AC1: resalta los períodos inadecuados con su tipo de desviación. */}
+      {/* Resalta los períodos inadecuados con su tipo de desviación. */}
       <div className="mt-5 border-t border-sand pt-4">
         <p className="mb-2.5 text-[14px] font-semibold text-ink">Periodos de mala postura</p>
         {periods.length === 0 ? (

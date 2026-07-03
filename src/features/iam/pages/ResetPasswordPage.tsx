@@ -7,7 +7,7 @@ import { useToast } from '@/shared/ui/toast'
 import { resetPassword } from '../services/authService'
 
 /**
- * HU-27 — pantalla del paso 2: el usuario llega desde el enlace del correo
+ * Pantalla del paso 2: el usuario llega desde el enlace del correo
  * (`/reset-password?token=...`), elige una nueva contraseña y la confirma.
  * Sin token, o si el backend rechaza el token (inválido/expirado), se muestra
  * el estado de "enlace inválido" con acceso a pedir uno nuevo.

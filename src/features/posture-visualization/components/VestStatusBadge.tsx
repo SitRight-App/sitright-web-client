@@ -18,14 +18,14 @@ interface StatusConfig {
 
 const CONFIG: Record<VestStatus, StatusConfig> = {
   connected: { label: 'Conectado', dot: 'bg-moss', text: 'text-moss' },
-  // HU-07 AC2 — batería baja: AC pide amarillo + 'conectar cargador'.
+  // Batería baja: amarillo + 'conectar cargador'.
   // Usamos sand-light (el amarillo más cercano de la paleta editorial).
   battery_low: {
     label: 'Batería baja, conectar cargador',
     dot: 'bg-sand-light',
     text: 'text-ink-soft',
   },
-  // HU-06 AC3 — 'Chaleco sin conexión'. El hint de WiFi vive en el tooltip.
+  // 'Chaleco sin conexión'. El hint de WiFi vive en el tooltip.
   disconnected: {
     label: 'Chaleco sin conexión',
     dot: 'bg-ink-faint',
