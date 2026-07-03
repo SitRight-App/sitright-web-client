@@ -114,9 +114,9 @@ export function DashboardPage() {
 
   return (
     <div>
-      {/* Encabezado delgado — el badge lleva de forma explícita el estado de
-          conexión ("Conectado" / "Chaleco sin conexión") y el aviso ámbar de
-          batería baja "conectar cargador" (HU-07). */}
+      {/* Encabezado delgado — el badge muestra el estado de conexión
+          ("Conectado" / "Chaleco sin conexión") y el aviso ámbar de batería
+          baja "conectar cargador". */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-3">
         <div>
           <p className="text-[14px] text-ink-soft">Buen día,</p>

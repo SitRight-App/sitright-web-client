@@ -3,13 +3,10 @@ import { useAuth } from '@/features/iam/context/AuthContext'
 import type { LatestReading } from '../types/posture'
 
 const READINGS_PER_MINUTE = 12 // 12 lecturas × 5 s = 60 s
-// HU-12 AC4 — si las preferencias del usuario no tienen un intervalo, se usa
-// el valor por defecto de 60 minutos.
+// Intervalo por defecto del recordatorio si el usuario no configuró uno.
 const DEFAULT_BREAK_REMINDER_MINUTES = 60
-// HU-12 AC2 — el sistema considera una pausa activa automática cuando pasan al
-// menos 5 minutos sin lecturas nuevas. Antes esto se ataba al flag de
-// desconexión del chaleco (~30 s), demasiado agresivo: un microcorte de WiFi
-// bastaba para reiniciar el contador del recordatorio.
+// Un hueco de ≥ 5 minutos sin lecturas nuevas se interpreta como una pausa
+// activa automática y reinicia el contador del recordatorio.
 const AUTO_BREAK_GAP_MS = 5 * 60_000
 
 export function useBreakReminder(reading: LatestReading | null | undefined) {
@@ -22,9 +19,8 @@ export function useBreakReminder(reading: LatestReading | null | undefined) {
   const lastTimestampRef = useRef<number | undefined>(undefined)
   const countRef = useRef(0)
 
-  // HU-12 AC3 — si las notificaciones están desactivadas, no se muestra el
-  // recordatorio pero el contador sigue marchando (el sistema "registra
-  // internamente que se cumplió el umbral").
+  // Si las notificaciones están desactivadas no se muestra el recordatorio,
+  // pero el contador sigue avanzando.
   const notificationsEnabled = user?.preferences.email_notifications ?? true
 
   useEffect(() => {
@@ -35,9 +31,8 @@ export function useBreakReminder(reading: LatestReading | null | undefined) {
     const previousTimestamp = lastTimestampRef.current
     lastTimestampRef.current = timestamp
 
-    // HU-12 AC2 — si transcurrieron ≥ 5 minutos sin lecturas nuevas (según el
-    // tiempo desde la última lectura), se asume una pausa activa automática y
-    // se reinicia el contador del recordatorio.
+    // Un hueco de ≥ 5 min sin lecturas nuevas se asume como pausa activa y
+    // reinicia el contador.
     if (previousTimestamp !== undefined && timestamp - previousTimestamp >= AUTO_BREAK_GAP_MS) {
       countRef.current = 0
       return
