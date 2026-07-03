@@ -43,3 +43,7 @@ CLAUDE.md
 # ─── Artefactos temporales de validación (scripts/capturas locales) ───────────
 _*.mjs
 _*.png
+
+# Artefactos de planificacion (superpowers) — no versionar
+docs/superpowers/
+.superpowers/
