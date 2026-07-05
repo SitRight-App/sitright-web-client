@@ -6,6 +6,7 @@ import { RecommendationsCard } from '@/features/recommendations/components/Recom
 import { useRecommendations } from '@/features/recommendations/hooks/useRecommendations'
 import { SessionControls } from '@/features/session-history/components/SessionControls'
 import { useActiveSession } from '@/shared/hooks/useActiveSession'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { useMyVest } from '@/features/vest-management/hooks/useMyVest'
 import { staggerContainer, staggerItem } from '@/shared/ui/motion'
 import { BreakReminder } from '../components/BreakReminder'
@@ -44,7 +45,7 @@ function capitalize(s: string): string {
 }
 
 function timeSince(iso: string): string {
-  const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  const sec = Math.floor((Date.now() - parseServerDate(iso).getTime()) / 1000)
   if (sec < 5) return 'hace un momento'
   if (sec < 60) return `hace ${sec} s`
   const min = Math.floor(sec / 60)

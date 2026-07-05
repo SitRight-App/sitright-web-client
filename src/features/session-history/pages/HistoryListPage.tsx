@@ -2,6 +2,7 @@ import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { ScoreRing } from '@/shared/ui/ScoreRing'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { useSessions } from '../hooks/useSessions'
 import { dominantPlain } from '../lib/sessionCopy'
 import type { PostureSession } from '../types/session'
@@ -163,7 +164,7 @@ export function HistoryListPage() {
                 >
                   <span>
                     <span className="block text-[15px] font-medium text-ink">
-                      {dateFmt.format(new Date(s.started_at))}
+                      {dateFmt.format(parseServerDate(s.started_at))}
                     </span>
                     {s.summary?.dominant_deviation && (
                       <span className="mt-0.5 block text-[12px] text-ink-faint">

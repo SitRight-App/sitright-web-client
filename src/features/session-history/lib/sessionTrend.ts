@@ -1,3 +1,4 @@
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import type { PostureSession } from '../types/session'
 
 export interface TrendPoint {
@@ -29,7 +30,7 @@ export function buildTrend(
   if (current.adequatePct != null && !points.some((p) => p.id === current.id)) {
     points.push({ id: current.id, at: current.startedAt, pct: current.adequatePct, dominant: current.dominant })
   }
-  points.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
+  points.sort((a, b) => parseServerDate(a.at).getTime() - parseServerDate(b.at).getTime())
   const capped = points.slice(-maxPoints)
   const idxRaw = capped.findIndex((p) => p.id === current.id)
   const currentIndex = idxRaw === -1 ? Math.max(0, capped.length - 1) : idxRaw

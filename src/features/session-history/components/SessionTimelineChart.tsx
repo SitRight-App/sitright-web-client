@@ -4,6 +4,7 @@ import type {
   TimelineReading,
 } from '@/features/posture-visualization/types/posture'
 import { Skeleton } from '@/shared/ui/Skeleton'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 
 interface Props {
   readings: TimelineReading[]
@@ -75,14 +76,14 @@ function dominant(counts: Record<string, number>): PostureClass {
 /** Agrupa las lecturas en minutos (bloques de color por minuto). */
 function buildMinutes(readings: TimelineReading[]): Minute[] {
   const sorted = [...readings].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    (a, b) => parseServerDate(a.timestamp).getTime() - parseServerDate(b.timestamp).getTime(),
   )
   const byMin = new Map<number, Record<string, number>>()
   let firstMin = Infinity
   let lastMin = -Infinity
   let lastTs = 0
   for (const r of sorted) {
-    const ts = new Date(r.timestamp).getTime()
+    const ts = parseServerDate(r.timestamp).getTime()
     const m = Math.floor(ts / MINUTE) * MINUTE
     const rec = byMin.get(m) ?? {}
     rec[r.posture_class] = (rec[r.posture_class] ?? 0) + 1

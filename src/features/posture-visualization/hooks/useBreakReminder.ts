@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/features/iam/context/AuthContext'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import type { LatestReading } from '../types/posture'
 
 const READINGS_PER_MINUTE = 12 // 12 lecturas × 5 s = 60 s
@@ -27,7 +28,7 @@ export function useBreakReminder(reading: LatestReading | null | undefined) {
     if (!reading || reading.id === prevIdRef.current) return
     prevIdRef.current = reading.id
 
-    const timestamp = new Date(reading.timestamp).getTime()
+    const timestamp = parseServerDate(reading.timestamp).getTime()
     const previousTimestamp = lastTimestampRef.current
     lastTimestampRef.current = timestamp
 

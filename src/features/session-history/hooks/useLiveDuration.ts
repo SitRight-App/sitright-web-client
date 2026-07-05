@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 
 /**
  * Devuelve la duración en milisegundos desde `startedAt` hasta ahora, actualizada
@@ -6,7 +7,7 @@ import { useEffect, useState } from 'react'
  * provocar refetches al backend.
  */
 export function useLiveDuration(startedAt: string | null, tickMs = 1000): number {
-  const compute = () => (startedAt ? Date.now() - new Date(startedAt).getTime() : 0)
+  const compute = () => (startedAt ? Date.now() - parseServerDate(startedAt).getTime() : 0)
   const [ms, setMs] = useState(compute)
 
   useEffect(() => {

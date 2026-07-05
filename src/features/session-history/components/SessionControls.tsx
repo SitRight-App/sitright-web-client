@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useMyVest } from '@/features/vest-management/hooks/useMyVest'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { formatDuration, useLiveDuration } from '../hooks/useLiveDuration'
 import { useActiveSession, useCloseSession, useStartSession } from '../hooks/useSessions'
@@ -143,7 +144,7 @@ function ActiveSessionState({
   isPending,
   isStale,
 }: ActiveProps) {
-  const startedAtFmt = new Date(startedAt).toLocaleTimeString('es-PE', {
+  const startedAtFmt = parseServerDate(startedAt).toLocaleTimeString('es-PE', {
     hour: '2-digit',
     minute: '2-digit',
   })

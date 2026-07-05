@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { formatDuration, useLiveDuration } from '../hooks/useLiveDuration'
 import { useActiveSession } from '../hooks/useSessions'
 
@@ -48,7 +49,7 @@ export function ActiveSessionPill() {
       <Link
         to="/"
         className="inline-flex items-center gap-2 rounded-full bg-moss-deep px-3.5 py-1.5 text-[12px] font-medium text-cream transition-opacity hover:opacity-90"
-        title={`Sesión activa desde ${new Date(active.started_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`}
+        title={`Sesión activa desde ${parseServerDate(active.started_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}`}
       >
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-terracotta" />
         Sesión · {formatDuration(liveMs)}

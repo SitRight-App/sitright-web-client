@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { CARD_TONE, SectionEyebrow } from '@/shared/ui/SectionEyebrow'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { useSessions } from '../hooks/useSessions'
 import { buildTrend, type TrendPoint } from '../lib/sessionTrend'
 
@@ -38,7 +39,7 @@ const DOMINANT_ZONE: Record<string, string> = {
 const dayFmt = new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: 'short' })
 
 function isToday(iso: string): boolean {
-  const d = new Date(iso)
+  const d = parseServerDate(iso)
   const now = new Date()
   return (
     d.getFullYear() === now.getFullYear() &&
@@ -143,7 +144,7 @@ export function SessionTrend({
                     isCurrent ? 'bg-moss-deep' : 'bg-ink-soft/25'
                   }`}
                   style={{ height: barPx }}
-                  title={`${dayFmt.format(new Date(p.at))} · ${Math.round(p.pct)}% de postura correcta`}
+                  title={`${dayFmt.format(parseServerDate(p.at))} · ${Math.round(p.pct)}% de postura correcta`}
                 />
               </div>
             )
@@ -152,7 +153,7 @@ export function SessionTrend({
         <div className="mt-2 flex gap-3">
           {series.map((p, i) => {
             const isCurrent = i === curIdx
-            const dateLabel = isToday(p.at) ? 'hoy' : dayFmt.format(new Date(p.at)).replace('.', '')
+            const dateLabel = isToday(p.at) ? 'hoy' : dayFmt.format(parseServerDate(p.at)).replace('.', '')
             return (
               <span
                 key={p.id}

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, Check, ChevronDown } from 'lucide-react'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import {
   useAllRecommendations,
   useAppliedRecommendations,
@@ -342,7 +343,7 @@ function FeaturedHero({ featured, onMark, onUnmark, isMutating }: FeaturedHeroPr
           {featured.applied ? (
             <>
               <span className="inline-flex items-center gap-2 rounded-xl border border-cream-bone/25 bg-cream-bone/10 px-5 py-3 text-[15px] font-semibold text-cream-bone">
-                ✓ Hecha{featured.appliedAt && ` · ${timeFmt.format(new Date(featured.appliedAt))}`}
+                ✓ Hecha{featured.appliedAt && ` · ${timeFmt.format(parseServerDate(featured.appliedAt))}`}
               </span>
               <button
                 type="button"
@@ -451,7 +452,7 @@ function RecommendationCard({ entry, onToggle, disabled }: CardProps) {
       <div className="mt-4 flex items-center justify-between border-t border-sand pt-3 text-[12px] text-ink-soft">
         <span>
           {isApplied && entry.appliedAt
-            ? `Hecha · ${timeFmt.format(new Date(entry.appliedAt))}`
+            ? `Hecha · ${timeFmt.format(parseServerDate(entry.appliedAt))}`
             : entry.frequency_label}
         </span>
         <label

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { staggerContainer, staggerItem } from '@/shared/ui/motion'
 import { useToast } from '@/shared/ui/toast'
 import type { UserStatusFilter } from '../services/adminService'
@@ -240,11 +241,11 @@ function UsersTable({ users }: { users: AuthUser[] }) {
               <RoleBadge role={u.role} />
               <ActiveBadge active={u.is_active} />
               <span className="text-[13px] tabular-nums text-ink-soft">
-                {longDateFmt.format(new Date(u.created_at))}
+                {longDateFmt.format(parseServerDate(u.created_at))}
               </span>
               <span className="text-[13px] tabular-nums text-ink-soft">
                 {u.last_session_at
-                  ? shortDateFmt.format(new Date(u.last_session_at))
+                  ? shortDateFmt.format(parseServerDate(u.last_session_at))
                   : <span className="text-ink-faint">sin sesiones</span>}
               </span>
               <VestSummary vest={u.linked_vest ?? null} />

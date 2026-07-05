@@ -5,6 +5,7 @@ import {
   POSTURE_LABELS,
   isDeviation,
 } from '../types/posture'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { ConfidenceBar } from './ConfidenceBar'
 
 interface Props {
@@ -13,7 +14,7 @@ interface Props {
 }
 
 function timeSince(isoString: string): string {
-  const diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000)
+  const diff = Math.floor((Date.now() - parseServerDate(isoString).getTime()) / 1000)
   if (diff < 5) return 'ahora mismo'
   if (diff < 60) return `hace ${diff}s`
   return `hace ${Math.floor(diff / 60)}m`

@@ -3,6 +3,7 @@ import { useCurrentPosture } from '@/features/posture-visualization/hooks/useCur
 import type { PostureClass } from '@/features/posture-visualization/types/posture'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { useToast } from '@/shared/ui/toast/ToastProvider'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { CalibrationPanel } from '../components/CalibrationPanel'
 import { LinkVestForm } from '../components/LinkVestForm'
 import { VestIllustration } from '../components/VestIllustration'
@@ -16,7 +17,7 @@ const longDateFmt = new Intl.DateTimeFormat('es-PE', {
 })
 
 function secondsSince(iso: string): number {
-  return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))
+  return Math.max(0, Math.round((Date.now() - parseServerDate(iso).getTime()) / 1000))
 }
 
 function batteryHoursRemaining(percent: number): number {
@@ -356,7 +357,7 @@ function UnlinkCard({ vest }: PropsWithVest) {
       </p>
       {vest.linked_at && (
         <p className="mt-3 text-[12px] text-ink-faint">
-          Vinculado el {longDateFmt.format(new Date(vest.linked_at))}
+          Vinculado el {longDateFmt.format(parseServerDate(vest.linked_at))}
         </p>
       )}
 

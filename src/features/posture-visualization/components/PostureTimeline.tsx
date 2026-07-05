@@ -8,6 +8,7 @@ import {
   YAxis,
 } from 'recharts'
 import { ScoreRing } from '@/shared/ui/ScoreRing'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import type { PostureClass, TimelineReading } from '../types/posture'
 
 interface Props {
@@ -77,7 +78,7 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
   const data = useMemo<ChartPoint[]>(
     () =>
       readings.map((r) => ({
-        time: new Date(r.timestamp).getTime(),
+        time: parseServerDate(r.timestamp).getTime(),
         height: 1,
         posture: r.posture_class,
         fill: POSTURE_COLOR[r.posture_class],
@@ -97,9 +98,9 @@ export function PostureTimeline({ readings, isLoading, isError }: Props) {
     return Math.round((adeq / valid.length) * 100)
   }, [readings])
 
-  const startTime = readings.length > 0 ? new Date(readings[0].timestamp) : null
+  const startTime = readings.length > 0 ? parseServerDate(readings[0].timestamp) : null
   const endTime =
-    readings.length > 0 ? new Date(readings[readings.length - 1].timestamp) : null
+    readings.length > 0 ? parseServerDate(readings[readings.length - 1].timestamp) : null
 
   return (
     <div className="editorial-card p-7">

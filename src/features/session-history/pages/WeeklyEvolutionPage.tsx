@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import { SkeletonCard, SkeletonTextLine, Skeleton } from '@/shared/ui/Skeleton'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { useSessions } from '../hooks/useSessions'
 import type { PostureSession } from '../types/session'
 
@@ -53,7 +54,7 @@ function buildWeek(sessions: PostureSession[]): DayPoint[] {
   // Agrega cada sesión cerrada al bucket de su día.
   for (const session of sessions) {
     if (!session.summary) continue
-    const dayKey = startOfDay(new Date(session.started_at))
+    const dayKey = startOfDay(parseServerDate(session.started_at))
     const point = points.find((p) => p.dayKey === dayKey)
     if (!point) continue
     // Promedio ponderado por lecturas válidas.

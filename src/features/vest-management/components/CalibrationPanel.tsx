@@ -5,6 +5,7 @@ import {
   type SensorTriple,
 } from '@/features/posture-visualization/services/postureService'
 import { useToast } from '@/shared/ui/toast'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { useCalibrateVest } from '../hooks/useMyVest'
 
 interface Props {
@@ -165,7 +166,7 @@ export function CalibrationPanel({ vestId, isCalibrated, calibratedAt }: Props) 
 
       {isCalibrated && calibratedAt && (
         <p className="mb-4 text-[13px] text-ink-faint">
-          Última calibración: {calibratedAtFmt.format(new Date(calibratedAt))}
+          Última calibración: {calibratedAtFmt.format(parseServerDate(calibratedAt))}
         </p>
       )}
 

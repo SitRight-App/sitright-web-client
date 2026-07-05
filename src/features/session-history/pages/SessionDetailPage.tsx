@@ -6,6 +6,7 @@ import { useAuth } from '@/features/iam/context/AuthContext'
 import { Skeleton, SkeletonCard, SkeletonTextLine } from '@/shared/ui/Skeleton'
 import { ScoreRing } from '@/shared/ui/ScoreRing'
 import { CARD_TONE, SectionEyebrow } from '@/shared/ui/SectionEyebrow'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import { PostureComparison } from '../components/PostureComparison'
 import { SessionTimelineChart } from '../components/SessionTimelineChart'
 import { SessionTrend } from '../components/SessionTrend'
@@ -111,8 +112,8 @@ function deriveStats(readings: TimelineReading[], dominant: string | null): Deri
   const pauseGaps: number[] = []
   for (let i = 1; i < readings.length; i++) {
     const dt =
-      (new Date(readings[i].timestamp).getTime() -
-        new Date(readings[i - 1].timestamp).getTime()) /
+      (parseServerDate(readings[i].timestamp).getTime() -
+        parseServerDate(readings[i - 1].timestamp).getTime()) /
       60_000
     if (dt > 2) pauseGaps.push(dt)
   }
@@ -323,7 +324,7 @@ function SessionDetailSkeleton() {
 }
 
 function Crumbs({ session }: { session: PostureSession }) {
-  const startDate = new Date(session.started_at)
+  const startDate = parseServerDate(session.started_at)
   return (
     <div className="mb-5 flex items-center gap-2 text-[13px] text-ink-soft">
       <Link to="/history" className="font-medium text-moss hover:text-moss-deep">
@@ -345,8 +346,8 @@ function Hero({ session, effective, stats }: HeroProps) {
   const { user } = useAuth()
   const { data: zoneData } = useZoneAnalysis(session.id)
   const { dominant, provisional, summary } = effective
-  const started = new Date(session.started_at)
-  const ended = session.ended_at ? new Date(session.ended_at) : null
+  const started = parseServerDate(session.started_at)
+  const ended = session.ended_at ? parseServerDate(session.ended_at) : null
   const adequatePct =
     summary?.adequate_percentage != null ? Math.round(summary.adequate_percentage) : null
 
@@ -367,7 +368,7 @@ function Hero({ session, effective, stats }: HeroProps) {
   const shortDateFmt = new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: '2-digit' })
   const trend = {
     bars: trendResult.points.map((p, i) => ({
-      label: shortDateFmt.format(new Date(p.at)),
+      label: shortDateFmt.format(parseServerDate(p.at)),
       pct: Math.round(p.pct),
       current: i === trendResult.currentIndex,
     })),
@@ -494,7 +495,7 @@ function Hero({ session, effective, stats }: HeroProps) {
               void buildSessionPdf({
                 sessionId: session.id,
                 patientName: user?.name ?? 'Paciente',
-                dateLabel: dateLongFmt.format(new Date(session.started_at)),
+                dateLabel: dateLongFmt.format(parseServerDate(session.started_at)),
                 totalMinutes: summary?.total_minutes ?? session.duration_minutes ?? 0,
                 adequatePct:
                   summary?.adequate_percentage != null ? Math.round(summary.adequate_percentage) : 0,

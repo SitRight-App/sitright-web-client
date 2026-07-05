@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell, BellRing } from 'lucide-react'
 import { Skeleton, SkeletonTextLine } from '@/shared/ui/Skeleton'
+import { parseServerDate } from '@/shared/lib/parseServerDate'
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
@@ -219,7 +220,7 @@ function NotificationRow({ notification: n, isLast, onMarkRead, disabled }: Noti
           </p>
         </div>
         <span className="whitespace-nowrap text-[12px] text-ink-soft">
-          {dateTimeFmt.format(new Date(n.sent_at))}
+          {dateTimeFmt.format(parseServerDate(n.sent_at))}
         </span>
       </button>
     </li>
