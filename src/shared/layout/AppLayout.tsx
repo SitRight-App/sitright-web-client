@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Activity,
+  Database,
   History,
   ShieldCheck,
   Sparkles,
@@ -34,6 +35,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/vest', label: 'Chaleco', Icon: Shirt },
   { to: '/settings', label: 'Configuración', Icon: SettingsIcon },
   { to: '/admin', label: 'Administración', Icon: ShieldCheck, adminOnly: true },
+  { to: '/captura', label: 'Captura de datos', Icon: Database, adminOnly: true },
 ]
 
 function userInitial(name: string): string {

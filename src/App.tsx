@@ -18,6 +18,7 @@ import { VestManagementPage } from '@/features/vest-management/pages/VestManagem
 import { SettingsPage } from '@/features/iam/pages/SettingsPage'
 import { AdminPage } from '@/features/iam/pages/AdminPage'
 import { RecommendationsPage } from '@/features/recommendations/pages/RecommendationsPage'
+import { CapturePage } from '@/features/training/pages/CapturePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,6 +51,7 @@ export default function App() {
                   <Route path="vest" element={<VestManagementPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+                  <Route path="captura" element={<AdminRoute><CapturePage /></AdminRoute>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
               </Route>
